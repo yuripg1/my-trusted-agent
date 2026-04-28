@@ -5,6 +5,7 @@ import time
 import typing
 import subprocess
 import json
+from duckduckgo_search import DDGS
 
 FunctionType = typing.Literal["function"]
 RoleType = typing.Literal["assistant", "tool", "user", "system"]
@@ -94,7 +95,17 @@ TOOLS: list[typing.Dict[str, typing.Any]] = [
             },
         },
     },
-]
+    {
+        "type": "function",
+        "function": {
+            "name": "web_search",
+            "description": "Search the web using DuckDuckGo and return results with titles, URLs, and snippets",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "The search query"},
+                    "max_results": {"type": "integer", "description": "Maximum number of results (default: 5, max: 10)"},
+                },"required":["query"],"additionalProperties":False}}}]
 
 
 def execute_bash_command(command: str) -> tuple[str, str, int]:
@@ -136,6 +147,7 @@ SYSTEM_MESSAGES: list[str] = [
     "You are an AI assistant operating in a text-only terminal interface",
     'You are a capable of running any bash commands on the user\'s system using the "run_bash_command" function',
     'You are capable of getting a random integer number using the "get_random_integer" function',
+    'You are capable of searching the web using the "web_search" function',
     f"$ {SYSTEM_COMMAND_1}\n\n{get_formatted_command_output(SYSTEM_COMMAND_STDOUT_1, SYSTEM_COMMAND_STDERR_1, SYSTEM_COMMAND_RETURNCODE_1)}",
     f"$ {SYSTEM_COMMAND_2}\n\n{get_formatted_command_output(SYSTEM_COMMAND_STDOUT_2, SYSTEM_COMMAND_STDERR_2, SYSTEM_COMMAND_RETURNCODE_2)}",
     f"$ {SYSTEM_COMMAND_3}\n\n{get_formatted_command_output(SYSTEM_COMMAND_STDOUT_3, SYSTEM_COMMAND_STDERR_3, SYSTEM_COMMAND_RETURNCODE_3)}",
@@ -248,6 +260,27 @@ def print_random_integer(min_integer: int, max_integer: int) -> None:
     )
 
 
+def search_web(query: str, max_results: int) -> str:
+    try:
+        with DDGS() as ddg:
+            results = list(ddg.text(query, max_results=min(max_results, 10)))
+        if not results:
+            return f'No results found for "{query}".'
+        output = []
+        for i, r in enumerate(results, 1):
+            output.append(f"{i}. {r['title']}\n   URL: {r['href']}\n   {r['body']}")
+        return "\n\n".join(output)
+    except Exception as e:
+        return f"Web search failed: {e}"
+
+
+def print_web_search(query: str, max_results: int) -> None:
+    print(
+        f'------------------------------------- TOOL -------------------------------------\nSearching the web for "{query}" (max {max_results} results)\n',
+        end="",
+    )
+
+
 def process_tool_calls(tool_calls: list[ToolCall], messages: list[DeepSeekRequestMessage]) -> None:
     for tool_call in tool_calls:
         if tool_call["function"]["name"] == "run_bash_command":
@@ -265,6 +298,13 @@ def process_tool_calls(tool_calls: list[ToolCall], messages: list[DeepSeekReques
             print_random_integer(min_integer, max_integer)
             random_integer = random.randint(min_integer, max_integer)
             add_to_llm_messages(messages, "tool", str(random_integer), "", [], tool_call["id"])
+        elif tool_call["function"]["name"] == "web_search":
+            function_arguments = json.loads(tool_call["function"]["arguments"])
+            query: str = function_arguments["query"]
+            max_results: int = function_arguments.get("max_results", 5)
+            print_web_search(query, max_results)
+            result_text = search_web(query, max_results)
+            add_to_llm_messages(messages, "tool", result_text, "", [], tool_call["id"])
 
 
 def create_llm_messages(llm_system_messages: list[str]) -> list[DeepSeekRequestMessage]:

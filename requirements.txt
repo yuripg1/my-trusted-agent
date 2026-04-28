@@ -1,3 +1,4 @@
 requests~=2.33.1
 rich~=15.0.0
 types-requests~=2.33.0.20260408
+duckduckgo_search~=8.0.0
