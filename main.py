@@ -5,7 +5,7 @@ import time
 import typing
 import subprocess
 import json
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 
 FunctionType = typing.Literal["function"]
 RoleType = typing.Literal["assistant", "tool", "user", "system"]
