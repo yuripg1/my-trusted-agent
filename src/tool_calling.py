@@ -12,7 +12,9 @@ FunctionNameType = Literal["run_bash_command", "get_random_integer", "search_web
 
 WEB_SEARCH_TIMEOUT: int = 300
 WEB_SEARCH_SAFESEARCH: str = "off"
+PDF_DOCUMENT_REQUEST_USER_AGENT: str = "MyTrustedAIAgent (+https://github.com/yuri/my-trusted-ai-agent)"
 PDF_DOCUMENT_REQUEST_TIMEOUT: int = 300
+WEB_PAGE_REQUEST_USER_AGENT: str = "MyTrustedAIAgent (+https://github.com/yuri/my-trusted-ai-agent)"
 WEB_PAGE_REQUEST_TIMEOUT: int = 300
 
 
@@ -23,9 +25,9 @@ class ToolCallArguments(TypedDict):
     query: NotRequired[str]
     max_results_per_page: NotRequired[int]
     page_number: NotRequired[int]
+    location_type: NotRequired[str]
+    location: NotRequired[str]
     url: NotRequired[str]
-    source_type: NotRequired[str]
-    source: NotRequired[str]
 
 
 class ToolCall(TypedDict):
@@ -42,11 +44,9 @@ def get_tool_call_message(tool_call: ToolCall) -> str:
     elif tool_call["function_name"] == "search_web":
         return f'Searching the web for "{tool_call["arguments"]["query"]}" ({tool_call["arguments"]["max_results_per_page"]} results - page {tool_call["arguments"]["page_number"]})'
     elif tool_call["function_name"] == "read_pdf_document":
-        return (
-            f'Reading PDF document from "{tool_call["arguments"]["source"]}" ({tool_call["arguments"]["source_type"]})'
-        )
+        return f'Reading PDF document at "{tool_call["arguments"]["location"]}" ({tool_call["arguments"]["location_type"]})'
     elif tool_call["function_name"] == "read_web_page":
-        return f'Reading web site from "{tool_call["arguments"]["url"]}"'
+        return f'Reading web site at "{tool_call["arguments"]["url"]}"'
     return ""
 
 
@@ -54,7 +54,7 @@ def get_default_tool_call_permission(tool_call: ToolCall) -> bool:
     if tool_call["function_name"] in ["get_random_integer", "search_web", "read_web_page"]:
         return True
     elif tool_call["function_name"] == "read_pdf_document":
-        return tool_call["arguments"]["source_type"] == "remote"
+        return tool_call["arguments"]["location_type"] == "web"
     else:
         return False
 
@@ -113,19 +113,16 @@ def search_web(query: str, max_results_per_page: int, page_number: int) -> str:
     return f'<web_search query="{query}" max_results_per_page="{max_results_per_page}" page_number="{page_number}">\n{joined_output_entries}\n</web_search>'
 
 
-def read_pdf_document(source_type: str, source: str) -> str:
+def read_pdf_document(location_type: str, location: str) -> str:
     output_entries: list[str] = []
     errored: bool = False
     status_code: int | None = None
     content_type: str = ""
     raw_pdf_document_content: Any = None
     try:
-        if source_type == "local":
-            with open(source, "rb") as pdf_document_file:
-                raw_pdf_document_content = pdf_document_file.read()
-        elif source_type == "remote":
-            headers: Mapping[str, str] = {"User-Agent": ""}
-            response: Response = get(source, headers=headers, timeout=PDF_DOCUMENT_REQUEST_TIMEOUT)
+        if location_type == "remote" or location.startswith(("http", "https")):
+            headers: Mapping[str, str] = {"User-Agent": PDF_DOCUMENT_REQUEST_USER_AGENT}
+            response: Response = get(location, headers=headers, timeout=PDF_DOCUMENT_REQUEST_TIMEOUT)
             status_code = response.status_code
             if response.status_code < 200 or response.status_code > 299:
                 output_entries.append("<error>Could not fetch the PDF document</error>")
@@ -137,6 +134,12 @@ def read_pdf_document(source_type: str, source: str) -> str:
                     trimmed_response_content_type: str = response_content_type.strip()
                     if len(trimmed_response_content_type) != 0:
                         content_type = trimmed_response_content_type
+        elif location_type == "local":
+            with open(location, "rb") as pdf_document_file:
+                raw_pdf_document_content = pdf_document_file.read()
+        else:
+            output_entries.append('<error>Invalid "location_type"</error>')
+            errored = True
     except:
         output_entries.append("<error>Could not fetch the PDF document</error>")
         errored = True
@@ -167,7 +170,7 @@ def read_pdf_document(source_type: str, source: str) -> str:
         if len(content_type) != 0:
             output_entries.append(f"<content_type>{content_type}</content_type>")
     joined_output_entries = "\n".join(output_entries)
-    return f'<pdf_document source_type="{source_type}" source="{source}">\n{joined_output_entries}\n</pdf_document>'
+    return f'<pdf_document location_type="{location_type}" location="{location}">\n{joined_output_entries}\n</pdf_document>'
 
 
 def read_web_page(url: str) -> str:
@@ -177,7 +180,7 @@ def read_web_page(url: str) -> str:
     content_type: str = ""
     raw_web_page_content: str = ""
     try:
-        headers: Mapping[str, str] = {"User-Agent": ""}
+        headers: Mapping[str, str] = {"User-Agent": WEB_PAGE_REQUEST_USER_AGENT}
         response: Response = get(url, headers=headers, timeout=WEB_PAGE_REQUEST_TIMEOUT)
         status_code = response.status_code
         if response.status_code < 200 or response.status_code > 299:
@@ -233,7 +236,7 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
         url: str = tool_call["arguments"]["url"]
         return read_web_page(url)
     elif tool_call["function_name"] == "read_pdf_document":
-        source_type: str = tool_call["arguments"]["source_type"]
-        source: str = tool_call["arguments"]["source"]
-        return read_pdf_document(source_type, source)
+        location_type: str = tool_call["arguments"]["location_type"]
+        location: str = tool_call["arguments"]["location"]
+        return read_pdf_document(location_type, location)
     return ""

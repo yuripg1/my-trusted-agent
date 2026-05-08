@@ -1,7 +1,8 @@
 from sqlite3 import Connection
 from typing import cast, Self
 
-from ai.core import Ai, AiMessages, AiProviderType, ToolCall
+from ai.core import Ai, AiMessages, AiProviderType
+from tool_calling import ToolCall
 
 
 class Session:

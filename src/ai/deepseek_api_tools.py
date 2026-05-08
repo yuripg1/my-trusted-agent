@@ -60,14 +60,14 @@ DEEPSEEK_API_TOOLS: list[Dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "read_pdf_document",
-            "description": "Fetch and return the text content from a PDF document (remote or local)",
+            "description": "Fetch and return the text content from a PDF document (local or on the web)",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "source_type": {"type": "string", "description": 'Type of the source ("remote" or "local")'},
-                    "source": {"type": "string", "description": "Source of the PDF file (remote URL or local path)"},
+                    "location_type": {"type": "string", "description": 'Type of the locationof the PDF document ("local" if it is local or "web" if it is on the web)'},
+                    "location": {"type": "string", "description": "Location of the PDF document (local path or web URL)"},
                 },
-                "required": ["source_type", "source"],
+                "required": ["location_type", "location"],
                 "additionalProperties": False,
             },
         },

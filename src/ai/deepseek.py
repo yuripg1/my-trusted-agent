@@ -16,8 +16,9 @@ DeepSeekResponseFormat = Literal["text", "json_object"]
 
 API_STREAM: bool = False
 API_TOOL_CHOICE: DeepSeekToolChoiceType = "auto"
-API_TIMEOUT: int = 600
 API_WAIT_AFTER_ERROR: int = 2
+API_REQUEST_USER_AGENT: str = "MyTrustedAIAgent (+https://github.com/yuri/my-trusted-ai-agent)"
+API_REQUEST_TIMEOUT: int = 600
 
 
 class DeepSeekToolCallFunction(TypedDict):
@@ -139,7 +140,7 @@ class DeepSeekAi:
         headers: Mapping[str, str] = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
-            "User-Agent": "",
+            "User-Agent": API_REQUEST_USER_AGENT,
         }
         payload_thinking: DeepSeekRequestThinking = {"type": self.thinking}
         payload: DeepSeekRequest = {
@@ -155,7 +156,7 @@ class DeepSeekAi:
             payload["reasoning_effort"] = self.reasoning_effort
         response: Response | None = None
         try:
-            response = post(f"{self.base_url}/chat/completions", headers=headers, json=payload, timeout=API_TIMEOUT)
+            response = post(f"{self.base_url}/chat/completions", headers=headers, json=payload, timeout=API_REQUEST_TIMEOUT)
         except:
             pass
         if response is None or response.status_code != 200:
@@ -245,7 +246,7 @@ class DeepSeekAi:
                             id=tool_call["id"],
                             function_name="read_pdf_document",
                             arguments=ToolCallArguments(
-                                source_type=tool_call_arguments["source_type"], source=tool_call_arguments["source"]
+                                location_type=tool_call_arguments["location_type"], location=tool_call_arguments["location"]
                             ),
                         )
                     )
