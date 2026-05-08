@@ -28,7 +28,7 @@ def get_system_messages(environment: Environment, ui_system_instruction: str) ->
         'You are capable of getting a random integer number using the "get_random_integer" function',
         'You are capable of searching the web using the "search_web" function',
         'You are capable of reading PDF documents (from the web or local) using the "read_pdf_document" function',
-        'You are capable of fetching web pages using the "fetch_web_page" function',
+        'You are capable of fetching web pages using the "read_web_page" function',
         ui_system_instruction,
         get_bash_command_as_system_message("getent passwd ${USER}"),
         get_bash_command_as_system_message("uname -a"),
@@ -61,11 +61,14 @@ def ai_chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui
                     continue
                 while True:
                     session.request_assistant_reply(ai)
+                    tool_calls: list[ToolCall] = session.get_tool_calls_from_latest_message(ai)
+                    is_final_assistant_message: bool = len(tool_calls) == 0
+                    if is_final_assistant_message:
+                        session.auto_save(ai, db_connection)
                     session_id, context_length = session.get_info()
                     message, reasoning = session.get_latest_message(ai)
                     ui.display_assistant_message(session_id, context_length, message, reasoning)
-                    tool_calls: list[ToolCall] = session.get_tool_calls_from_latest_message(ai)
-                    if len(tool_calls) == 0:
+                    if is_final_assistant_message:
                         break
                     for tool_call in tool_calls:
                         tool_call_message: str = get_tool_call_message(tool_call)
@@ -77,7 +80,6 @@ def ai_chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui
                         has_added_tool_call: bool = session.add_tool_call(ai, tool_call, tool_call_output)
                         if not has_added_tool_call:
                             break
-                session.auto_save(ai, db_connection)
     except KeyboardInterrupt:
         ui.teardown()
 
@@ -89,7 +91,7 @@ def main() -> None:
     ai = Ai(environment)
     ui = Ui(environment)
     ai_chat_loop(environment, db_connection, ai, ui)
-    close_db_connection
+    close_db_connection(db_connection)
 
 
 if __name__ == "__main__":

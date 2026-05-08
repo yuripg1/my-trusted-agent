@@ -15,25 +15,29 @@ class TerminalUi:
         print("\n", end="")
 
     def teardown(self) -> None:
-        print("\n\n--------------------------------------------------------------------------------\n\n", end="")
+        rich_console_instance = Console(no_color=True)
+        print("\n\n", end="")
+        rich_console_instance.rule()
+        print("\n", end="")
 
-    def get_formatted_session_info(self, total_length: int, session_id: int | None, context_length: int) -> str:
+    def get_formatted_session_info(self, session_id: int | None, context_length: int) -> str:
         session_info_list: list[str] = []
         if session_id is not None:
-            session_info_list.append(f"[ Session: {session_id} ]")
+            session_info_list.append(f"[ Session ID: {session_id} ]")
         if context_length != 0:
-            session_info_list.append(f"[ Context: {context_length} ]")
+            session_info_list.append(f"[ Context length: {context_length} ]")
         joined_session_info: str = " ".join(session_info_list)
-        filler: str = "-" * (total_length - len(joined_session_info) - 1)
-        return f"{filler} {joined_session_info}"
+        return joined_session_info
 
     def get_user_input(self, session_id: int | None, context_length: int) -> str:
-        session_info: str = self.get_formatted_session_info(49, session_id, context_length)
-        print(f"[ USER ] ----------------------{session_info}\n\n", end="")
+        rich_console_instance = Console(no_color=True)
+        session_info: str = self.get_formatted_session_info(session_id, context_length)
+        rich_console_instance.rule(f" [ User ] {session_info}", align="left")
+        print("\n", end="")
         user_input_lines: list[str] = []
         capturing_user_input: bool = True
         while capturing_user_input:
-            user_input: str = input("> ").strip()
+            user_input: str = rich_console_instance.input(" [bold]> [/] ").strip()
             if len(user_input) != 0:
                 if user_input[-1] == "\\":
                     user_input = user_input[:-1].strip()
@@ -49,21 +53,25 @@ class TerminalUi:
         self, session_id: int | None, context_length: int, message: str, reasoning: str
     ) -> None:
         rich_console_instance = Console(no_color=True)
-        session_info: str = self.get_formatted_session_info(49, session_id, context_length)
+        session_info: str = self.get_formatted_session_info(session_id, context_length)
         if self.show_reasoning and len(reasoning) != 0:
-            print(f"[ ASSISTANT - REASONING ] -----{session_info}\n\n", end="")
+            rich_console_instance.rule(f" [ Assistant ] [ Reasoning ] {session_info}", align="left")
+            print("\n", end="")
             rich_console_instance.print(Markdown(reasoning))
             print("\n", end="")
         if len(message) != 0:
-            print(f"[ ASSISTANT ] -----------------{session_info}\n\n", end="")
+            rich_console_instance.rule(f" [ Assistant ] {session_info}", align="left")
+            print("\n", end="")
             rich_console_instance.print(Markdown(message))
             print("\n", end="")
 
     def display_tool_call_message(
         self, session_id: int | None, context_length: int, tool_call_message: str, tool_call_permission: bool
     ) -> bool:
-        session_info: str = self.get_formatted_session_info(49, session_id, context_length)
-        print(f"[ TOOL ] ----------------------{session_info}\n\n{tool_call_message}\n\n", end="")
+        rich_console_instance = Console(no_color=True)
+        session_info: str = self.get_formatted_session_info(session_id, context_length)
+        rich_console_instance.rule(f" [ Tool ] {session_info}", align="left")
+        print(f"\n{tool_call_message}\n\n", end="")
         if tool_call_permission:
             return True
         try:

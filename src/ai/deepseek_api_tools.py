@@ -5,7 +5,7 @@ DEEPSEEK_API_TOOLS: list[Dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "run_bash_command",
-            "description": "Run any bash command",
+            "description": 'Run any bash command and return "stdout", "stderr", and "returncode"',
             "parameters": {
                 "type": "object",
                 "properties": {"command": {"type": "string", "description": "The bash command to run"}},
@@ -34,20 +34,24 @@ DEEPSEEK_API_TOOLS: list[Dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "search_web",
-            "description": "Search the web and return results with title, href, and body",
+            "description": 'Search the web and return results with "title", "href", and "body"',
             "parameters": {
                 "type": "object",
                 "properties": {
                     "query": {"type": "string", "description": "Search query"},
-                    "max_results": {
+                    "max_results_per_page": {
                         "type": "integer",
-                        "description": "Maximum number of results per page",
+                        "description": "Maximum number of search results per page",
                         "minimum": 1,
                         "maximum": 10,
                     },
-                    "page": {"type": "integer", "description": "Page number of the search results", "minimum": 1},
+                    "page_number": {
+                        "type": "integer",
+                        "description": "Page number of the search results",
+                        "minimum": 1,
+                    },
                 },
-                "required": ["query", "max_results", "page"],
+                "required": ["query", "max_results_per_page", "page_number"],
                 "additionalProperties": False,
             },
         },
@@ -56,14 +60,14 @@ DEEPSEEK_API_TOOLS: list[Dict[str, Any]] = [
         "type": "function",
         "function": {
             "name": "read_pdf_document",
-            "description": "Fetch and extract the main text content from a PDF document (from the web or local)",
+            "description": "Fetch and return the text content from a PDF document (remote or local)",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "source_type": {"type": "string", "description": 'Type of the source ("remote" or "local")'},
                     "source": {"type": "string", "description": "Source of the PDF file (remote URL or local path)"},
                 },
-                "required": ["source", "source_type"],
+                "required": ["source_type", "source"],
                 "additionalProperties": False,
             },
         },
@@ -71,8 +75,8 @@ DEEPSEEK_API_TOOLS: list[Dict[str, Any]] = [
     {
         "type": "function",
         "function": {
-            "name": "fetch_web_page",
-            "description": "Fetch and extract the main text content from a web page",
+            "name": "read_web_page",
+            "description": "Fetch and return the text content from a web page",
             "parameters": {
                 "type": "object",
                 "properties": {"url": {"type": "string", "description": "The URL of the web page to fetch and read"}},

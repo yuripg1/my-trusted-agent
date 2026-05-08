@@ -16,7 +16,7 @@ DeepSeekResponseFormat = Literal["text", "json_object"]
 
 API_STREAM: bool = False
 API_TOOL_CHOICE: DeepSeekToolChoiceType = "auto"
-API_TIMEOUT: int = 60
+API_TIMEOUT: int = 600
 API_WAIT_AFTER_ERROR: int = 2
 
 
@@ -231,8 +231,8 @@ class DeepSeekAi:
                             id=tool_call["id"],
                             arguments=ToolCallArguments(
                                 query=tool_call_arguments["query"],
-                                max_results=tool_call_arguments["max_results"],
-                                page=tool_call_arguments["page"],
+                                max_results_per_page=tool_call_arguments["max_results_per_page"],
+                                page_number=tool_call_arguments["page_number"],
                             ),
                         )
                     )
@@ -247,12 +247,12 @@ class DeepSeekAi:
                             ),
                         )
                     )
-                elif tool_call["function"]["name"] == "fetch_web_page":
+                elif tool_call["function"]["name"] == "read_web_page":
                     tool_call_arguments = loads(tool_call["function"]["arguments"])
                     tool_calls.append(
                         ToolCall(
                             id=tool_call["id"],
-                            function_name="fetch_web_page",
+                            function_name="read_web_page",
                             arguments=ToolCallArguments(url=tool_call_arguments["url"]),
                         )
                     )
