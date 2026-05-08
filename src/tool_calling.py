@@ -5,15 +5,15 @@ from pypdf import PdfReader
 from random import randint
 from requests import get, Response
 from subprocess import run
-from trafilatura import extract, fetch_url
+from trafilatura import extract
 from typing import Any, Literal, Mapping, NotRequired, Required, TypedDict
 
 FunctionNameType = Literal["run_bash_command", "get_random_integer", "search_web", "read_pdf_document", "read_web_page"]
 
-WEB_SEARCH_TIMEOUT: int = 120
+WEB_SEARCH_TIMEOUT: int = 300
 WEB_SEARCH_SAFESEARCH: str = "off"
-PDF_DOCUMENT_REQUEST_TIMEOUT: int = 120
-WEB_PAGE_REQUEST_TIMEOUT: int = 120
+PDF_DOCUMENT_REQUEST_TIMEOUT: int = 300
+WEB_PAGE_REQUEST_TIMEOUT: int = 300
 
 
 class ToolCallArguments(TypedDict):
@@ -46,7 +46,7 @@ def get_tool_call_message(tool_call: ToolCall) -> str:
             f'Reading PDF document from "{tool_call["arguments"]["source"]}" ({tool_call["arguments"]["source_type"]})'
         )
     elif tool_call["function_name"] == "read_web_page":
-        return f'Fetching content from "{tool_call["arguments"]["url"]}"'
+        return f'Reading web site from "{tool_call["arguments"]["url"]}"'
     return ""
 
 
@@ -116,6 +116,7 @@ def search_web(query: str, max_results_per_page: int, page_number: int) -> str:
 def read_pdf_document(source_type: str, source: str) -> str:
     output_entries: list[str] = []
     errored: bool = False
+    status_code: int | None = None
     content_type: str = ""
     raw_pdf_document_content: Any = None
     try:
@@ -125,13 +126,17 @@ def read_pdf_document(source_type: str, source: str) -> str:
         elif source_type == "remote":
             headers: Mapping[str, str] = {"User-Agent": ""}
             response: Response = get(source, headers=headers, timeout=PDF_DOCUMENT_REQUEST_TIMEOUT)
-            response.raise_for_status()
-            raw_pdf_document_content = response.content
-            response_content_type: str | None = response.headers.get("Content-Type")
-            if response_content_type is not None:
-                trimmed_response_content_type: str = response_content_type.strip()
-                if len(trimmed_response_content_type) != 0:
-                    content_type = trimmed_response_content_type
+            status_code = response.status_code
+            if response.status_code < 200 or response.status_code > 299:
+                output_entries.append("<error>Could not fetch the PDF document</error>")
+                errored = True
+            else:
+                raw_pdf_document_content = response.content
+                response_content_type: str | None = response.headers.get("Content-Type")
+                if response_content_type is not None:
+                    trimmed_response_content_type: str = response_content_type.strip()
+                    if len(trimmed_response_content_type) != 0:
+                        content_type = trimmed_response_content_type
     except:
         output_entries.append("<error>Could not fetch the PDF document</error>")
         errored = True
@@ -156,8 +161,11 @@ def read_pdf_document(source_type: str, source: str) -> str:
     if len(output_entries) == 0:
         output_entries.append("<error>Could not read the PDF document</error>")
         errored = True
-    if errored and len(content_type) != 0:
-        output_entries.append(f"<content_type>{content_type}</content_type>")
+    if errored:
+        if status_code is not None:
+            output_entries.append(f"<status_code>{status_code}</status_code>")
+        if len(content_type) != 0:
+            output_entries.append(f"<content_type>{content_type}</content_type>")
     joined_output_entries = "\n".join(output_entries)
     return f'<pdf_document source_type="{source_type}" source="{source}">\n{joined_output_entries}\n</pdf_document>'
 
@@ -165,25 +173,29 @@ def read_pdf_document(source_type: str, source: str) -> str:
 def read_web_page(url: str) -> str:
     output_entries: list[str] = []
     errored: bool = False
+    status_code: int | None = None
     content_type: str = ""
     raw_web_page_content: str = ""
     try:
         headers: Mapping[str, str] = {"User-Agent": ""}
         response: Response = get(url, headers=headers, timeout=WEB_PAGE_REQUEST_TIMEOUT)
-        response.raise_for_status()
-        raw_web_page_content = response.text
-        response_content_type: str | None = response.headers.get("Content-Type")
-        if response_content_type is not None:
-            trimmed_response_content_type = response_content_type.strip()
-            if len(trimmed_response_content_type) != 0:
-                content_type = trimmed_response_content_type
-    except Exception as e:
-        print(e)
+        status_code = response.status_code
+        if response.status_code < 200 or response.status_code > 299:
+            output_entries.append("<error>Could not fetch the web page</error>")
+            errored = True
+        else:
+            raw_web_page_content = response.text
+            response_content_type: str | None = response.headers.get("Content-Type")
+            if response_content_type is not None:
+                trimmed_response_content_type = response_content_type.strip()
+                if len(trimmed_response_content_type) != 0:
+                    content_type = trimmed_response_content_type
+    except:
         output_entries.append("<error>Could not fetch the web page</error>")
         errored = True
     if not errored:
         try:
-            extracted_content: str | None = extract(raw_web_page_content, output_format="markdown", with_metadata=False)
+            extracted_content: str | None = extract(raw_web_page_content, output_format="markdown", include_links=True)
             if extracted_content is not None:
                 trimmed_extracted_content: str = extracted_content.strip()
                 if len(trimmed_extracted_content) != 0:
@@ -194,8 +206,11 @@ def read_web_page(url: str) -> str:
     if len(output_entries) == 0:
         output_entries.append("<error>Could not read the web page</error>")
         errored = True
-    if errored and len(content_type) != 0:
-        output_entries.append(f"<content_type>{content_type}</content_type>")
+    if errored:
+        if status_code is not None:
+            output_entries.append(f"<status_code>{status_code}</status_code>")
+        if len(content_type) != 0:
+            output_entries.append(f"<content_type>{content_type}</content_type>")
     joined_output_entries = "\n".join(output_entries)
     return f'<web_page url="{url}">\n{joined_output_entries}\n</web_page>'
 

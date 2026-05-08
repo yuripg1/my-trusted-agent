@@ -64,7 +64,6 @@ class DeepSeekAi:
     stream: bool
     tools: list[Dict[str, Any]]
     tool_choice: DeepSeekToolChoiceType
-    wait_after_error: int
 
     def __init__(
         self,
@@ -161,11 +160,13 @@ class DeepSeekAi:
             pass
         if response is None or response.status_code != 200:
             if (
-                response is None or response.status_code >= 500 and response.status_code <= 599
-            ) or response.status_code == 429:
-                sleep(self.wait_after_error)
+                response is None
+                or response.status_code == 429
+                or (response.status_code >= 500 and response.status_code <= 599)
+            ):
+                sleep(API_WAIT_AFTER_ERROR)
                 return self.request_assistant_reply(messages)
-            print(dumps(payload, indent=API_WAIT_AFTER_ERROR))
+            print(dumps(payload, indent=2))
             print(response.status_code)
             print(dumps(response.json(), indent=2))
         data = response.json()
