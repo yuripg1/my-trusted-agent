@@ -140,6 +140,7 @@ class DeepSeekAi:
         headers: Mapping[str, str] = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
+            "User-Agent": "",
         }
         payload_thinking: DeepSeekRequestThinking = {"type": self.thinking}
         payload: DeepSeekRequest = {
