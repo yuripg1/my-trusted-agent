@@ -48,13 +48,15 @@ def ai_chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui
             user_input: str = ui.get_user_input(session_id, context_length)
             if user_input == "/new":
                 session = Session(ai)
+            elif user_input == "/raw":
+                session = Session(ai, is_raw=True)
             elif user_input.startswith("/load "):
                 referenced_session_id = int(user_input.split(" ")[1])
                 session = Session(ai).load(ai, referenced_session_id, db_connection)
             elif user_input == "/rewind":
                 session.rewind_message(ai)
             else:
-                if session.is_messages_empty(ai):
+                if session.should_add_system_messages(ai):
                     session.add_system_messages(ai, get_system_messages(environment, ui.get_system_instruction()))
                 has_added_user_message: bool = session.add_user_message(ai, user_input)
                 if not has_added_user_message:

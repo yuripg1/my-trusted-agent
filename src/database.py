@@ -21,6 +21,7 @@ def init_db(conn: Connection) -> None:
             CREATE TABLE sessions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 ai_provider TEXT NOT NULL,
+                is_raw TEXT NOT NULL,
                 context_length INTEGER NOT NULL,
                 messages TEXT NOT NULL,
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),

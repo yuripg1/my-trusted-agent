@@ -1,5 +1,5 @@
 from sqlite3 import Connection
-from typing import cast, Self
+from typing import Self
 
 from ai.core import Ai, AiMessages, AiProviderType
 from tool_calling import ToolCall
@@ -8,42 +8,46 @@ from tool_calling import ToolCall
 class Session:
     id: int | None
     ai_provider: AiProviderType
+    is_raw: bool
     context_length: int
     messages: AiMessages
 
-    def __init__(self, ai: Ai) -> None:
+    def __init__(self, ai: Ai, is_raw: bool = False) -> None:
         self.id = None
         self.ai_provider = ai.provider
+        self.is_raw = is_raw
         self.context_length = 0
         self.messages = ai.create_messages()
 
     def load(self, ai: Ai, id: int, db_connection: Connection) -> Self:
         ai_provider = str(ai.provider)
         cursor = db_connection.execute(
-            "SELECT id, ai_provider, context_length, messages FROM sessions WHERE id = ? and ai_provider = ?",
+            "SELECT id, is_raw, context_length, messages FROM sessions WHERE id = ? and ai_provider = ?",
             (id, ai_provider),
         )
         fetched_data = cursor.fetchone()
         if fetched_data is not None:
             self.id = int(fetched_data["id"])
-            self.ai_provider = cast(AiProviderType, fetched_data["ai_provider"])
+            self.ai_provider = ai.provider
+            self.is_raw = bool(fetched_data["is_raw"])
             self.context_length = int(fetched_data["context_length"])
             self.messages = ai.decode_messages_json(str(fetched_data["messages"]))
         return self
 
     def auto_save(self, ai: Ai, db_connection: Connection) -> None:
         ai_provider: str = str(self.ai_provider)
+        is_raw = str(self.is_raw)
         messages_json: str = ai.encode_messages_json(self.messages)
         if self.id is None:
             cursor = db_connection.execute(
-                "INSERT INTO sessions (ai_provider, context_length, messages) VALUES (?, ?, ?)",
-                (ai_provider, self.context_length, messages_json),
+                "INSERT INTO sessions (ai_provider, is_raw, context_length, messages) VALUES (?, ?, ?, ?)",
+                (ai_provider, is_raw, self.context_length, messages_json),
             )
             self.id = cursor.lastrowid
         else:
             db_connection.execute(
-                'UPDATE sessions SET ai_provider = ?, context_length = ?, messages = ?, updated_at = datetime("now") WHERE id = ?',
-                (ai_provider, self.context_length, messages_json, self.id),
+                'UPDATE sessions SET context_length = ?, messages = ?, updated_at = datetime("now") WHERE id = ?',
+                (self.context_length, messages_json, self.id),
             )
         db_connection.commit()
 
@@ -64,8 +68,11 @@ class Session:
     def request_assistant_reply(self, ai: Ai) -> None:
         self.context_length = ai.request_assistant_reply(self.messages)
 
-    def is_messages_empty(self, ai: Ai) -> bool:
-        return ai.is_messages_empty(self.messages)
+    def should_add_system_messages(self, ai: Ai) -> bool:
+        if self.is_raw:
+            return False
+        else:
+            return ai.is_messages_empty(self.messages)
 
     def get_info(self) -> tuple[int | None, int]:
         return self.id, self.context_length

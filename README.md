@@ -4,7 +4,7 @@ This projects aims at implementing a minimalistic terminal-based AI agent that i
 
 ---
 
-## Supported models
+## Supported AI models
 
 * DeepSeek
     * deepseek-v4-flash
@@ -15,6 +15,7 @@ This projects aims at implementing a minimalistic terminal-based AI agent that i
 ## Special commands
 
 * **/new** : Starts a new session
+* **/raw** : Starts a new raw session (without any system prompts)
 * **/load n** : Loads previous session with ID "n"
 * **/rewind** : Rewind back to right before the latest user prompt
 
