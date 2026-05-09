@@ -17,7 +17,9 @@ This projects aims at implementing a minimalistic terminal-based AI agent that i
 * **/new** : Starts a new session
 * **/raw** : Starts a new raw session (without any system prompts)
 * **/load n** : Loads previous session with ID "n"
-* **/rewind** : Rewind back to right before the latest user prompt
+* **/replay** : Replays a chat (useful after loading a session)
+* **/rewind** : Rewinds back to right before the latest user prompt
+* **/exit** : Closes the application
 
 ---
 

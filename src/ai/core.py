@@ -12,6 +12,7 @@ from environment import Environment
 from tool_calling import ToolCall
 
 AiProviderType = Literal["deepseek"]
+AiRoleType = Literal["assistant", "tool", "user", "system"]
 
 
 class AiMessages(TypedDict):
@@ -77,6 +78,26 @@ class Ai:
             return self.deepseek_ai.is_messages_empty(messages["deepseek_messages"])
         else:
             return False
+
+    def get_nth_message(self, messages: AiMessages, message_index: int) -> tuple[AiRoleType, str] | None:
+        if self.provider == "deepseek" and self.deepseek_ai is not None and "deepseek_messages" in messages:
+            nth_message = self.deepseek_ai.get_nth_message(messages["deepseek_messages"], message_index)
+            if nth_message is None:
+                return None
+            else:
+                role, message = nth_message
+                if role == "system":
+                    return "system", message
+                if role == "user":
+                    return "user", message
+                if role == "assistant":
+                    return "assistant", message
+                if role == "tool":
+                    return "tool", message
+                else:
+                    return None
+        else:
+            return None
 
     def get_latest_message(self, messages: AiMessages) -> tuple[str, str]:
         if self.provider == "deepseek" and self.deepseek_ai is not None and "deepseek_messages" in messages:

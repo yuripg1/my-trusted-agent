@@ -1,6 +1,8 @@
 from rich.console import Console
 from rich.markdown import Markdown
 
+RULE_CHARACTER: str = "─"
+
 
 class TerminalUi:
     show_reasoning: bool
@@ -14,10 +16,11 @@ class TerminalUi:
     def startup(self) -> None:
         print("\n", end="")
 
-    def teardown(self) -> None:
+    def teardown(self, graceful_exit: bool) -> None:
         rich_console_instance = Console(no_color=True)
-        print("\n\n", end="")
-        rich_console_instance.rule()
+        if not graceful_exit:
+            print("\n\n", end="")
+        rich_console_instance.rule(characters=RULE_CHARACTER)
         print("\n", end="")
 
     def get_formatted_session_info(self, session_id: int | None, context_length: int) -> str:
@@ -29,15 +32,23 @@ class TerminalUi:
         joined_session_info: str = " ".join(session_info_list)
         return joined_session_info
 
+    def display_user_input(self, session_id: int | None, context_length: int, message: str) -> None:
+        rich_console_instance = Console(no_color=True)
+        session_info: str = self.get_formatted_session_info(session_id, context_length)
+        rich_console_instance.rule(f"{RULE_CHARACTER} [ User ] {session_info}", align="left", characters=RULE_CHARACTER)
+        print("\n", end="")
+        rich_console_instance.print(message)
+        print("\n", end="")
+
     def get_user_input(self, session_id: int | None, context_length: int) -> str:
         rich_console_instance = Console(no_color=True)
         session_info: str = self.get_formatted_session_info(session_id, context_length)
-        rich_console_instance.rule(f" [ User ] {session_info}", align="left")
+        rich_console_instance.rule(f"{RULE_CHARACTER} [ User ] {session_info}", align="left", characters=RULE_CHARACTER)
         print("\n", end="")
         user_input_lines: list[str] = []
         capturing_user_input: bool = True
         while capturing_user_input:
-            user_input: str = rich_console_instance.input(" [bold]> [/] ").strip()
+            user_input: str = rich_console_instance.input(" [bold]>[/] ").strip()
             if len(user_input) != 0:
                 if user_input[-1] == "\\":
                     user_input = user_input[:-1].strip()
@@ -55,12 +66,16 @@ class TerminalUi:
         rich_console_instance = Console(no_color=True)
         session_info: str = self.get_formatted_session_info(session_id, context_length)
         if self.show_reasoning and len(reasoning) != 0:
-            rich_console_instance.rule(f" [ Assistant ] [ Reasoning ] {session_info}", align="left")
+            rich_console_instance.rule(
+                f"{RULE_CHARACTER} [ Assistant ] [ Reasoning ] {session_info}", align="left", characters=RULE_CHARACTER
+            )
             print("\n", end="")
             rich_console_instance.print(Markdown(reasoning))
             print("\n", end="")
         if len(message) != 0:
-            rich_console_instance.rule(f" [ Assistant ] {session_info}", align="left")
+            rich_console_instance.rule(
+                f"{RULE_CHARACTER} [ Assistant ] {session_info}", align="left", characters=RULE_CHARACTER
+            )
             print("\n", end="")
             rich_console_instance.print(Markdown(message))
             print("\n", end="")
@@ -70,7 +85,7 @@ class TerminalUi:
     ) -> bool:
         rich_console_instance = Console(no_color=True)
         session_info: str = self.get_formatted_session_info(session_id, context_length)
-        rich_console_instance.rule(f" [ Tool ] {session_info}", align="left")
+        rich_console_instance.rule(f"{RULE_CHARACTER} [ Tool ] {session_info}", align="left", characters=RULE_CHARACTER)
         print(f"\n{tool_call_message}\n\n", end="")
         if tool_call_permission:
             return True

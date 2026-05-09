@@ -156,7 +156,9 @@ class DeepSeekAi:
             payload["reasoning_effort"] = self.reasoning_effort
         response: Response | None = None
         try:
-            response = post(f"{self.base_url}/chat/completions", headers=headers, json=payload, timeout=API_REQUEST_TIMEOUT)
+            response = post(
+                f"{self.base_url}/chat/completions", headers=headers, json=payload, timeout=API_REQUEST_TIMEOUT
+            )
         except:
             pass
         if response is None or response.status_code != 200:
@@ -192,6 +194,18 @@ class DeepSeekAi:
 
     def is_messages_empty(self, messages: list[DeepSeekMessage]) -> bool:
         return len(messages) == 0
+
+    def get_nth_message(
+        self, messages: list[DeepSeekMessage], message_index: int
+    ) -> tuple[DeepSeekRoleType, str] | None:
+        if len(messages) <= message_index:
+            return None
+        else:
+            nth_message: DeepSeekMessage = messages[message_index]
+            message_content: str = ""
+            if "content" in nth_message:
+                message_content = nth_message["content"]
+            return nth_message["role"], message_content
 
     def get_latest_message(self, messages: list[DeepSeekMessage]) -> tuple[str, str]:
         message: str = ""
@@ -246,7 +260,8 @@ class DeepSeekAi:
                             id=tool_call["id"],
                             function_name="read_pdf_document",
                             arguments=ToolCallArguments(
-                                location_type=tool_call_arguments["location_type"], location=tool_call_arguments["location"]
+                                location_type=tool_call_arguments["location_type"],
+                                location=tool_call_arguments["location"],
                             ),
                         )
                     )

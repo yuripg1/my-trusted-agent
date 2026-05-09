@@ -1,7 +1,7 @@
 from sqlite3 import Connection
 from typing import Self
 
-from ai.core import Ai, AiMessages, AiProviderType
+from ai.core import Ai, AiMessages, AiProviderType, AiRoleType
 from tool_calling import ToolCall
 
 
@@ -76,6 +76,9 @@ class Session:
 
     def get_info(self) -> tuple[int | None, int]:
         return self.id, self.context_length
+
+    def get_nth_message(self, ai: Ai, message_index: int) -> tuple[AiRoleType, str] | None:
+        return ai.get_nth_message(self.messages, message_index)
 
     def get_latest_message(self, ai: Ai) -> tuple[str, str]:
         return ai.get_latest_message(self.messages)
