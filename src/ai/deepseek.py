@@ -1,24 +1,29 @@
 from json import dumps, loads
 from requests import post, Response
 from time import sleep
-from typing import Any, cast, Dict, Literal, Mapping, NotRequired, Required, TypedDict
+from typing import Any, Literal, Mapping, NotRequired, Required, TypedDict
 
-from ai.deepseek_api_tools import DEEPSEEK_API_TOOLS
-from tool_calling import ToolCall, ToolCallArguments
+from ai.deepseek_api_tools import DeepSeekTool, DeepSeekToolFunction, DEEPSEEK_TOOLS
+from tool import (
+    ExecuteBashCommandArguments,
+    ExecuteBashCommandToolCall,
+    GetRandomIntegerArguments,
+    GetRandomIntegerToolCall,
+    ReadPdfDocumentArguments,
+    ReadPdfDocumentToolCall,
+    ReadWebPageArguments,
+    ReadWebPageToolCall,
+    SearchWebArguments,
+    SearchWebToolCall,
+    ToolCall,
+)
 
-DeepSeekToolCallType = Literal["function"]
-DeepSeekRoleType = Literal["assistant", "tool", "user", "system"]
+DeepSeekRoleType = Literal["assistant", "system", "tool", "user"]
 DeepSeekToolChoiceType = Literal["none", "auto", "required"]
 DeepSeekModelType = Literal["deepseek-v4-flash", "deepseek-v4-pro"]
 DeepSeekThinkingType = Literal["enabled", "disabled"]
 DeepSeekReasoningEffortType = Literal["high", "max"]
 DeepSeekResponseFormat = Literal["text", "json_object"]
-
-API_STREAM: bool = False
-API_TOOL_CHOICE: DeepSeekToolChoiceType = "auto"
-API_WAIT_AFTER_ERROR: int = 2
-API_REQUEST_USER_AGENT: str = "MyTrustedAIAgent (+https://github.com/yuri/my-trusted-ai-agent)"
-API_REQUEST_TIMEOUT: int = 600
 
 
 class DeepSeekToolCallFunction(TypedDict):
@@ -28,7 +33,7 @@ class DeepSeekToolCallFunction(TypedDict):
 
 class DeepSeekToolCall(TypedDict):
     id: Required[str]
-    type: Required[DeepSeekToolCallType]
+    type: Required[str]
     function: Required[DeepSeekToolCallFunction]
 
 
@@ -51,8 +56,15 @@ class DeepSeekRequest(TypedDict):
     reasoning_effort: NotRequired[DeepSeekReasoningEffortType]
     max_tokens: Required[int]
     stream: Required[bool]
-    tools: Required[list[Dict[str, Any]]]
+    tools: Required[list[DeepSeekTool]]
     tool_choice: Required[str]
+
+
+API_STREAM: bool = False
+API_TOOL_CHOICE: DeepSeekToolChoiceType = "auto"
+API_WAIT_AFTER_ERROR: int = 2
+API_REQUEST_USER_AGENT: str = "MyTrustedAIAgent"
+API_REQUEST_TIMEOUT: int = 600
 
 
 class DeepSeekAi:
@@ -63,7 +75,7 @@ class DeepSeekAi:
     reasoning_effort: DeepSeekReasoningEffortType
     max_tokens: int
     stream: bool
-    tools: list[Dict[str, Any]]
+    tools: list[DeepSeekTool]
     tool_choice: DeepSeekToolChoiceType
 
     def __init__(
@@ -108,11 +120,20 @@ class DeepSeekAi:
         messages: list[DeepSeekMessage] = []
         return messages
 
+    def create_tools(self) -> list[DeepSeekTool]:
+        tools: list[DeepSeekTool] = []
+        return tools
+
     def rewind_message(self, messages: list[DeepSeekMessage]) -> None:
         while len(messages) != 0 and messages[-1]["role"] != "user":
             del messages[-1]
         if len(messages) != 0:
             del messages[-1]
+
+    def add_tools(self, tools: list[DeepSeekTool], tool_names: list[str]) -> None:
+        for tool_name in tool_names:
+            if tool_name in DEEPSEEK_TOOLS:
+                tools.append(DEEPSEEK_TOOLS[tool_name])
 
     def add_system_messages(self, messages: list[DeepSeekMessage], system_messages: list[str]) -> None:
         for system_message in system_messages:
@@ -128,15 +149,12 @@ class DeepSeekAi:
         else:
             return False
 
-    def add_tool_call(self, messages: list[DeepSeekMessage], tool_call: ToolCall, tool_call_output: str) -> bool:
+    def add_tool_call(self, messages: list[DeepSeekMessage], tool_call: ToolCall, tool_call_output: str) -> None:
         trimmed_tool_call_output: str = tool_call_output.strip()
         if len(trimmed_tool_call_output) != 0:
             self.__add_to_messages(messages, "tool", trimmed_tool_call_output, "", [], tool_call["id"])
-            return True
-        else:
-            return False
 
-    def request_assistant_reply(self, messages: list[DeepSeekMessage]) -> int:
+    def request_assistant_reply(self, messages: list[DeepSeekMessage], tools: list[DeepSeekTool]) -> int:
         headers: Mapping[str, str] = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
@@ -150,7 +168,7 @@ class DeepSeekAi:
             "max_tokens": self.max_tokens,
             "stream": API_STREAM,
             "tool_choice": API_TOOL_CHOICE,
-            "tools": DEEPSEEK_API_TOOLS,
+            "tools": tools,
         }
         if payload["thinking"]["type"] == "enabled":
             payload["reasoning_effort"] = self.reasoning_effort
@@ -168,7 +186,7 @@ class DeepSeekAi:
                 or (response.status_code >= 500 and response.status_code <= 599)
             ):
                 sleep(API_WAIT_AFTER_ERROR)
-                return self.request_assistant_reply(messages)
+                return self.request_assistant_reply(messages, tools)
             print(dumps(payload, indent=2))
             print(response.status_code)
             print(dumps(response.json(), indent=2))
@@ -192,88 +210,75 @@ class DeepSeekAi:
         self.__add_to_messages(messages, "assistant", content, reasoning_content, tool_calls)
         return total_tokens
 
-    def is_messages_empty(self, messages: list[DeepSeekMessage]) -> bool:
-        return len(messages) == 0
+    def get_messages_count(self, messages: list[DeepSeekMessage]) -> int:
+        return len(messages)
 
-    def get_nth_message(
-        self, messages: list[DeepSeekMessage], message_index: int
-    ) -> tuple[DeepSeekRoleType, str] | None:
-        if len(messages) <= message_index:
+    def get_nth_message(self, messages: list[DeepSeekMessage], message_index: int) -> DeepSeekMessage | None:
+        if len(messages) <= message_index or message_index < 0:
             return None
         else:
-            nth_message: DeepSeekMessage = messages[message_index]
-            message_content: str = ""
-            if "content" in nth_message:
-                message_content = nth_message["content"]
-            return nth_message["role"], message_content
+            return messages[message_index]
 
-    def get_latest_message(self, messages: list[DeepSeekMessage]) -> tuple[str, str]:
-        message: str = ""
-        reasoning: str = ""
-        if len(messages) != 0:
-            latest_message_object: DeepSeekMessage = messages[-1]
-            message = latest_message_object["content"]
-            if "reasoning_content" in latest_message_object:
-                reasoning = latest_message_object["reasoning_content"]
-        return message, reasoning
-
-    def get_tool_calls_from_latest_message(self, messages: list[DeepSeekMessage]) -> list[ToolCall]:
+    def get_tool_calls_from_nth_message(self, messages: list[DeepSeekMessage], message_index: int) -> list[ToolCall]:
         tool_calls: list[ToolCall] = []
-        latest_message_object: DeepSeekMessage = messages[-1]
-        if "tool_calls" in latest_message_object:
-            for tool_call in latest_message_object["tool_calls"]:
-                if tool_call["function"]["name"] == "run_bash_command":
-                    tool_call_arguments = loads(tool_call["function"]["arguments"])
-                    tool_calls.append(
-                        ToolCall(
-                            id=tool_call["id"],
-                            function_name="run_bash_command",
-                            arguments=ToolCallArguments(command=tool_call_arguments["command"]),
+        if len(messages) > message_index:
+            nth_message: DeepSeekMessage = messages[message_index]
+            if "tool_calls" in nth_message:
+                for tool_call in nth_message["tool_calls"]:
+                    if tool_call["function"]["name"] == "execute_bash_command":
+                        tool_call_arguments = loads(tool_call["function"]["arguments"])
+                        tool_calls.append(
+                            ExecuteBashCommandToolCall(
+                                id=tool_call["id"],
+                                tool_name="execute_bash_command",
+                                arguments=ExecuteBashCommandArguments(command=tool_call_arguments["command"]),
+                            )
                         )
-                    )
-                elif tool_call["function"]["name"] == "get_random_integer":
-                    tool_call_arguments = loads(tool_call["function"]["arguments"])
-                    tool_calls.append(
-                        ToolCall(
-                            id=tool_call["id"],
-                            function_name="get_random_integer",
-                            arguments=ToolCallArguments(min=tool_call_arguments["min"], max=tool_call_arguments["max"]),
+                    elif tool_call["function"]["name"] == "generate_random_integer":
+                        tool_call_arguments = loads(tool_call["function"]["arguments"])
+                        tool_calls.append(
+                            GetRandomIntegerToolCall(
+                                id=tool_call["id"],
+                                tool_name="generate_random_integer",
+                                arguments=GetRandomIntegerArguments(
+                                    min=tool_call_arguments["min"], max=tool_call_arguments["max"]
+                                ),
+                            )
                         )
-                    )
-                elif tool_call["function"]["name"] == "search_web":
-                    tool_call_arguments = loads(tool_call["function"]["arguments"])
-                    tool_calls.append(
-                        ToolCall(
-                            function_name="search_web",
-                            id=tool_call["id"],
-                            arguments=ToolCallArguments(
-                                query=tool_call_arguments["query"],
-                                max_results_per_page=tool_call_arguments["max_results_per_page"],
-                                page_number=tool_call_arguments["page_number"],
-                            ),
+                    elif tool_call["function"]["name"] == "read_pdf_document":
+                        tool_call_arguments = loads(tool_call["function"]["arguments"])
+                        tool_calls.append(
+                            ReadPdfDocumentToolCall(
+                                id=tool_call["id"],
+                                tool_name="read_pdf_document",
+                                arguments=ReadPdfDocumentArguments(
+                                    location_type=tool_call_arguments["location_type"],
+                                    location=tool_call_arguments["location"],
+                                ),
+                            )
                         )
-                    )
-                elif tool_call["function"]["name"] == "read_pdf_document":
-                    tool_call_arguments = loads(tool_call["function"]["arguments"])
-                    tool_calls.append(
-                        ToolCall(
-                            id=tool_call["id"],
-                            function_name="read_pdf_document",
-                            arguments=ToolCallArguments(
-                                location_type=tool_call_arguments["location_type"],
-                                location=tool_call_arguments["location"],
-                            ),
+                    elif tool_call["function"]["name"] == "read_web_page":
+                        tool_call_arguments = loads(tool_call["function"]["arguments"])
+                        tool_calls.append(
+                            ReadWebPageToolCall(
+                                id=tool_call["id"],
+                                tool_name="read_web_page",
+                                arguments=ReadWebPageArguments(url=tool_call_arguments["url"]),
+                            )
                         )
-                    )
-                elif tool_call["function"]["name"] == "read_web_page":
-                    tool_call_arguments = loads(tool_call["function"]["arguments"])
-                    tool_calls.append(
-                        ToolCall(
-                            id=tool_call["id"],
-                            function_name="read_web_page",
-                            arguments=ToolCallArguments(url=tool_call_arguments["url"]),
+                    elif tool_call["function"]["name"] == "search_web":
+                        tool_call_arguments = loads(tool_call["function"]["arguments"])
+                        tool_calls.append(
+                            SearchWebToolCall(
+                                id=tool_call["id"],
+                                tool_name="search_web",
+                                arguments=SearchWebArguments(
+                                    query=tool_call_arguments["query"],
+                                    max_results_per_page=tool_call_arguments["max_results_per_page"],
+                                    results_page_number=tool_call_arguments["results_page_number"],
+                                ),
+                            )
                         )
-                    )
         return tool_calls
 
     def decode_messages_json(self, parsed_messages: Any) -> list[DeepSeekMessage]:
@@ -291,15 +296,31 @@ class DeepSeekAi:
             if "tool_calls" in parsed_message:
                 new_tool_calls: list[DeepSeekToolCall] = []
                 for parsed_tool_calls in parsed_message["tool_calls"]:
-                    new_tool_call_type: DeepSeekToolCallType = cast(DeepSeekToolCallType, parsed_tool_calls["type"])
-                    new_tool_call_function: DeepSeekToolCallFunction = DeepSeekToolCallFunction(
-                        name=str(parsed_tool_calls["function"]["name"]),
-                        arguments=str(parsed_tool_calls["function"]["arguments"]),
+                    new_tool_calls.append(
+                        DeepSeekToolCall(
+                            id=str(parsed_tool_calls["id"]),
+                            type=str(parsed_tool_calls["type"]),
+                            function=DeepSeekToolCallFunction(
+                                name=str(parsed_tool_calls["function"]["name"]),
+                                arguments=str(parsed_tool_calls["function"]["arguments"]),
+                            ),
+                        )
                     )
-                    new_tool_call: DeepSeekToolCall = DeepSeekToolCall(
-                        id=str(parsed_tool_calls["id"]), type=new_tool_call_type, function=new_tool_call_function
-                    )
-                    new_tool_calls.append(new_tool_call)
                 new_message["tool_calls"] = new_tool_calls
             messages.append(new_message)
         return messages
+
+    def decode_tools_json(self, parsed_tools: Any) -> list[DeepSeekTool]:
+        tools: list[DeepSeekTool] = []
+        for parsed_tool in parsed_tools:
+            tools.append(
+                DeepSeekTool(
+                    type=str(parsed_tool["type"]),
+                    function=DeepSeekToolFunction(
+                        name=str(parsed_tool["function"]["name"]),
+                        description=str(parsed_tool["function"]["description"]),
+                        parameters=parsed_tool["function"]["parameters"],
+                    ),
+                )
+            )
+        return tools

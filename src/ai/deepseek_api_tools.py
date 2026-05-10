@@ -1,11 +1,23 @@
-from typing import Any, Dict
+from typing import Any, NotRequired, Required, TypedDict
 
-DEEPSEEK_API_TOOLS: list[Dict[str, Any]] = [
-    {
+
+class DeepSeekToolFunction(TypedDict):
+    name: Required[str]
+    description: Required[str]
+    parameters: NotRequired[Any]
+
+
+class DeepSeekTool(TypedDict):
+    type: Required[str]
+    function: Required[DeepSeekToolFunction]
+
+
+DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
+    "execute_bash_command": {
         "type": "function",
         "function": {
-            "name": "run_bash_command",
-            "description": 'Run any bash command and return "stdout", "stderr", and "returncode"',
+            "name": "execute_bash_command",
+            "description": 'Run any bash command and return the resulting "stdout", "stderr", and "returncode"',
             "parameters": {
                 "type": "object",
                 "properties": {"command": {"type": "string", "description": "The bash command to run"}},
@@ -14,11 +26,11 @@ DEEPSEEK_API_TOOLS: list[Dict[str, Any]] = [
             },
         },
     },
-    {
+    "generate_random_integer": {
         "type": "function",
         "function": {
-            "name": "get_random_integer",
-            "description": "Return a random integer",
+            "name": "generate_random_integer",
+            "description": "Generate and return a random integer number",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -30,7 +42,43 @@ DEEPSEEK_API_TOOLS: list[Dict[str, Any]] = [
             },
         },
     },
-    {
+    "read_pdf_document": {
+        "type": "function",
+        "function": {
+            "name": "read_pdf_document",
+            "description": "Fetch and return the text content from a PDF document (local or on the web)",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location_type": {
+                        "type": "string",
+                        "description": 'Type of the location of the PDF document ("local" if it is local or "web" if it is on the web)',
+                        "enum": ["local", "web"],
+                    },
+                    "location": {
+                        "type": "string",
+                        "description": "Location of the PDF document (local path or web URL)",
+                    },
+                },
+                "required": ["location_type", "location"],
+                "additionalProperties": False,
+            },
+        },
+    },
+    "read_web_page": {
+        "type": "function",
+        "function": {
+            "name": "read_web_page",
+            "description": "Fetch and return the text content from a web page",
+            "parameters": {
+                "type": "object",
+                "properties": {"url": {"type": "string", "description": "The URL of the web page to fetch and read"}},
+                "required": ["url"],
+                "additionalProperties": False,
+            },
+        },
+    },
+    "search_web": {
         "type": "function",
         "function": {
             "name": "search_web",
@@ -45,44 +93,15 @@ DEEPSEEK_API_TOOLS: list[Dict[str, Any]] = [
                         "minimum": 1,
                         "maximum": 10,
                     },
-                    "page_number": {
+                    "results_page_number": {
                         "type": "integer",
                         "description": "Page number of the search results",
                         "minimum": 1,
                     },
                 },
-                "required": ["query", "max_results_per_page", "page_number"],
+                "required": ["query", "max_results_per_page", "results_page_number"],
                 "additionalProperties": False,
             },
         },
     },
-    {
-        "type": "function",
-        "function": {
-            "name": "read_pdf_document",
-            "description": "Fetch and return the text content from a PDF document (local or on the web)",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "location_type": {"type": "string", "description": 'Type of the locationof the PDF document ("local" if it is local or "web" if it is on the web)'},
-                    "location": {"type": "string", "description": "Location of the PDF document (local path or web URL)"},
-                },
-                "required": ["location_type", "location"],
-                "additionalProperties": False,
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "read_web_page",
-            "description": "Fetch and return the text content from a web page",
-            "parameters": {
-                "type": "object",
-                "properties": {"url": {"type": "string", "description": "The URL of the web page to fetch and read"}},
-                "required": ["url"],
-                "additionalProperties": False,
-            },
-        },
-    },
-]
+}

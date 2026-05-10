@@ -1,5 +1,5 @@
 from json import dumps, loads
-from typing import cast, Literal, NotRequired, TypedDict
+from typing import cast, Literal, NotRequired, Required, TypedDict
 
 from ai.deepseek import (
     DeepSeekAi,
@@ -8,15 +8,26 @@ from ai.deepseek import (
     DeepSeekReasoningEffortType,
     DeepSeekThinkingType,
 )
+from ai.deepseek_api_tools import DeepSeekTool
 from environment import Environment
-from tool_calling import ToolCall
+from tool import ToolCall
 
 AiProviderType = Literal["deepseek"]
-AiRoleType = Literal["assistant", "tool", "user", "system"]
+AiRoleType = Literal["assistant", "system", "tool", "user"]
 
 
 class AiMessages(TypedDict):
     deepseek_messages: NotRequired[list[DeepSeekMessage]]
+
+
+class AiTools(TypedDict):
+    deepseek_tools: NotRequired[list[DeepSeekTool]]
+
+
+class AiMessage(TypedDict):
+    role: Required[AiRoleType]
+    message: Required[str]
+    reasoning: Required[str]
 
 
 class Ai:
@@ -46,9 +57,19 @@ class Ai:
         else:
             return AiMessages()
 
+    def create_tools(self) -> AiTools:
+        if self.provider == "deepseek" and self.deepseek_ai is not None:
+            return AiTools(deepseek_tools=self.deepseek_ai.create_tools())
+        else:
+            return AiTools()
+
     def rewind_message(self, messages: AiMessages) -> None:
         if self.provider == "deepseek" and self.deepseek_ai is not None and "deepseek_messages" in messages:
             self.deepseek_ai.rewind_message(messages["deepseek_messages"])
+
+    def add_tools(self, tools: AiTools, tool_names: list[str]) -> None:
+        if self.provider == "deepseek" and self.deepseek_ai is not None and "deepseek_tools" in tools:
+            self.deepseek_ai.add_tools(tools["deepseek_tools"], tool_names)
 
     def add_system_messages(self, messages: AiMessages, system_messages: list[str]) -> None:
         if self.provider == "deepseek" and self.deepseek_ai is not None and "deepseek_messages" in messages:
@@ -60,54 +81,55 @@ class Ai:
         else:
             return False
 
-    def add_tool_call(self, messages: AiMessages, tool_call: ToolCall, tool_call_output: str) -> bool:
+    def add_tool_call(self, messages: AiMessages, tool_call: ToolCall, tool_call_output: str) -> None:
         if self.provider == "deepseek" and self.deepseek_ai is not None and "deepseek_messages" in messages:
             return self.deepseek_ai.add_tool_call(messages["deepseek_messages"], tool_call, tool_call_output)
-        else:
-            return False
 
-    def request_assistant_reply(self, messages: AiMessages) -> int:
+    def request_assistant_reply(self, messages: AiMessages, tools: AiTools) -> int:
         if self.provider == "deepseek" and self.deepseek_ai is not None and "deepseek_messages" in messages:
-            total_tokens: int = self.deepseek_ai.request_assistant_reply(messages["deepseek_messages"])
-            return total_tokens
+            context_length: int = self.deepseek_ai.request_assistant_reply(
+                messages["deepseek_messages"], tools["deepseek_tools"]
+            )
+            return context_length
         else:
             return 0
 
-    def is_messages_empty(self, messages: AiMessages) -> bool:
+    def get_messages_count(self, messages: AiMessages) -> int:
         if self.provider == "deepseek" and self.deepseek_ai is not None and "deepseek_messages" in messages:
-            return self.deepseek_ai.is_messages_empty(messages["deepseek_messages"])
+            return self.deepseek_ai.get_messages_count(messages["deepseek_messages"])
         else:
-            return False
+            return 0
 
-    def get_nth_message(self, messages: AiMessages, message_index: int) -> tuple[AiRoleType, str] | None:
+    def get_nth_message(self, messages: AiMessages, message_index: int) -> AiMessage | None:
         if self.provider == "deepseek" and self.deepseek_ai is not None and "deepseek_messages" in messages:
-            nth_message = self.deepseek_ai.get_nth_message(messages["deepseek_messages"], message_index)
-            if nth_message is None:
-                return None
-            else:
-                role, message = nth_message
-                if role == "system":
-                    return "system", message
-                if role == "user":
-                    return "user", message
-                if role == "assistant":
-                    return "assistant", message
-                if role == "tool":
-                    return "tool", message
-                else:
-                    return None
+            nth_message: DeepSeekMessage | None = self.deepseek_ai.get_nth_message(
+                messages["deepseek_messages"], message_index
+            )
+            if nth_message is not None:
+                role: AiRoleType | None = None
+                if nth_message["role"] == "assistant":
+                    role = "assistant"
+                elif nth_message["role"] == "system":
+                    role = "system"
+                elif nth_message["role"] == "tool":
+                    role = "tool"
+                elif nth_message["role"] == "user":
+                    role = "user"
+                if role is not None:
+                    message: str = ""
+                    if "content" in nth_message:
+                        message = nth_message["content"]
+                    reasoning: str = ""
+                    if "reasoning_content" in nth_message:
+                        reasoning = nth_message["reasoning_content"]
+                    return AiMessage(role=role, message=message, reasoning=reasoning)
+            return None
         else:
             return None
 
-    def get_latest_message(self, messages: AiMessages) -> tuple[str, str]:
+    def get_tool_calls_from_nth_message(self, messages: AiMessages, message_index: int) -> list[ToolCall]:
         if self.provider == "deepseek" and self.deepseek_ai is not None and "deepseek_messages" in messages:
-            return self.deepseek_ai.get_latest_message(messages["deepseek_messages"])
-        else:
-            return "", ""
-
-    def get_tool_calls_from_latest_message(self, messages: AiMessages) -> list[ToolCall]:
-        if self.provider == "deepseek" and self.deepseek_ai is not None and "deepseek_messages" in messages:
-            return self.deepseek_ai.get_tool_calls_from_latest_message(messages["deepseek_messages"])
+            return self.deepseek_ai.get_tool_calls_from_nth_message(messages["deepseek_messages"], message_index)
         else:
             tool_calls: list[ToolCall] = []
             return tool_calls
@@ -123,3 +145,13 @@ class Ai:
 
     def encode_messages_json(self, messages: AiMessages) -> str:
         return dumps(messages)
+
+    def decode_tools_json(self, tools_json: str) -> AiTools:
+        parsed_tools = loads(tools_json)
+        if self.provider == "deepseek" and self.deepseek_ai is not None and "deepseek_tools" in parsed_tools:
+            return AiTools(deepseek_tools=self.deepseek_ai.decode_tools_json(parsed_tools["deepseek_tools"]))
+        else:
+            return AiTools()
+
+    def encode_tools_json(self, tools: AiTools) -> str:
+        return dumps(tools)
