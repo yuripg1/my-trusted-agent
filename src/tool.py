@@ -1,5 +1,6 @@
 from ddgs import DDGS
 from io import BytesIO
+from os import listdir
 from primp import Client, Response
 from pypdf import PdfReader
 from random import randint
@@ -15,6 +16,14 @@ class ExecuteBashCommandArguments(TypedDict):
 class GetRandomIntegerArguments(TypedDict):
     min: Required[int]
     max: Required[int]
+
+
+class ListDirectoryArguments(TypedDict):
+    path: Required[str]
+
+
+class ReadFileArguments(TypedDict):
+    path: Required[str]
 
 
 class ReadPdfDocumentArguments(TypedDict):
@@ -46,6 +55,16 @@ class GetRandomIntegerToolCall(BaseToolCall):
     arguments: Required[GetRandomIntegerArguments]
 
 
+class ListDirectoryToolCall(BaseToolCall):
+    tool_name: Required[Literal["list_directory"]]
+    arguments: Required[ListDirectoryArguments]
+
+
+class ReadFileToolCall(BaseToolCall):
+    tool_name: Required[Literal["read_file"]]
+    arguments: Required[ReadFileArguments]
+
+
 class ReadPdfDocumentToolCall(BaseToolCall):
     tool_name: Required[Literal["read_pdf_document"]]
     arguments: Required[ReadPdfDocumentArguments]
@@ -64,6 +83,8 @@ class SearchWebToolCall(BaseToolCall):
 ToolCall: TypeAlias = (
     ExecuteBashCommandToolCall
     | GetRandomIntegerToolCall
+    | ListDirectoryToolCall
+    | ReadFileToolCall
     | ReadPdfDocumentToolCall
     | ReadWebPageToolCall
     | SearchWebToolCall
@@ -76,22 +97,33 @@ WEB_SEARCH_SAFESEARCH: str = "off"
 
 
 def get_tool_call_assistant_message(tool_call: ToolCall) -> str:
-    if tool_call["tool_name"] == "execute_bash_command":
-        return f"$ {tool_call["arguments"]["command"]}"
-    elif tool_call["tool_name"] == "generate_random_integer":
-        return f'Generating a random integer between "{tool_call["arguments"]["min"]}" and "{tool_call["arguments"]["max"]}"'
-    elif tool_call["tool_name"] == "read_pdf_document":
-        return f'Reading PDF document at "{tool_call["arguments"]["location"]}" ({tool_call["arguments"]["location_type"]})'
-    elif tool_call["tool_name"] == "read_web_page":
-        return f'Reading web site at "{tool_call["arguments"]["url"]}"'
-    elif tool_call["tool_name"] == "search_web":
-        return f'Searching the web for "{tool_call["arguments"]["query"]}" ({tool_call["arguments"]["max_results_per_page"]} results - page {tool_call["arguments"]["results_page_number"]})'
-    return ""
+    tool_name: str = ""
+    try:
+        if tool_call["tool_name"] == "execute_bash_command":
+            return f"$ {tool_call["arguments"]["command"]}"
+        elif tool_call["tool_name"] == "generate_random_integer":
+            return f'Generating a random integer between "{tool_call["arguments"]["min"]}" and "{tool_call["arguments"]["max"]}"'
+        elif tool_call["tool_name"] == "list_directory":
+            return f'Listing directory at "{tool_call["arguments"]["path"]}"'
+        elif tool_call["tool_name"] == "read_file":
+            return f'Reading file at "{tool_call["arguments"]["path"]}"'
+        elif tool_call["tool_name"] == "read_pdf_document":
+            return f'Reading PDF document at "{tool_call["arguments"]["location"]}" ({tool_call["arguments"]["location_type"]})'
+        elif tool_call["tool_name"] == "read_web_page":
+            return f'Reading web site at "{tool_call["arguments"]["url"]}"'
+        elif tool_call["tool_name"] == "search_web":
+            return f'Searching the web for "{tool_call["arguments"]["query"]}" ({tool_call["arguments"]["max_results_per_page"]} results - page {tool_call["arguments"]["results_page_number"]})'
+    except:
+        pass
+    if len(tool_name) != 0:
+        return 'Error on "{tool_name}"'
+    return "Error"
 
 
 def get_default_tool_call_permission(tool_call: ToolCall) -> bool:
     if tool_call["tool_name"] in [
         "generate_random_integer",
+        "list_directory",
         "read_web_page",
         "search_web",
     ]:
@@ -123,6 +155,44 @@ def execute_bash_command(command: str, tool_call_permission: bool = True) -> str
 def generate_random_integer(min: int, max: int) -> str:
     random_integer: int = randint(min, max)
     return f'<random_integer min="{min}" max="{max}">{random_integer}</random_integer>'
+
+
+def list_directory(path: str) -> str:
+    output_entries: list[str] = []
+    try:
+        for directory_entry in listdir(path):
+            output_entries.append(f"<entry>{directory_entry}</entry>")
+    except FileNotFoundError:
+        output_entries.append("<error>Directory not found</error>")
+    except NotADirectoryError:
+        output_entries.append("<error>Path is not a directory</error>")
+    except PermissionError:
+        output_entries.append("<error>Permission denied</error>")
+    except:
+        output_entries.append("<error>Could not list directory</error>")
+    if len(output_entries) == 0:
+        output_entries.append("<error>No entries found</error>")
+    joined_output_entries: str = "\n".join(output_entries)
+    return f'<directory_listing path="{path}">\n{joined_output_entries}\n</directory_listing>'
+
+
+def read_file(path: str, tool_call_permission: bool = True) -> str:
+    output_entries: list[str] = []
+    if not tool_call_permission:
+        output_entries.append("<error>File reading manually denied by the user</error>")
+    else:
+        try:
+            with open(path, "r") as file:
+                file_content = file.read()
+                output_entries.append(f"<content>\n{file_content}\n</content>")
+        except FileNotFoundError:
+            output_entries.append("<error>File not found</error>")
+        except PermissionError:
+            output_entries.append("<error>Permission denied</error>")
+        except:
+            output_entries.append("<error>Could not read file</error>")
+    joined_output_entries: str = "\n".join(output_entries)
+    return f'<file_read path="{path}">\n{joined_output_entries}\n</file_read>'
 
 
 def read_pdf_document(location_type: str, location: str, tool_call_permission: bool = True, info: str = "") -> str:
@@ -253,7 +323,7 @@ def search_web(query: str, max_results_per_page: int, results_page_number: int) 
         for page_result_number, search_result_data in enumerate(raw_search_results, 1):
             search_result_number: int = ((results_page_number - 1) * max_results_per_page) + page_result_number
             output_entries.append(
-                f'<search_result result_number="{search_result_number}">\n<title>{str(search_result_data["title"]).strip()}</title>\n<href>{str(search_result_data["href"]).strip()}</href>\n<body>\n{str(search_result_data["body"]).strip()}\n</body>\n</search_result>'
+                f'<search_result result_number="{search_result_number}">\n<title>{str(search_result_data["title"]).strip()}</title>\n<href>{str(search_result_data["href"]).strip()}</href>\n<snippet>\n{str(search_result_data["body"]).strip()}\n</snippet>\n</search_result>'
             )
     joined_output_entries: str = "\n".join(output_entries)
     return f'<web_search query="{query}" max_results_per_page="{max_results_per_page}" results_page_number="{results_page_number}">\n{joined_output_entries}\n</web_search>'
@@ -270,6 +340,12 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
             min: int = tool_call["arguments"]["min"]
             max: int = tool_call["arguments"]["max"]
             return generate_random_integer(min, max)
+        elif tool_call["tool_name"] == "list_directory":
+            directory_path: str = tool_call["arguments"]["path"]
+            return list_directory(directory_path)
+        elif tool_call["tool_name"] == "read_file":
+            file_path: str = tool_call["arguments"]["path"]
+            return read_file(file_path, tool_call_permission)
         elif tool_call["tool_name"] == "read_pdf_document":
             location_type: str = tool_call["arguments"]["location_type"]
             location: str = tool_call["arguments"]["location"]

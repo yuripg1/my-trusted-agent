@@ -38,7 +38,7 @@ class TerminalUi:
         rich_console_instance = Console(no_color=True)
         session_info: str = self.get_formatted_session_info(session_id, context_length)
         rich_console_instance.rule(f"[ User ] {session_info}", align=RULE_ALIGN, characters=RULE_CHARACTER)
-        print("\n{message}\n\n", end="")
+        print(f"\n{message}\n\n", end="")
 
     def get_user_input(self, session_id: int | None, context_length: int) -> str:
         rich_console_instance = Console(no_color=True)

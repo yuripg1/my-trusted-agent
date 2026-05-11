@@ -9,6 +9,10 @@ from tool import (
     ExecuteBashCommandToolCall,
     GetRandomIntegerArguments,
     GetRandomIntegerToolCall,
+    ListDirectoryArguments,
+    ListDirectoryToolCall,
+    ReadFileArguments,
+    ReadFileToolCall,
     ReadPdfDocumentArguments,
     ReadPdfDocumentToolCall,
     ReadWebPageArguments,
@@ -241,6 +245,24 @@ class DeepSeekAi:
                                 arguments=GetRandomIntegerArguments(
                                     min=tool_call_arguments["min"], max=tool_call_arguments["max"]
                                 ),
+                            )
+                        )
+                    elif tool_call["function"]["name"] == "list_directory":
+                        tool_call_arguments = loads(tool_call["function"]["arguments"])
+                        tool_calls.append(
+                            ListDirectoryToolCall(
+                                id=tool_call["id"],
+                                tool_name="list_directory",
+                                arguments=ListDirectoryArguments(path=tool_call_arguments["path"]),
+                            )
+                        )
+                    elif tool_call["function"]["name"] == "read_file":
+                        tool_call_arguments = loads(tool_call["function"]["arguments"])
+                        tool_calls.append(
+                            ReadFileToolCall(
+                                id=tool_call["id"],
+                                tool_name="read_file",
+                                arguments=ReadFileArguments(path=tool_call_arguments["path"]),
                             )
                         )
                     elif tool_call["function"]["name"] == "read_pdf_document":

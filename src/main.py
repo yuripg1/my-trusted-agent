@@ -39,6 +39,8 @@ def get_default_tool_names() -> list[str]:
     tool_names: list[str] = [
         "execute_bash_command",
         "generate_random_integer",
+        "list_directory",
+        "read_file",
         "read_pdf_document",
         "read_web_page",
         "search_web",

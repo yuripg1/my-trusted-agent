@@ -42,11 +42,37 @@ DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
             },
         },
     },
+    "list_directory": {
+        "type": "function",
+        "function": {
+            "name": "list_directory",
+            "description": "List and return the entries in a directory",
+            "parameters": {
+                "type": "object",
+                "properties": {"path": {"type": "string", "description": "The path of the directory"}},
+                "required": ["path"],
+                "additionalProperties": False,
+            },
+        },
+    },
+    "read_file": {
+        "type": "function",
+        "function": {
+            "name": "read_file",
+            "description": "Read and return the text contents of a file",
+            "parameters": {
+                "type": "object",
+                "properties": {"path": {"type": "string", "description": "The path of the file"}},
+                "required": ["path"],
+                "additionalProperties": False,
+            },
+        },
+    },
     "read_pdf_document": {
         "type": "function",
         "function": {
             "name": "read_pdf_document",
-            "description": "Fetch and return the text content from a PDF document (local or on the web)",
+            "description": "Fetch and return the text contents of a PDF document (local or on the web)",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -69,10 +95,10 @@ DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
         "type": "function",
         "function": {
             "name": "read_web_page",
-            "description": "Fetch and return the text content from a web page",
+            "description": "Fetch and return the text contents of a web page",
             "parameters": {
                 "type": "object",
-                "properties": {"url": {"type": "string", "description": "The URL of the web page to fetch and read"}},
+                "properties": {"url": {"type": "string", "description": "The URL of the web page"}},
                 "required": ["url"],
                 "additionalProperties": False,
             },
@@ -82,7 +108,7 @@ DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
         "type": "function",
         "function": {
             "name": "search_web",
-            "description": 'Search the web and return results with "title", "href", and "body"',
+            "description": 'Search the web and return results with "title", "href", and "snippet"',
             "parameters": {
                 "type": "object",
                 "properties": {
