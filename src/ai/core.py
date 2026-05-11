@@ -116,12 +116,8 @@ class Ai:
                 elif nth_message["role"] == "user":
                     role = "user"
                 if role is not None:
-                    message: str = ""
-                    if "content" in nth_message:
-                        message = nth_message["content"]
-                    reasoning: str = ""
-                    if "reasoning_content" in nth_message:
-                        reasoning = nth_message["reasoning_content"]
+                    message: str = nth_message.get("content", "")
+                    reasoning: str = nth_message.get("reasoning_content", "")
                     return AiMessage(role=role, message=message, reasoning=reasoning)
             return None
         else:

@@ -1,9 +1,8 @@
 from ddgs import DDGS
-from ddgs.exceptions import DDGSException
 from io import BytesIO
+from primp import Client, Response
 from pypdf import PdfReader
 from random import randint
-from requests import get, Response
 from subprocess import CompletedProcess, run
 from trafilatura import extract
 from typing import Any, Literal, Mapping, NotRequired, Required, TypeAlias, TypedDict
@@ -70,9 +69,7 @@ ToolCall: TypeAlias = (
     | SearchWebToolCall
 )
 
-PDF_DOCUMENT_REQUEST_USER_AGENT: str = "MyTrustedAIAgent"
 PDF_DOCUMENT_REQUEST_TIMEOUT: int = 300
-WEB_PAGE_REQUEST_USER_AGENT: str = "MyTrustedAIAgent"
 WEB_PAGE_REQUEST_TIMEOUT: int = 300
 WEB_SEARCH_TIMEOUT: int = 300
 WEB_SEARCH_SAFESEARCH: str = "off"
@@ -128,7 +125,7 @@ def generate_random_integer(min: int, max: int) -> str:
     return f'<random_integer min="{min}" max="{max}">{random_integer}</random_integer>'
 
 
-def read_pdf_document(location_type: str, location: str, tool_call_permission: bool = True) -> str:
+def read_pdf_document(location_type: str, location: str, tool_call_permission: bool = True, info: str = "") -> str:
     output_entries: list[str] = []
     if not tool_call_permission:
         output_entries.append("<error>PDF document reading manually denied by the user</error>")
@@ -139,19 +136,17 @@ def read_pdf_document(location_type: str, location: str, tool_call_permission: b
         raw_pdf_document_content: Any = None
         try:
             if location_type == "web" or location.startswith(("http", "https")):
-                headers: Mapping[str, str] = {"User-Agent": PDF_DOCUMENT_REQUEST_USER_AGENT}
-                response: Response = get(location, headers=headers, timeout=PDF_DOCUMENT_REQUEST_TIMEOUT)
+                client: Client = Client(
+                    impersonate="random", impersonate_os="random", timeout=PDF_DOCUMENT_REQUEST_TIMEOUT
+                )
+                response: Response = client.get(location)
                 status_code = response.status_code
-                if response.status_code < 200 or response.status_code > 299:
+                if status_code < 200 or status_code > 299:
                     output_entries.append("<error>Could not fetch the PDF document</error>")
                     errored = True
                 else:
                     raw_pdf_document_content = response.content
-                    response_content_type: str | None = response.headers.get("Content-Type")
-                    if response_content_type is not None:
-                        trimmed_response_content_type: str = response_content_type.strip()
-                        if len(trimmed_response_content_type) != 0:
-                            content_type = trimmed_response_content_type
+                    content_type = response.headers.get("content-type", "").strip()
             elif location_type == "local":
                 with open(location, "rb") as pdf_document_file:
                     raw_pdf_document_content = pdf_document_file.read()
@@ -184,12 +179,14 @@ def read_pdf_document(location_type: str, location: str, tool_call_permission: b
         if len(output_entries) == 0:
             output_entries.append("<error>Could not read the PDF document</error>")
             errored = True
+        if len(info) != 0:
+            output_entries.append(f"<info>{info}</info>")
         if errored:
             if status_code is not None:
                 output_entries.append(f"<status_code>{status_code}</status_code>")
             if len(content_type) != 0:
                 output_entries.append(f"<content_type>{content_type}</content_type>")
-    joined_output_entries = "\n".join(output_entries)
+    joined_output_entries: str = "\n".join(output_entries)
     return f'<pdf_document location_type="{location_type}" location="{location}">\n{joined_output_entries}\n</pdf_document>'
 
 
@@ -200,22 +197,20 @@ def read_web_page(url: str) -> str:
     content_type: str = ""
     raw_web_page_content: str = ""
     try:
-        headers: Mapping[str, str] = {"User-Agent": WEB_PAGE_REQUEST_USER_AGENT}
-        response: Response = get(url, headers=headers, timeout=WEB_PAGE_REQUEST_TIMEOUT)
+        client = Client(impersonate="random", impersonate_os="random", timeout=WEB_PAGE_REQUEST_TIMEOUT)
+        response: Response = client.get(url)
         status_code = response.status_code
-        if response.status_code < 200 or response.status_code > 299:
+        if status_code < 200 or status_code > 299:
             output_entries.append("<error>Could not fetch the web page</error>")
             errored = True
         else:
             raw_web_page_content = response.text
-            response_content_type: str | None = response.headers.get("Content-Type")
-            if response_content_type is not None:
-                trimmed_response_content_type = response_content_type.strip()
-                if len(trimmed_response_content_type) != 0:
-                    content_type = trimmed_response_content_type
+            content_type = response.headers.get("content-type", "").strip()
     except:
         output_entries.append("<error>Could not fetch the web page</error>")
         errored = True
+    if "application/pdf" in content_type.lower():
+        return read_pdf_document("web", url, True, 'Redirected from "read_web_page" to "read_pdf_document"')
     if not errored:
         try:
             extracted_content: str | None = extract(raw_web_page_content, output_format="markdown", include_links=True)
@@ -234,7 +229,7 @@ def read_web_page(url: str) -> str:
             output_entries.append(f"<status_code>{status_code}</status_code>")
         if len(content_type) != 0:
             output_entries.append(f"<content_type>{content_type}</content_type>")
-    joined_output_entries = "\n".join(output_entries)
+    joined_output_entries: str = "\n".join(output_entries)
     return f'<web_page url="{url}">\n{joined_output_entries}\n</web_page>'
 
 
@@ -265,23 +260,30 @@ def search_web(query: str, max_results_per_page: int, results_page_number: int) 
 
 
 def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
-    if tool_call["tool_name"] == "execute_bash_command":
-        command: str = tool_call["arguments"]["command"]
-        return execute_bash_command(command, tool_call_permission)
-    elif tool_call["tool_name"] == "generate_random_integer":
-        min: int = tool_call["arguments"]["min"]
-        max: int = tool_call["arguments"]["max"]
-        return generate_random_integer(min, max)
-    elif tool_call["tool_name"] == "read_pdf_document":
-        location_type: str = tool_call["arguments"]["location_type"]
-        location: str = tool_call["arguments"]["location"]
-        return read_pdf_document(location_type, location, tool_call_permission)
-    elif tool_call["tool_name"] == "read_web_page":
-        url: str = tool_call["arguments"]["url"]
-        return read_web_page(url)
-    elif tool_call["tool_name"] == "search_web":
-        query: str = tool_call["arguments"]["query"]
-        max_results_per_page: int = tool_call["arguments"]["max_results_per_page"]
-        results_page_number: int = tool_call["arguments"]["results_page_number"]
-        return search_web(query, max_results_per_page, results_page_number)
-    return ""
+    tool_name: str = ""
+    try:
+        tool_name = tool_call["tool_name"]
+        if tool_call["tool_name"] == "execute_bash_command":
+            command: str = tool_call["arguments"]["command"]
+            return execute_bash_command(command, tool_call_permission)
+        elif tool_call["tool_name"] == "generate_random_integer":
+            min: int = tool_call["arguments"]["min"]
+            max: int = tool_call["arguments"]["max"]
+            return generate_random_integer(min, max)
+        elif tool_call["tool_name"] == "read_pdf_document":
+            location_type: str = tool_call["arguments"]["location_type"]
+            location: str = tool_call["arguments"]["location"]
+            return read_pdf_document(location_type, location, tool_call_permission)
+        elif tool_call["tool_name"] == "read_web_page":
+            url: str = tool_call["arguments"]["url"]
+            return read_web_page(url)
+        elif tool_call["tool_name"] == "search_web":
+            query: str = tool_call["arguments"]["query"]
+            max_results_per_page: int = tool_call["arguments"]["max_results_per_page"]
+            results_page_number: int = tool_call["arguments"]["results_page_number"]
+            return search_web(query, max_results_per_page, results_page_number)
+    except:
+        pass
+    if len(tool_name) != 0:
+        return 'Error on "{tool_name}"'
+    return "Error"

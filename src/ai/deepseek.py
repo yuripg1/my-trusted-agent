@@ -63,7 +63,6 @@ class DeepSeekRequest(TypedDict):
 API_STREAM: bool = False
 API_TOOL_CHOICE: DeepSeekToolChoiceType = "auto"
 API_WAIT_AFTER_ERROR: int = 2
-API_REQUEST_USER_AGENT: str = "MyTrustedAIAgent"
 API_REQUEST_TIMEOUT: int = 600
 
 
@@ -158,7 +157,6 @@ class DeepSeekAi:
         headers: Mapping[str, str] = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
-            "User-Agent": API_REQUEST_USER_AGENT,
         }
         payload_thinking: DeepSeekRequestThinking = {"type": self.thinking}
         payload: DeepSeekRequest = {
@@ -287,8 +285,6 @@ class DeepSeekAi:
             new_message: DeepSeekMessage = DeepSeekMessage(role=parsed_message["role"])
             if "content" in parsed_message:
                 new_message["content"] = str(parsed_message["content"])
-            else:
-                new_message["content"] = ""
             if "reasoning_content" in parsed_message:
                 new_message["reasoning_content"] = str(parsed_message["reasoning_content"])
             if "tool_call_id" in parsed_message:

@@ -65,7 +65,7 @@ def ai_chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui
                 replay_message = session.get_nth_message(ai, replay_message_index)
                 while replay_message is not None:
                     if replay_message["role"] == "user":
-                        ui.display_user_input(session.id, session.context_length, replay_message["message"])
+                        ui.display_user_message(session.id, session.context_length, replay_message["message"])
                     elif replay_message["role"] == "assistant":
                         ui.display_assistant_message(session.id, session.context_length, replay_message["message"], "")
                     replay_message_index += 1

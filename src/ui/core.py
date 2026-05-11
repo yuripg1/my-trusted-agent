@@ -29,9 +29,9 @@ class Ui:
         if self.channel == "terminal" and self.terminal_ui is not None:
             self.terminal_ui.teardown(graceful_exit)
 
-    def display_user_input(self, session_id: int | None, context_length: int, message: str) -> None:
+    def display_user_message(self, session_id: int | None, context_length: int, message: str) -> None:
         if self.channel == "terminal" and self.terminal_ui is not None:
-            self.terminal_ui.display_user_input(session_id, context_length, message)
+            self.terminal_ui.display_user_message(session_id, context_length, message)
 
     def get_user_input(self, session_id: int | None, context_length: int) -> str:
         if self.channel == "terminal" and self.terminal_ui is not None:
