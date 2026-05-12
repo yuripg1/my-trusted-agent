@@ -1,6 +1,6 @@
 from ddgs import DDGS
 from io import BytesIO
-from os import listdir
+from pathlib import Path
 from primp import Client, Response
 from pypdf import PdfReader
 from random import randint
@@ -96,9 +96,10 @@ WEB_SEARCH_TIMEOUT: int = 300
 WEB_SEARCH_SAFESEARCH: str = "off"
 
 
-def get_tool_call_assistant_message(tool_call: ToolCall) -> str:
+def get_individual_tool_call_message(tool_call: ToolCall) -> str:
     tool_name: str = ""
     try:
+        tool_name = tool_call["tool_name"]
         if tool_call["tool_name"] == "execute_bash_command":
             return f"$ {tool_call["arguments"]["command"]}"
         elif tool_call["tool_name"] == "generate_random_integer":
@@ -116,22 +117,31 @@ def get_tool_call_assistant_message(tool_call: ToolCall) -> str:
     except:
         pass
     if len(tool_name) != 0:
-        return 'Error on "{tool_name}"'
+        return f'Error on "{tool_name}"'
     return "Error"
 
 
-def get_default_tool_call_permission(tool_call: ToolCall) -> bool:
-    if tool_call["tool_name"] in [
-        "generate_random_integer",
-        "list_directory",
-        "read_web_page",
-        "search_web",
-    ]:
+def get_group_tool_call_messages(tool_calls: list[ToolCall]) -> list[str]:
+    messages: list[str] = []
+    for tool_call in tool_calls:
+        messages.append(get_individual_tool_call_message(tool_call))
+    return messages
+
+
+def get_individual_tool_call_permission(tool_call: ToolCall) -> bool:
+    if tool_call["tool_name"] in ["generate_random_integer", "list_directory", "read_web_page", "search_web"]:
         return True
     elif tool_call["tool_name"] == "read_pdf_document":
         return tool_call["arguments"]["location_type"] == "web"
     else:
         return False
+
+
+def get_group_tool_call_permission(tool_calls: list[ToolCall]) -> bool:
+    for tool_call in tool_calls:
+        if not get_individual_tool_call_permission(tool_call):
+            return False
+    return True
 
 
 def execute_bash_command(command: str, tool_call_permission: bool = True) -> str:
@@ -153,15 +163,35 @@ def execute_bash_command(command: str, tool_call_permission: bool = True) -> str
 
 
 def generate_random_integer(min: int, max: int) -> str:
-    random_integer: int = randint(min, max)
-    return f'<random_integer min="{min}" max="{max}">{random_integer}</random_integer>'
+    output_entries: list[str] = []
+    if max < min:
+        output_entries.append('<error>"max" is less than "min"</error>')
+    else:
+        random_integer: int = randint(min, max)
+        output_entries.append(f"<result>{random_integer}</result>")
+    joined_output_entries: str = "\n".join(output_entries)
+    return f'<random_integer min="{min}" max="{max}">\n{joined_output_entries}\n</random_integer>'
 
 
 def list_directory(path: str) -> str:
     output_entries: list[str] = []
     try:
-        for directory_entry in listdir(path):
-            output_entries.append(f"<entry>{directory_entry}</entry>")
+        directory_path: Path = Path(path)
+        for directory_entry in directory_path.iterdir():
+            directory_entry_type: str = ""
+            try:
+                if directory_entry.is_symlink():
+                    directory_entry_type = "symlink"
+                elif directory_entry.is_dir():
+                    directory_entry_type = "directory"
+                elif directory_entry.is_file():
+                    directory_entry_type = "file"
+            except:
+                pass
+            if len(directory_entry_type) != 0:
+                output_entries.append(f'<entry type="{directory_entry_type}">{directory_entry.name}</entry>')
+            else:
+                output_entries.append(f"<entry>{directory_entry.name}</entry>")
     except FileNotFoundError:
         output_entries.append("<error>Directory not found</error>")
     except NotADirectoryError:
@@ -280,7 +310,7 @@ def read_web_page(url: str) -> str:
         output_entries.append("<error>Could not fetch the web page</error>")
         errored = True
     if "application/pdf" in content_type.lower():
-        return read_pdf_document("web", url, True, 'Redirected from "read_web_page" to "read_pdf_document"')
+        return read_pdf_document("web", url, tool_call_permission=True, info='Redirected from "read_web_page"')
     if not errored:
         try:
             extracted_content: str | None = extract(raw_web_page_content, output_format="markdown", include_links=True)
@@ -349,7 +379,7 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
         elif tool_call["tool_name"] == "read_pdf_document":
             location_type: str = tool_call["arguments"]["location_type"]
             location: str = tool_call["arguments"]["location"]
-            return read_pdf_document(location_type, location, tool_call_permission)
+            return read_pdf_document(location_type, location, tool_call_permission=tool_call_permission)
         elif tool_call["tool_name"] == "read_web_page":
             url: str = tool_call["arguments"]["url"]
             return read_web_page(url)
@@ -361,5 +391,5 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
     except:
         pass
     if len(tool_name) != 0:
-        return 'Error on "{tool_name}"'
+        return f'Error on "{tool_name}"'
     return "Error"

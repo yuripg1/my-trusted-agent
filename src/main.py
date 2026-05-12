@@ -7,8 +7,10 @@ from entity.session import Session
 from tool import (
     execute_bash_command,
     execute_tool_call,
-    get_default_tool_call_permission,
-    get_tool_call_assistant_message,
+    get_individual_tool_call_permission,
+    get_group_tool_call_permission,
+    get_group_tool_call_messages,
+    get_individual_tool_call_message,
     ToolCall,
 )
 from ui.core import Ui
@@ -69,7 +71,7 @@ def ai_chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui
                     if replay_message["role"] == "user":
                         ui.display_user_message(session.id, session.context_length, replay_message["message"])
                     elif replay_message["role"] == "assistant":
-                        ui.display_assistant_message(session.id, session.context_length, replay_message["message"], "")
+                        ui.display_assistant_message(session.id, session.context_length, replay_message["message"])
                     replay_message_index += 1
                     replay_message = session.get_nth_message(ai, replay_message_index)
             elif user_input == "/rewind":
@@ -98,13 +100,25 @@ def ai_chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui
                     if len(tool_calls) == 0:
                         session.auto_save(ai, db_connection)
                         break
+                    group_tool_call_permission: bool = get_group_tool_call_permission(tool_calls)
+                    group_tool_call_messages: list[str] = get_group_tool_call_messages(tool_calls)
+                    group_tool_call_permission = ui.display_group_tool_call_message(
+                        session.id, session.context_length, group_tool_call_messages, group_tool_call_permission
+                    )
                     for tool_call in tool_calls:
-                        tool_call_message: str = get_tool_call_assistant_message(tool_call)
-                        default_tool_call_permission: bool = get_default_tool_call_permission(tool_call)
-                        final_tool_call_permission: bool = ui.display_tool_call_message(
-                            session.id, session.context_length, tool_call_message, default_tool_call_permission
-                        )
-                        tool_call_output: str = execute_tool_call(tool_call, final_tool_call_permission)
+                        tool_call_output: str = ""
+                        if group_tool_call_permission:
+                            tool_call_output = execute_tool_call(tool_call, group_tool_call_permission)
+                        else:
+                            individual_tool_call_permission: bool = get_individual_tool_call_permission(tool_call)
+                            individual_tool_call_message: str = get_individual_tool_call_message(tool_call)
+                            individual_tool_call_permission = ui.display_individual_tool_call_message(
+                                session.id,
+                                session.context_length,
+                                individual_tool_call_message,
+                                individual_tool_call_permission,
+                            )
+                            tool_call_output = execute_tool_call(tool_call, individual_tool_call_permission)
                         session.add_tool_call(ai, tool_call, tool_call_output)
         except KeyboardInterrupt:
             graceful_exit = False

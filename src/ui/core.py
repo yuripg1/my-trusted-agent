@@ -40,16 +40,26 @@ class Ui:
             return ""
 
     def display_assistant_message(
-        self, session_id: int | None, context_length: int, message: str, reasoning: str
+        self, session_id: int | None, context_length: int, message: str, reasoning: str = ""
     ) -> None:
         if self.channel == "terminal" and self.terminal_ui is not None:
             self.terminal_ui.display_assistant_message(session_id, context_length, message, reasoning)
 
-    def display_tool_call_message(
+    def display_group_tool_call_message(
+        self, session_id: int | None, context_length: int, tool_call_messages: list[str], tool_call_permission: bool
+    ) -> bool:
+        if self.channel == "terminal" and self.terminal_ui is not None:
+            return self.terminal_ui.display_group_tool_call_message(
+                session_id, context_length, tool_call_messages, tool_call_permission
+            )
+        else:
+            return False
+
+    def display_individual_tool_call_message(
         self, session_id: int | None, context_length: int, tool_call_message: str, tool_call_permission: bool
     ) -> bool:
         if self.channel == "terminal" and self.terminal_ui is not None:
-            return self.terminal_ui.display_tool_call_message(
+            return self.terminal_ui.display_individual_tool_call_message(
                 session_id, context_length, tool_call_message, tool_call_permission
             )
         else:
