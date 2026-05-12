@@ -5,7 +5,7 @@ from database import close_db_connection, init_db, open_db_connection
 from environment import Environment
 from entity.session import Session
 from tool import (
-    execute_bash_command,
+    execute_shell_command,
     execute_tool_call,
     get_individual_tool_call_permission,
     get_group_tool_call_permission,
@@ -33,13 +33,13 @@ def get_default_system_messages(environment: Environment, ui_system_message: str
     system_messages.extend(default_instruction_messages)
     system_messages.append(ui_system_message)
     for system_command in system_commands:
-        system_messages.append(execute_bash_command(system_command))
+        system_messages.append(execute_shell_command(system_command))
     return system_messages
 
 
 def get_default_tool_names() -> list[str]:
     tool_names: list[str] = [
-        "execute_bash_command",
+        "execute_shell_command",
         "generate_random_integer",
         "list_directory",
         "read_file",
@@ -112,13 +112,11 @@ def ai_chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui
                             tool_call_output = execute_tool_call(tool_call, group_tool_call_permission)
                         else:
                             individual_tool_call_permission: bool = get_individual_tool_call_permission(tool_call)
-                            individual_tool_call_message: str = get_individual_tool_call_message(tool_call)
-                            individual_tool_call_permission = ui.display_individual_tool_call_message(
-                                session.id,
-                                session.context_length,
-                                individual_tool_call_message,
-                                individual_tool_call_permission,
-                            )
+                            if len(tool_calls) > 1:
+                                individual_tool_call_message: str = get_individual_tool_call_message(tool_call)
+                                individual_tool_call_permission = ui.display_individual_tool_call_message(
+                                    individual_tool_call_message, individual_tool_call_permission
+                                )
                             tool_call_output = execute_tool_call(tool_call, individual_tool_call_permission)
                         session.add_tool_call(ai, tool_call, tool_call_output)
         except KeyboardInterrupt:

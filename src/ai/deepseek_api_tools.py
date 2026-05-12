@@ -13,14 +13,14 @@ class DeepSeekTool(TypedDict):
 
 
 DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
-    "execute_bash_command": {
+    "execute_shell_command": {
         "type": "function",
         "function": {
-            "name": "execute_bash_command",
-            "description": 'Run any bash command and return the resulting "stdout", "stderr", and "returncode"',
+            "name": "execute_shell_command",
+            "description": 'Execute any shell command and return the resulting stdout, stderr, and exit code',
             "parameters": {
                 "type": "object",
-                "properties": {"command": {"type": "string", "description": "The bash command to run"}},
+                "properties": {"command": {"type": "string", "description": "The command to be executed"}},
                 "required": ["command"],
                 "additionalProperties": False,
             },

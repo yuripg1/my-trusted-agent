@@ -5,8 +5,8 @@ from typing import Any, Literal, Mapping, NotRequired, Required, TypedDict
 
 from ai.deepseek_api_tools import DeepSeekTool, DeepSeekToolFunction, DEEPSEEK_TOOLS
 from tool import (
-    ExecuteBashCommandArguments,
-    ExecuteBashCommandToolCall,
+    ExecuteShellCommandArguments,
+    ExecuteShellCommandToolCall,
     GetRandomIntegerArguments,
     GetRandomIntegerToolCall,
     ListDirectoryArguments,
@@ -229,13 +229,13 @@ class DeepSeekAi:
             nth_message: DeepSeekMessage = messages[message_index]
             if "tool_calls" in nth_message:
                 for tool_call in nth_message["tool_calls"]:
-                    if tool_call["function"]["name"] == "execute_bash_command":
+                    if tool_call["function"]["name"] == "execute_shell_command":
                         tool_call_arguments = loads(tool_call["function"]["arguments"])
                         tool_calls.append(
-                            ExecuteBashCommandToolCall(
+                            ExecuteShellCommandToolCall(
                                 id=tool_call["id"],
-                                tool_name="execute_bash_command",
-                                arguments=ExecuteBashCommandArguments(command=tool_call_arguments["command"]),
+                                tool_name="execute_shell_command",
+                                arguments=ExecuteShellCommandArguments(command=tool_call_arguments["command"]),
                             )
                         )
                     elif tool_call["function"]["name"] == "generate_random_integer":

@@ -18,7 +18,7 @@ class TerminalUi:
         print("\n", end="")
 
     def teardown(self, graceful_exit: bool) -> None:
-        rich_console_instance = Console(no_color=True)
+        rich_console_instance = Console()
         if not graceful_exit:
             print("\n\n", end="")
         rich_console_instance.rule()
@@ -34,13 +34,13 @@ class TerminalUi:
         return joined_session_info
 
     def display_user_message(self, session_id: int | None, context_length: int, message: str) -> None:
-        rich_console_instance = Console(no_color=True)
+        rich_console_instance = Console()
         session_info: str = self.get_formatted_session_info(session_id, context_length)
         rich_console_instance.rule(f"[ User ] {session_info}", align=RULE_ALIGN)
         print(f"\n{message}\n\n", end="")
 
     def get_user_input(self, session_id: int | None, context_length: int) -> str:
-        rich_console_instance = Console(no_color=True)
+        rich_console_instance = Console()
         session_info: str = self.get_formatted_session_info(session_id, context_length)
         rich_console_instance.rule(f"[ User ] {session_info}", align=RULE_ALIGN)
         print("\n", end="")
@@ -62,7 +62,7 @@ class TerminalUi:
     def display_assistant_message(
         self, session_id: int | None, context_length: int, message: str, reasoning: str
     ) -> None:
-        rich_console_instance = Console(no_color=True)
+        rich_console_instance = Console()
         session_info: str = self.get_formatted_session_info(session_id, context_length)
         if self.show_reasoning and len(reasoning) != 0:
             rich_console_instance.rule(f"[ Assistant ] [ Reasoning ] {session_info}", align=RULE_ALIGN)
@@ -78,12 +78,12 @@ class TerminalUi:
     def display_group_tool_call_message(
         self, session_id: int | None, context_length: int, tool_call_messages: list[str], tool_call_permission: bool
     ) -> bool:
-        rich_console_instance = Console(no_color=True)
+        rich_console_instance = Console()
         session_info: str = self.get_formatted_session_info(session_id, context_length)
         rich_console_instance.rule(f"[ Tool ] {session_info}", align=RULE_ALIGN)
-        for tool_call_message in tool_call_messages:
-            print(f"\n{tool_call_message}", end="")
-        print("\n\n", end="")
+        print("\n", end="")
+        rich_console_instance.print(Markdown("\n\n".join(tool_call_messages)))
+        print("\n", end="")
         if tool_call_permission:
             return True
         try:
@@ -94,10 +94,10 @@ class TerminalUi:
             print("\n\n", end="")
             return False
 
-    def display_individual_tool_call_message(
-        self, session_id: int | None, context_length: int, tool_call_message: str, tool_call_permission: bool
-    ) -> bool:
-        print(f"{tool_call_message}\n\n", end="")
+    def display_individual_tool_call_message(self, tool_call_message: str, tool_call_permission: bool) -> bool:
+        rich_console_instance = Console()
+        rich_console_instance.print(Markdown(tool_call_message))
+        print("\n", end="")
         if tool_call_permission:
             return True
         try:

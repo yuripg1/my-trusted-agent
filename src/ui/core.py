@@ -55,12 +55,8 @@ class Ui:
         else:
             return False
 
-    def display_individual_tool_call_message(
-        self, session_id: int | None, context_length: int, tool_call_message: str, tool_call_permission: bool
-    ) -> bool:
+    def display_individual_tool_call_message(self, tool_call_message: str, tool_call_permission: bool) -> bool:
         if self.channel == "terminal" and self.terminal_ui is not None:
-            return self.terminal_ui.display_individual_tool_call_message(
-                session_id, context_length, tool_call_message, tool_call_permission
-            )
+            return self.terminal_ui.display_individual_tool_call_message(tool_call_message, tool_call_permission)
         else:
             return False

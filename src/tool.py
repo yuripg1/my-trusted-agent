@@ -9,7 +9,7 @@ from trafilatura import extract
 from typing import Any, Literal, Mapping, NotRequired, Required, TypeAlias, TypedDict
 
 
-class ExecuteBashCommandArguments(TypedDict):
+class ExecuteShellCommandArguments(TypedDict):
     command: Required[str]
 
 
@@ -50,9 +50,9 @@ class BaseToolCall(TypedDict):
     id: NotRequired[str]
 
 
-class ExecuteBashCommandToolCall(BaseToolCall):
-    tool_name: Required[Literal["execute_bash_command"]]
-    arguments: Required[ExecuteBashCommandArguments]
+class ExecuteShellCommandToolCall(BaseToolCall):
+    tool_name: Required[Literal["execute_shell_command"]]
+    arguments: Required[ExecuteShellCommandArguments]
 
 
 class GetRandomIntegerToolCall(BaseToolCall):
@@ -91,7 +91,7 @@ class WriteFileToolCall(BaseToolCall):
 
 
 ToolCall: TypeAlias = (
-    ExecuteBashCommandToolCall
+    ExecuteShellCommandToolCall
     | GetRandomIntegerToolCall
     | ListDirectoryToolCall
     | ReadFileToolCall
@@ -111,22 +111,22 @@ def get_individual_tool_call_message(tool_call: ToolCall) -> str:
     tool_name: str = ""
     try:
         tool_name = tool_call["tool_name"]
-        if tool_call["tool_name"] == "execute_bash_command":
-            return f"$ {tool_call["arguments"]["command"]}"
+        if tool_call["tool_name"] == "execute_shell_command":
+            return f"```shell\n$ {tool_call["arguments"]["command"]}\n```"
         elif tool_call["tool_name"] == "generate_random_integer":
-            return f'Generating a random integer between "{tool_call["arguments"]["min"]}" and "{tool_call["arguments"]["max"]}"'
+            return f'Generating a random integer between **{tool_call["arguments"]["min"]}** and **{tool_call["arguments"]["max"]}**'
         elif tool_call["tool_name"] == "list_directory":
-            return f'Listing directory at "{tool_call["arguments"]["path"]}"'
+            return f'Listing directory at **{tool_call["arguments"]["path"]}**'
         elif tool_call["tool_name"] == "read_file":
-            return f'Reading file at "{tool_call["arguments"]["path"]}"'
+            return f'Reading file at **{tool_call["arguments"]["path"]}**'
         elif tool_call["tool_name"] == "read_pdf_document":
-            return f'Reading PDF document at "{tool_call["arguments"]["location"]}" ({tool_call["arguments"]["location_type"]})'
+            return f'Reading PDF document at **{tool_call["arguments"]["location"]}** (**{tool_call["arguments"]["location_type"]}**)'
         elif tool_call["tool_name"] == "read_web_page":
-            return f'Reading web site at "{tool_call["arguments"]["url"]}"'
+            return f'Reading web site at **{tool_call["arguments"]["url"]}**'
         elif tool_call["tool_name"] == "search_web":
-            return f'Searching the web for "{tool_call["arguments"]["query"]}" ({tool_call["arguments"]["max_results_per_page"]} results - page {tool_call["arguments"]["results_page_number"]})'
+            return f'Searching the web for **{tool_call["arguments"]["query"]}** (**{tool_call["arguments"]["max_results_per_page"]}** results - page **{tool_call["arguments"]["results_page_number"]}**)'
         elif tool_call["tool_name"] == "write_file":
-            return f'Writing file at "{tool_call["arguments"]["path"]}"'
+            return f'Writing file at **{tool_call["arguments"]["path"]}**\n\n```\n{tool_call["arguments"]["content"]}\n```'
     except:
         pass
     if len(tool_name) != 0:
@@ -157,7 +157,7 @@ def get_group_tool_call_permission(tool_calls: list[ToolCall]) -> bool:
     return True
 
 
-def execute_bash_command(command: str, tool_call_permission: bool = True) -> str:
+def execute_shell_command(command: str, tool_call_permission: bool = True) -> str:
     output_entries: list[str] = []
     output_entries.append(f"<command>\n{command.strip()}\n</command>")
     if not tool_call_permission:
@@ -170,9 +170,9 @@ def execute_bash_command(command: str, tool_call_permission: bool = True) -> str
         trimmed_stderr = command_execution_result.stderr.strip()
         if len(trimmed_stderr) != 0:
             output_entries.append(f"<stderr>\n{trimmed_stderr}\n</stderr>")
-        output_entries.append(f"<returncode>{command_execution_result.returncode}</returncode>")
+        output_entries.append(f"<exit_code>{command_execution_result.returncode}</exit_code>")
     joined_output_entries: str = "\n".join(output_entries)
-    return f"<bash_command_execution>\n{joined_output_entries}\n</bash_command_execution>"
+    return f"<shell_command_execution>\n{joined_output_entries}\n</shell_command_execution>"
 
 
 def generate_random_integer(min: int, max: int) -> str:
@@ -238,7 +238,7 @@ def read_file(path: str, tool_call_permission: bool = True) -> str:
     return f'<file_read path="{path}">\n{joined_output_entries}\n</file_read>'
 
 
-def read_pdf_document(location_type: str, location: str, tool_call_permission: bool = True, info: str = "") -> str:
+def read_pdf_document(location_type: str, location: str, tool_call_permission: bool = True, note: str = "") -> str:
     output_entries: list[str] = []
     if not tool_call_permission:
         output_entries.append("<error>PDF document reading manually denied by the user</error>")
@@ -292,13 +292,13 @@ def read_pdf_document(location_type: str, location: str, tool_call_permission: b
         if len(output_entries) == 0:
             output_entries.append("<error>Could not read the PDF document</error>")
             errored = True
-        if len(info) != 0:
-            output_entries.append(f"<info>{info}</info>")
         if errored:
             if status_code is not None:
                 output_entries.append(f"<status_code>{status_code}</status_code>")
             if len(content_type) != 0:
                 output_entries.append(f"<content_type>{content_type}</content_type>")
+        if len(note) != 0:
+            output_entries.insert(0, f"<note>{note}</note>")
     joined_output_entries: str = "\n".join(output_entries)
     return f'<pdf_document location_type="{location_type}" location="{location}">\n{joined_output_entries}\n</pdf_document>'
 
@@ -323,7 +323,7 @@ def read_web_page(url: str) -> str:
         output_entries.append("<error>Could not fetch the web page</error>")
         errored = True
     if "application/pdf" in content_type.lower():
-        return read_pdf_document("web", url, tool_call_permission=True, info='Redirected from "read_web_page"')
+        return read_pdf_document("web", url, note='Redirected from "read_web_page"')
     if not errored:
         try:
             extracted_content: str | None = extract(raw_web_page_content, output_format="markdown", include_links=True)
@@ -348,6 +348,7 @@ def read_web_page(url: str) -> str:
 
 def search_web(query: str, max_results_per_page: int, results_page_number: int) -> str:
     output_entries: list[str] = []
+    output_entries.append(f"<query>{query}</query>")
     raw_search_results = []
     try:
         raw_search_results = list(
@@ -369,7 +370,7 @@ def search_web(query: str, max_results_per_page: int, results_page_number: int) 
                 f'<search_result result_number="{search_result_number}">\n<title>{str(search_result_data["title"]).strip()}</title>\n<href>{str(search_result_data["href"]).strip()}</href>\n<snippet>\n{str(search_result_data["body"]).strip()}\n</snippet>\n</search_result>'
             )
     joined_output_entries: str = "\n".join(output_entries)
-    return f'<web_search query="{query}" max_results_per_page="{max_results_per_page}" results_page_number="{results_page_number}">\n{joined_output_entries}\n</web_search>'
+    return f'<web_search max_results_per_page="{max_results_per_page}" results_page_number="{results_page_number}">\n{joined_output_entries}\n</web_search>'
 
 
 def write_file(path: str, content: str, tool_call_permission: bool = True) -> str:
@@ -394,9 +395,9 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
     tool_name: str = ""
     try:
         tool_name = tool_call["tool_name"]
-        if tool_call["tool_name"] == "execute_bash_command":
+        if tool_call["tool_name"] == "execute_shell_command":
             command: str = tool_call["arguments"]["command"]
-            return execute_bash_command(command, tool_call_permission)
+            return execute_shell_command(command, tool_call_permission)
         elif tool_call["tool_name"] == "generate_random_integer":
             min: int = tool_call["arguments"]["min"]
             max: int = tool_call["arguments"]["max"]

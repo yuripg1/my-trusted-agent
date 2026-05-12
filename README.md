@@ -29,8 +29,10 @@ The AI agent does have support for tool calling.
 
 However, for security reasons, the following actions require manual user permission:
 
-* Execution of bash commands
+* Execution of shell commands
 * Reading of local PDF documents
+* File reading
+* File writing
 
 ---
 
