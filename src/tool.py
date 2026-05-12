@@ -378,11 +378,10 @@ def write_file(path: str, content: str, tool_call_permission: bool = True) -> st
         output_entries.append("<error>File writing manually denied by the user</error>")
     else:
         try:
+            Path(path).parent.mkdir(parents=True, exist_ok=True)
             with open(path, "w") as file:
                 file.write(content)
             output_entries.append("<result>File written successfully</result>")
-        except FileNotFoundError:
-            output_entries.append("<error>Directory not found</error>")
         except PermissionError:
             output_entries.append("<error>Permission denied</error>")
         except:
