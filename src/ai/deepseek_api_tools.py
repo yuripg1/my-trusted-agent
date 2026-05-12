@@ -62,7 +62,7 @@ DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
             "description": "Read and return the text contents of a file",
             "parameters": {
                 "type": "object",
-                "properties": {"path": {"type": "string", "description": "The path of the file"}},
+                "properties": {"path": {"type": "string", "description": "Path of the file"}},
                 "required": ["path"],
                 "additionalProperties": False,
             },
@@ -134,12 +134,12 @@ DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
         "type": "function",
         "function": {
             "name": "write_file",
-            "description": "Write text content to a file, creating or overwriting it. Returns the write operation result",
+            "description": "Write text contents to a file (if the file does not exist, create it; if the file exist, overwrite it; if the directory does not exist, create it)",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "path": {"type": "string", "description": "The path of the file to write to"},
-                    "content": {"type": "string", "description": "The text content to write to the file"},
+                    "path": {"type": "string", "description": "Path of the file"},
+                    "content": {"type": "string", "description": "Text contents to write"},
                 },
                 "required": ["path", "content"],
                 "additionalProperties": False,
