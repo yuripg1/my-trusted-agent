@@ -19,6 +19,8 @@ from tool import (
     ReadWebPageToolCall,
     SearchWebArguments,
     SearchWebToolCall,
+    WriteFileArguments,
+    WriteFileToolCall,
     ToolCall,
 )
 
@@ -296,6 +298,17 @@ class DeepSeekAi:
                                     query=tool_call_arguments["query"],
                                     max_results_per_page=tool_call_arguments["max_results_per_page"],
                                     results_page_number=tool_call_arguments["results_page_number"],
+                                ),
+                            )
+                        )
+                    elif tool_call["function"]["name"] == "write_file":
+                        tool_call_arguments = loads(tool_call["function"]["arguments"])
+                        tool_calls.append(
+                            WriteFileToolCall(
+                                id=tool_call["id"],
+                                tool_name="write_file",
+                                arguments=WriteFileArguments(
+                                    path=tool_call_arguments["path"], content=tool_call_arguments["content"]
                                 ),
                             )
                         )

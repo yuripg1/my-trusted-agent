@@ -41,6 +41,11 @@ class SearchWebArguments(TypedDict):
     results_page_number: Required[int]
 
 
+class WriteFileArguments(TypedDict):
+    path: Required[str]
+    content: Required[str]
+
+
 class BaseToolCall(TypedDict):
     id: NotRequired[str]
 
@@ -80,6 +85,11 @@ class SearchWebToolCall(BaseToolCall):
     arguments: Required[SearchWebArguments]
 
 
+class WriteFileToolCall(BaseToolCall):
+    tool_name: Required[Literal["write_file"]]
+    arguments: Required[WriteFileArguments]
+
+
 ToolCall: TypeAlias = (
     ExecuteBashCommandToolCall
     | GetRandomIntegerToolCall
@@ -88,6 +98,7 @@ ToolCall: TypeAlias = (
     | ReadPdfDocumentToolCall
     | ReadWebPageToolCall
     | SearchWebToolCall
+    | WriteFileToolCall
 )
 
 PDF_DOCUMENT_REQUEST_TIMEOUT: int = 300
@@ -114,6 +125,8 @@ def get_individual_tool_call_message(tool_call: ToolCall) -> str:
             return f'Reading web site at "{tool_call["arguments"]["url"]}"'
         elif tool_call["tool_name"] == "search_web":
             return f'Searching the web for "{tool_call["arguments"]["query"]}" ({tool_call["arguments"]["max_results_per_page"]} results - page {tool_call["arguments"]["results_page_number"]})'
+        elif tool_call["tool_name"] == "write_file":
+            return f'Writing file at "{tool_call["arguments"]["path"]}"'
     except:
         pass
     if len(tool_name) != 0:
@@ -359,6 +372,25 @@ def search_web(query: str, max_results_per_page: int, results_page_number: int) 
     return f'<web_search query="{query}" max_results_per_page="{max_results_per_page}" results_page_number="{results_page_number}">\n{joined_output_entries}\n</web_search>'
 
 
+def write_file(path: str, content: str, tool_call_permission: bool = True) -> str:
+    output_entries: list[str] = []
+    if not tool_call_permission:
+        output_entries.append("<error>File writing manually denied by the user</error>")
+    else:
+        try:
+            with open(path, "w") as file:
+                file.write(content)
+            output_entries.append("<result>File written successfully</result>")
+        except FileNotFoundError:
+            output_entries.append("<error>Directory not found</error>")
+        except PermissionError:
+            output_entries.append("<error>Permission denied</error>")
+        except:
+            output_entries.append("<error>Could not write file</error>")
+    joined_output_entries: str = "\n".join(output_entries)
+    return f'<file_write path="{path}">\n{joined_output_entries}\n</file_write>'
+
+
 def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
     tool_name: str = ""
     try:
@@ -388,6 +420,10 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
             max_results_per_page: int = tool_call["arguments"]["max_results_per_page"]
             results_page_number: int = tool_call["arguments"]["results_page_number"]
             return search_web(query, max_results_per_page, results_page_number)
+        elif tool_call["tool_name"] == "write_file":
+            write_file_path: str = tool_call["arguments"]["path"]
+            write_file_content: str = tool_call["arguments"]["content"]
+            return write_file(write_file_path, write_file_content, tool_call_permission)
     except:
         pass
     if len(tool_name) != 0:

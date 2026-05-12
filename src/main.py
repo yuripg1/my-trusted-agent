@@ -46,6 +46,7 @@ def get_default_tool_names() -> list[str]:
         "read_pdf_document",
         "read_web_page",
         "search_web",
+        "write_file",
     ]
     return tool_names
 
