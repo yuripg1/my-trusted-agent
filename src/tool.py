@@ -22,7 +22,7 @@ class EditFileArguments(TypedDict):
     path: Required[str]
     search_for: Required[str]
     replace_with: Required[str]
-    max_substitutions: Required[int]
+    number_of_substitutions: Required[int]
 
 
 class ExecuteShellCommandArguments(TypedDict):
@@ -150,7 +150,7 @@ def get_individual_tool_call_message(tool_call: ToolCall) -> str:
         elif tool_call["tool_name"] == "delete_file_or_directory":
             return f"Deleting **{tool_call["arguments"]["path"]}** (**{tool_call["arguments"]["type"]}**)"
         elif tool_call["tool_name"] == "edit_file":
-            return f"Editing file at **{tool_call["arguments"]["path"]}** (**{tool_call["arguments"]["max_substitutions"]}** substitutions)\n\n**Searching for**:\n```\n{tool_call["arguments"]["search_for"]}\n```\n\n**Replacing with**:\n```\n{tool_call["arguments"]["replace_with"]}\n```"
+            return f"Editing file at **{tool_call["arguments"]["path"]}** (**{tool_call["arguments"]["number_of_substitutions"]}** substitutions)\n\n**Searching for**:\n```\n{tool_call["arguments"]["search_for"]}\n```\n\n**Replacing with**:\n```\n{tool_call["arguments"]["replace_with"]}\n```"
         elif tool_call["tool_name"] == "execute_shell_command":
             return f"```shell\n$ {tool_call["arguments"]["command"]}\n```"
         elif tool_call["tool_name"] == "generate_random_integer":
@@ -250,43 +250,38 @@ def delete_file_or_directory(type: str, path: str, tool_call_permission: bool = 
 
 
 def edit_file(
-    path: str, search_for: str, replace_with: str, max_substitutions: int, tool_call_permission: bool = True
+    path: str, search_for: str, replace_with: str, number_of_substitutions: int, tool_call_permission: bool = True
 ) -> str:
     output_entries: list[str] = []
     if not tool_call_permission:
         output_entries.append("<error>File editing manually denied by the user</error>")
     else:
-        if max_substitutions < 1:
-            output_entries.append("<error>max_substitutions must be greater than or equal to 1</error>")
-        elif len(search_for) == 0:
-            output_entries.append("<error>search_for cannot be empty</error>")
-        else:
-            try:
-                with open(path, "r") as file:
-                    file_content: str = file.read()
-                number_of_occurrences: int = file_content.count(search_for)
-                output_entries.append(f"<number_of_occurrences>{number_of_occurrences}</number_of_occurrences>")
-                if number_of_occurrences == 0:
-                    output_entries.append(
-                        "<error>No occurrences of the searched text were found. No substitutions were made.</error>"
-                    )
-                elif number_of_occurrences > max_substitutions:
-                    output_entries.append(
-                        f"<error>Found {number_of_occurrences} occurrences of the searched text, but max_substitutions was set to {max_substitutions}. Please be more specific and include more context in the search text to narrow down the match.</error>"
-                    )
-                else:
-                    new_content: str = file_content.replace(search_for, replace_with, max_substitutions)
-                    with open(path, "w") as file:
-                        file.write(new_content)
-                    output_entries.append("<result>File edited successfully</result>")
-            except FileNotFoundError:
-                output_entries.append("<error>File not found</error>")
-            except PermissionError:
-                output_entries.append("<error>Permission denied by the system</error>")
-            except:
-                output_entries.append("<error>Could not edit file</error>")
+        number_of_occurrences: int | None = None
+        try:
+            with open(path, "r") as file:
+                file_content: str = file.read()
+            number_of_occurrences = file_content.count(search_for)
+            if number_of_occurrences == 0:
+                output_entries.append("<error>No occurrences of the searched text were found</error>")
+            elif number_of_occurrences != number_of_substitutions:
+                output_entries.append(
+                    f"<error>The number of occurrences of the searched text does not match the expected number of substitutions</error>"
+                )
+            else:
+                new_content: str = file_content.replace(search_for, replace_with, number_of_substitutions)
+                with open(path, "w") as file:
+                    file.write(new_content)
+                output_entries.append("<result>File edited successfully</result>")
+        except FileNotFoundError:
+            output_entries.append("<error>File not found</error>")
+        except PermissionError:
+            output_entries.append("<error>Permission denied by the system</error>")
+        except:
+            output_entries.append("<error>Could not edit file</error>")
+        if number_of_occurrences is not None:
+            output_entries.append(f"<number_of_occurrences>{number_of_occurrences}</number_of_occurrences>")
     joined_output_entries: str = "\n".join(output_entries)
-    return f'<file_edit path="{path}" max_substitutions="{max_substitutions}">\n{joined_output_entries}\n</file_edit>'
+    return f'<file_edit path="{path}" number_of_substitutions="{number_of_substitutions}">\n{joined_output_entries}\n</file_edit>'
 
 
 def execute_shell_command(command: str, tool_call_permission: bool = True) -> str:
@@ -538,8 +533,8 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
             path: str = tool_call["arguments"]["path"]
             search_for: str = tool_call["arguments"]["search_for"]
             replace_with: str = tool_call["arguments"]["replace_with"]
-            max_substitutions: int = tool_call["arguments"]["max_substitutions"]
-            return edit_file(path, search_for, replace_with, max_substitutions, tool_call_permission)
+            number_of_substitutions: int = tool_call["arguments"]["number_of_substitutions"]
+            return edit_file(path, search_for, replace_with, number_of_substitutions, tool_call_permission)
         elif tool_call["tool_name"] == "execute_shell_command":
             command: str = tool_call["arguments"]["command"]
             return execute_shell_command(command, tool_call_permission)

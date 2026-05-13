@@ -265,7 +265,7 @@ class DeepSeekAi:
                                     path=tool_call_arguments["path"],
                                     search_for=tool_call_arguments["search_for"],
                                     replace_with=tool_call_arguments["replace_with"],
-                                    max_substitutions=tool_call_arguments["max_substitutions"],
+                                    number_of_substitutions=tool_call_arguments["number_of_substitutions"],
                                 ),
                             )
                         )
