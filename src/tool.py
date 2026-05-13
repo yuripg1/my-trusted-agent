@@ -142,6 +142,27 @@ WEB_SEARCH_TIMEOUT: int = 300
 WEB_SEARCH_SAFESEARCH: str = "off"
 
 
+def make_safe_code_fence(content: str, info_string: str = "") -> str:
+    max_backtick_run: int = 0
+    current_backtick_run: int = 0
+    for character in content:
+        if character == "`":
+            current_backtick_run += 1
+            if current_backtick_run > max_backtick_run:
+                max_backtick_run = current_backtick_run
+        else:
+            current_backtick_run = 0
+    fence_length: int = 3
+    if max_backtick_run >= 3:
+        fence_length = max_backtick_run + 1
+    fence: str = "`" * fence_length
+    info: str = info_string.strip()
+    if len(info) != 0:
+        return f"{fence}{info}\n{content}\n{fence}"
+    else:
+        return f"{fence}\n{content}\n{fence}"
+
+
 def get_individual_tool_call_message(tool_call: ToolCall) -> str:
     tool_name: str = ""
     try:
@@ -151,9 +172,11 @@ def get_individual_tool_call_message(tool_call: ToolCall) -> str:
         elif tool_call["tool_name"] == "delete_file_or_directory":
             return f"Deleting **{tool_call["arguments"]["path"]}** (**{tool_call["arguments"]["type"]}**)"
         elif tool_call["tool_name"] == "edit_file":
-            return f"Editing file at **{tool_call["arguments"]["path"]}** (**{tool_call["arguments"]["number_of_substitutions"]}** substitutions)\n\n**Searching for**:\n```\n{tool_call["arguments"]["search_for"]}\n```\n\n**Replacing with**:\n```\n{tool_call["arguments"]["replace_with"]}\n```"
+            return f"Editing file at **{tool_call["arguments"]["path"]}** (**{tool_call["arguments"]["number_of_substitutions"]}** substitutions)\n\n**Searching for**:\n{make_safe_code_fence(tool_call["arguments"]["search_for"])}\n\n**Replacing with**:\n{make_safe_code_fence(tool_call["arguments"]["replace_with"])}"
         elif tool_call["tool_name"] == "execute_shell_command":
-            return f"```shell\n$ {tool_call["arguments"]["command"]}\n```"
+            return (
+                f"Executing shell command\n\n{make_safe_code_fence(f"$ {tool_call["arguments"]["command"]}", 'shell')}"
+            )
         elif tool_call["tool_name"] == "generate_random_integer":
             return f"Generating a random integer between **{tool_call["arguments"]["min"]}** and **{tool_call["arguments"]["max"]}**"
         elif tool_call["tool_name"] == "list_directory":
@@ -167,7 +190,7 @@ def get_individual_tool_call_message(tool_call: ToolCall) -> str:
         elif tool_call["tool_name"] == "search_web":
             return f"Searching the web for **{tool_call["arguments"]["query"]}** (**{tool_call["arguments"]["max_results_per_page"]}** results - page **{tool_call["arguments"]["results_page_number"]}**)"
         elif tool_call["tool_name"] == "write_file":
-            return f"Writing file at **{tool_call["arguments"]["path"]}** (**{tool_call["arguments"]["mode"]}** mode)\n\n```\n{tool_call["arguments"]["content"]}\n```"
+            return f"Writing file at **{tool_call["arguments"]["path"]}** (**{tool_call["arguments"]["mode"]}** mode)\n\n{make_safe_code_fence(tool_call["arguments"]["content"])}"
     except:
         pass
     if len(tool_name) != 0:
