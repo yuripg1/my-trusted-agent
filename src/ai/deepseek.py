@@ -4,31 +4,18 @@ from time import sleep
 from typing import Any, Literal, Mapping, NotRequired, Required, TypedDict
 
 from ai.deepseek_api_tools import DeepSeekTool, DeepSeekToolFunction, DEEPSEEK_TOOLS
-from tool import (
-    CreateDirectoryArguments,
-    CreateDirectoryToolCall,
-    DeleteFileOrDirectoryArguments,
-    DeleteFileOrDirectoryToolCall,
-    EditFileArguments,
-    EditFileToolCall,
-    ExecuteShellCommandArguments,
-    ExecuteShellCommandToolCall,
-    GetRandomIntegerArguments,
-    GetRandomIntegerToolCall,
-    ListDirectoryArguments,
-    ListDirectoryToolCall,
-    ReadFileArguments,
-    ReadFileToolCall,
-    ReadPdfDocumentArguments,
-    ReadPdfDocumentToolCall,
-    ReadWebPageArguments,
-    ReadWebPageToolCall,
-    SearchWebArguments,
-    SearchWebToolCall,
-    WriteFileArguments,
-    WriteFileToolCall,
-    ToolCall,
-)
+from tool.core import ToolCall
+from tool.create_directory import CreateDirectoryArguments, CreateDirectoryToolCall
+from tool.delete_file_or_directory import DeleteFileOrDirectoryArguments, DeleteFileOrDirectoryToolCall
+from tool.edit_file import EditFileArguments, EditFileToolCall
+from tool.execute_shell_command import ExecuteShellCommandArguments, ExecuteShellCommandToolCall
+from tool.generate_random_integer import GenerateRandomIntegerArguments, GenerateRandomIntegerToolCall
+from tool.list_directory import ListDirectoryArguments, ListDirectoryToolCall
+from tool.read_file import ReadFileArguments, ReadFileToolCall
+from tool.read_pdf_document import ReadPdfDocumentArguments, ReadPdfDocumentToolCall
+from tool.read_web_page import ReadWebPageArguments, ReadWebPageToolCall
+from tool.search_web import SearchWebArguments, SearchWebToolCall
+from tool.write_file import WriteFileArguments, WriteFileToolCall
 
 DeepSeekRoleType = Literal["assistant", "system", "tool", "user"]
 DeepSeekToolChoiceType = Literal["none", "auto", "required"]
@@ -281,10 +268,10 @@ class DeepSeekAi:
                     elif tool_call["function"]["name"] == "generate_random_integer":
                         tool_call_arguments = loads(tool_call["function"]["arguments"])
                         tool_calls.append(
-                            GetRandomIntegerToolCall(
+                            GenerateRandomIntegerToolCall(
                                 id=tool_call["id"],
                                 tool_name="generate_random_integer",
-                                arguments=GetRandomIntegerArguments(
+                                arguments=GenerateRandomIntegerArguments(
                                     min=tool_call_arguments["min"], max=tool_call_arguments["max"]
                                 ),
                             )

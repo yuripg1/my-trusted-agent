@@ -4,7 +4,7 @@ from ai.core import Ai, AiMessage
 from database import close_db_connection, init_db, open_db_connection
 from environment import Environment
 from entity.session import Session
-from tool import (
+from tool.core import (
     execute_shell_command,
     execute_tool_call,
     get_individual_tool_call_permission,

@@ -10,7 +10,7 @@ from ai.deepseek import (
 )
 from ai.deepseek_api_tools import DeepSeekTool
 from environment import Environment
-from tool import ToolCall
+from tool.core import ToolCall
 
 AiProviderType = Literal["deepseek"]
 AiRoleType = Literal["assistant", "system", "tool", "user"]

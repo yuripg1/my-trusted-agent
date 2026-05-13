@@ -1,6 +1,6 @@
 from os.path import dirname
 from os import makedirs
-from sqlite3 import Connection, connect, Row
+from sqlite3 import connect, Connection, Row
 
 
 def open_db_connection(db_path: str) -> Connection:

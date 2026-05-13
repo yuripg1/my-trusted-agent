@@ -2,7 +2,7 @@ from sqlite3 import Connection, Cursor
 from typing import Self
 
 from ai.core import Ai, AiMessage, AiMessages, AiProviderType, AiTools
-from tool import ToolCall
+from tool.core import ToolCall
 
 
 class Session:
