@@ -1,5 +1,5 @@
-from os.path import dirname
 from os import makedirs
+from os.path import dirname
 from sqlite3 import connect, Connection, Row
 
 

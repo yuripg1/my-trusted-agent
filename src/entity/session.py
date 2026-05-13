@@ -58,6 +58,11 @@ class Session:
         self.context_length = 0
         ai.rewind_message(self.__messages)
 
+    def compact(self, ai: Ai) -> None:
+        self.id = None
+        self.context_length = 0
+        self.__messages = ai.compact_messages(self.__messages)
+
     def add_tools(self, ai: Ai, tool_names: list[str]) -> None:
         ai.add_tools(self.__tools, tool_names)
 

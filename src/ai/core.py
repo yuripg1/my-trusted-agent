@@ -67,6 +67,12 @@ class Ai:
         if self.provider == "deepseek" and self.deepseek_ai is not None and "deepseek_messages" in messages:
             self.deepseek_ai.rewind_message(messages["deepseek_messages"])
 
+    def compact_messages(self, messages: AiMessages) -> AiMessages:
+        if self.provider == "deepseek" and self.deepseek_ai is not None and "deepseek_messages" in messages:
+            return AiMessages(deepseek_messages=self.deepseek_ai.compact_messages(messages["deepseek_messages"]))
+        else:
+            return AiMessages()
+
     def add_tools(self, tools: AiTools, tool_names: list[str]) -> None:
         if self.provider == "deepseek" and self.deepseek_ai is not None and "deepseek_tools" in tools:
             self.deepseek_ai.add_tools(tools["deepseek_tools"], tool_names)

@@ -5,7 +5,6 @@ from database import close_db_connection, init_db, open_db_connection
 from environment import Environment
 from entity.session import Session
 from tool.core import (
-    execute_shell_command,
     execute_tool_call,
     get_individual_tool_call_permission,
     get_group_tool_call_permission,
@@ -13,6 +12,7 @@ from tool.core import (
     get_individual_tool_call_message,
     ToolCall,
 )
+from tool.execute_shell_command import execute_shell_command
 from ui.core import Ui
 
 
@@ -80,6 +80,8 @@ def ai_chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui
                     replay_message = session.get_nth_message(ai, replay_message_index)
             elif user_input == "/rewind":
                 session.rewind_message(ai)
+            elif user_input == "/compact":
+                session.compact(ai)
             elif user_input == "/exit":
                 break
             else:
