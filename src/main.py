@@ -39,6 +39,8 @@ def get_default_system_messages(environment: Environment, ui_system_message: str
 
 def get_default_tool_names() -> list[str]:
     tool_names: list[str] = [
+        "create_directory",
+        "delete_file_or_directory",
         "execute_shell_command",
         "generate_random_integer",
         "list_directory",

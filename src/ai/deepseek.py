@@ -5,6 +5,10 @@ from typing import Any, Literal, Mapping, NotRequired, Required, TypedDict
 
 from ai.deepseek_api_tools import DeepSeekTool, DeepSeekToolFunction, DEEPSEEK_TOOLS
 from tool import (
+    CreateDirectoryArguments,
+    CreateDirectoryToolCall,
+    DeleteFileOrDirectoryArguments,
+    DeleteFileOrDirectoryToolCall,
     ExecuteShellCommandArguments,
     ExecuteShellCommandToolCall,
     GetRandomIntegerArguments,
@@ -229,7 +233,27 @@ class DeepSeekAi:
             nth_message: DeepSeekMessage = messages[message_index]
             if "tool_calls" in nth_message:
                 for tool_call in nth_message["tool_calls"]:
-                    if tool_call["function"]["name"] == "execute_shell_command":
+                    if tool_call["function"]["name"] == "create_directory":
+                        tool_call_arguments = loads(tool_call["function"]["arguments"])
+                        tool_calls.append(
+                            CreateDirectoryToolCall(
+                                id=tool_call["id"],
+                                tool_name="create_directory",
+                                arguments=CreateDirectoryArguments(path=tool_call_arguments["path"]),
+                            )
+                        )
+                    elif tool_call["function"]["name"] == "delete_file_or_directory":
+                        tool_call_arguments = loads(tool_call["function"]["arguments"])
+                        tool_calls.append(
+                            DeleteFileOrDirectoryToolCall(
+                                id=tool_call["id"],
+                                tool_name="delete_file_or_directory",
+                                arguments=DeleteFileOrDirectoryArguments(
+                                    type=tool_call_arguments["type"], path=tool_call_arguments["path"]
+                                ),
+                            )
+                        )
+                    elif tool_call["function"]["name"] == "execute_shell_command":
                         tool_call_arguments = loads(tool_call["function"]["arguments"])
                         tool_calls.append(
                             ExecuteShellCommandToolCall(

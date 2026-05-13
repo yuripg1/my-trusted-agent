@@ -13,11 +13,44 @@ class DeepSeekTool(TypedDict):
 
 
 DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
+    "create_directory": {
+        "type": "function",
+        "function": {
+            "name": "create_directory",
+            "description": "Create a directory (if the parent directories do not exist, create them)",
+            "parameters": {
+                "type": "object",
+                "properties": {"path": {"type": "string", "description": "Path of the directory to be created"}},
+                "required": ["path"],
+                "additionalProperties": False,
+            },
+        },
+    },
+    "delete_file_or_directory": {
+        "type": "function",
+        "function": {
+            "name": "delete_file_or_directory",
+            "description": "Delete a file or an empty directory",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "description": 'The type of the path ("file" or "directory")',
+                        "enum": ["file", "directory"],
+                    },
+                    "path": {"type": "string", "description": "Path of the file or directory"},
+                },
+                "required": ["type", "path"],
+                "additionalProperties": False,
+            },
+        },
+    },
     "execute_shell_command": {
         "type": "function",
         "function": {
             "name": "execute_shell_command",
-            "description": 'Execute any shell command and return the resulting stdout, stderr, and exit code',
+            "description": "Execute any shell command and return the resulting stdout, stderr, and exit code",
             "parameters": {
                 "type": "object",
                 "properties": {"command": {"type": "string", "description": "The command to be executed"}},
@@ -134,7 +167,7 @@ DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
         "type": "function",
         "function": {
             "name": "write_file",
-            "description": "Write text contents to a file (if the file does not exist, create it; if the file exist, overwrite it; if the directory does not exist, create it)",
+            "description": "Write text contents to a file (if the file does not exist, create it; if the file exist, overwrite it; if the directory does not exist, create it; if the parent directories do not exist, create them)",
             "parameters": {
                 "type": "object",
                 "properties": {

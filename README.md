@@ -27,12 +27,22 @@ This projects aims at implementing a minimalistic terminal-based AI agent that i
 
 The AI agent does have support for tool calling.
 
+The following actions are auto-approved:
+
+* Generating random integers
+* Listing directories
+* Reading web pages
+* Searching the web
+* Creating directories
+* Reading PDF documents from the web
+
 However, for security reasons, the following actions require manual user permission:
 
-* Execution of shell commands
-* Reading of local PDF documents
-* File reading
-* File writing
+* Executing shell commands
+* Reading local PDF documents
+* Reading files
+* Writing files
+* Deleting files or directories
 
 ---
 
