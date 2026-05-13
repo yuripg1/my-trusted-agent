@@ -348,7 +348,9 @@ class DeepSeekAi:
                                 id=tool_call["id"],
                                 tool_name="write_file",
                                 arguments=WriteFileArguments(
-                                    path=tool_call_arguments["path"], content=tool_call_arguments["content"]
+                                    path=tool_call_arguments["path"],
+                                    mode=tool_call_arguments["mode"],
+                                    content=tool_call_arguments["content"],
                                 ),
                             )
                         )
