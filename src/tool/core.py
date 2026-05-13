@@ -1,3 +1,4 @@
+from difflib import unified_diff
 from typing import TypeAlias
 
 from tool.create_directory import CreateDirectoryToolCall, create_directory
@@ -57,9 +58,20 @@ def get_individual_tool_call_message(tool_call: ToolCall) -> str:
         elif tool_call["tool_name"] == "delete_file_or_directory":
             return f"Deleting **{tool_call["arguments"]["path"]}** (**{tool_call["arguments"]["type"]}**)"
         elif tool_call["tool_name"] == "edit_file":
-            search_for_content: str = make_safe_code_fence(tool_call["arguments"]["search_for"])
-            replace_with_content: str = make_safe_code_fence(tool_call["arguments"]["replace_with"])
-            return f"Editing file at **{tool_call["arguments"]["path"]}** (**{tool_call["arguments"]["number_of_substitutions"]}** substitutions)\n\n**Searching for**:\n{search_for_content}\n\n**Replacing with**:\n{replace_with_content}"
+            search_for_text: str = tool_call["arguments"]["search_for"]
+            replace_with_text: str = tool_call["arguments"]["replace_with"]
+            file_path: str = tool_call["arguments"]["path"]
+            diff_lines: list[str] = list(
+                unified_diff(
+                    search_for_text.splitlines(),
+                    replace_with_text.splitlines(),
+                    fromfile=file_path,
+                    tofile=file_path,
+                    lineterm="",
+                )
+            )
+            edit_content: str = make_safe_code_fence("\n".join(diff_lines), "diff")
+            return f"Editing file at **{tool_call["arguments"]["path"]}** (**{tool_call["arguments"]["number_of_substitutions"]}** substitutions)\n\n{edit_content}"
         elif tool_call["tool_name"] == "execute_shell_command":
             command_content: str = make_safe_code_fence(f"$ {tool_call["arguments"]["command"]}", "shell")
             return f"Executing shell command\n\n{command_content}"
