@@ -50,7 +50,7 @@ DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
         "type": "function",
         "function": {
             "name": "edit_file",
-            "description": "Edit a file by searching for specific piece of text and replacing it with another piece of text (return an error if the number of occurrences found does not exactly match the expected number of substitutions)",
+            "description": "Edit a file by searching for an exact piece of text and replacing it with another piece of text",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -59,7 +59,7 @@ DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
                     "replace_with": {"type": "string", "description": "The text to replace occurrences with"},
                     "number_of_substitutions": {
                         "type": "integer",
-                        "description": "Exact number of substitutions expected to be performed",
+                        "description": "Exact number of substitutions expected to be performed (return an error if it does not match the number of occurrences found)",
                         "minimum": 1,
                     },
                 },
@@ -189,14 +189,19 @@ DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
         "type": "function",
         "function": {
             "name": "write_file",
-            "description": "Write text contents to a file (if the file does not exist, create it; if the file exist, overwrite it; if the directory does not exist, create it; if the parent directories do not exist, create them)",
+            "description": "Write text contents to a file (if the file does not exist, create it; if the file exist, either overwrite it or append to it, depending on the chosen mode; if the directory does not exist, create it; if the parent directories do not exist, create them)",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "path": {"type": "string", "description": "Path of the file"},
+                    "mode": {
+                        "type": "string",
+                        "description": 'The write mode ("create_or_overwrite" to overwrite if exists or create otherwise; "create_if_not_exists" to create only if the file does not already exist; "append" to append to the end of the file if it exists or create it otherwise)',
+                        "enum": ["create_or_overwrite", "create_if_not_exists", "append"],
+                    },
                     "content": {"type": "string", "description": "Text contents to write"},
                 },
-                "required": ["path", "content"],
+                "required": ["path", "mode", "content"],
                 "additionalProperties": False,
             },
         },
