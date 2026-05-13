@@ -41,6 +41,7 @@ def get_default_tool_names() -> list[str]:
     tool_names: list[str] = [
         "create_directory",
         "delete_file_or_directory",
+        "edit_file",
         "execute_shell_command",
         "generate_random_integer",
         "list_directory",

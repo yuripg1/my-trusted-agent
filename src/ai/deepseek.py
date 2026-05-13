@@ -9,6 +9,8 @@ from tool import (
     CreateDirectoryToolCall,
     DeleteFileOrDirectoryArguments,
     DeleteFileOrDirectoryToolCall,
+    EditFileArguments,
+    EditFileToolCall,
     ExecuteShellCommandArguments,
     ExecuteShellCommandToolCall,
     GetRandomIntegerArguments,
@@ -250,6 +252,20 @@ class DeepSeekAi:
                                 tool_name="delete_file_or_directory",
                                 arguments=DeleteFileOrDirectoryArguments(
                                     type=tool_call_arguments["type"], path=tool_call_arguments["path"]
+                                ),
+                            )
+                        )
+                    elif tool_call["function"]["name"] == "edit_file":
+                        tool_call_arguments = loads(tool_call["function"]["arguments"])
+                        tool_calls.append(
+                            EditFileToolCall(
+                                id=tool_call["id"],
+                                tool_name="edit_file",
+                                arguments=EditFileArguments(
+                                    path=tool_call_arguments["path"],
+                                    search_for=tool_call_arguments["search_for"],
+                                    replace_with=tool_call_arguments["replace_with"],
+                                    max_substitutions=tool_call_arguments["max_substitutions"],
                                 ),
                             )
                         )

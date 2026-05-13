@@ -42,6 +42,7 @@ However, for security reasons, the following actions require manual user permiss
 * Reading local PDF documents
 * Reading files
 * Writing files
+* Editing files
 * Deleting files or directories
 
 ---

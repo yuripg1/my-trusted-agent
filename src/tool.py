@@ -18,6 +18,13 @@ class DeleteFileOrDirectoryArguments(TypedDict):
     path: Required[str]
 
 
+class EditFileArguments(TypedDict):
+    path: Required[str]
+    search_for: Required[str]
+    replace_with: Required[str]
+    max_substitutions: Required[int]
+
+
 class ExecuteShellCommandArguments(TypedDict):
     command: Required[str]
 
@@ -69,6 +76,11 @@ class DeleteFileOrDirectoryToolCall(BaseToolCall):
     arguments: Required[DeleteFileOrDirectoryArguments]
 
 
+class EditFileToolCall(BaseToolCall):
+    tool_name: Required[Literal["edit_file"]]
+    arguments: Required[EditFileArguments]
+
+
 class ExecuteShellCommandToolCall(BaseToolCall):
     tool_name: Required[Literal["execute_shell_command"]]
     arguments: Required[ExecuteShellCommandArguments]
@@ -112,6 +124,7 @@ class WriteFileToolCall(BaseToolCall):
 ToolCall: TypeAlias = (
     CreateDirectoryToolCall
     | DeleteFileOrDirectoryToolCall
+    | EditFileToolCall
     | ExecuteShellCommandToolCall
     | GetRandomIntegerToolCall
     | ListDirectoryToolCall
@@ -133,26 +146,28 @@ def get_individual_tool_call_message(tool_call: ToolCall) -> str:
     try:
         tool_name = tool_call["tool_name"]
         if tool_call["tool_name"] == "create_directory":
-            return f'Creating directory at **{tool_call["arguments"]["path"]}**'
+            return f"Creating directory at **{tool_call["arguments"]["path"]}**"
         elif tool_call["tool_name"] == "delete_file_or_directory":
-            return f'Deleting **{tool_call["arguments"]["path"]}** (**{tool_call["arguments"]["type"]}**)'
+            return f"Deleting **{tool_call["arguments"]["path"]}** (**{tool_call["arguments"]["type"]}**)"
+        elif tool_call["tool_name"] == "edit_file":
+            return f"Editing file at **{tool_call["arguments"]["path"]}** (**{tool_call["arguments"]["max_substitutions"]}** substitutions)\n\n**Searching for**:\n```\n{tool_call["arguments"]["search_for"]}\n```\n\n**Replacing with**:\n```\n{tool_call["arguments"]["replace_with"]}\n```"
         elif tool_call["tool_name"] == "execute_shell_command":
             return f"```shell\n$ {tool_call["arguments"]["command"]}\n```"
         elif tool_call["tool_name"] == "generate_random_integer":
-            return f'Generating a random integer between **{tool_call["arguments"]["min"]}** and **{tool_call["arguments"]["max"]}**'
+            return f"Generating a random integer between **{tool_call["arguments"]["min"]}** and **{tool_call["arguments"]["max"]}**"
         elif tool_call["tool_name"] == "list_directory":
-            return f'Listing directory at **{tool_call["arguments"]["path"]}**'
+            return f"Listing directory at **{tool_call["arguments"]["path"]}**"
         elif tool_call["tool_name"] == "read_file":
-            return f'Reading file at **{tool_call["arguments"]["path"]}**'
+            return f"Reading file at **{tool_call["arguments"]["path"]}**"
         elif tool_call["tool_name"] == "read_pdf_document":
-            return f'Reading PDF document at **{tool_call["arguments"]["location"]}** (**{tool_call["arguments"]["location_type"]}**)'
+            return f"Reading PDF document at **{tool_call["arguments"]["location"]}** (**{tool_call["arguments"]["location_type"]}**)"
         elif tool_call["tool_name"] == "read_web_page":
-            return f'Reading web site at **{tool_call["arguments"]["url"]}**'
+            return f"Reading web site at **{tool_call["arguments"]["url"]}**"
         elif tool_call["tool_name"] == "search_web":
-            return f'Searching the web for **{tool_call["arguments"]["query"]}** (**{tool_call["arguments"]["max_results_per_page"]}** results - page **{tool_call["arguments"]["results_page_number"]}**)'
+            return f"Searching the web for **{tool_call["arguments"]["query"]}** (**{tool_call["arguments"]["max_results_per_page"]}** results - page **{tool_call["arguments"]["results_page_number"]}**)"
         elif tool_call["tool_name"] == "write_file":
             return (
-                f'Writing file at **{tool_call["arguments"]["path"]}**\n\n```\n{tool_call["arguments"]["content"]}\n```'
+                f"Writing file at **{tool_call["arguments"]["path"]}**\n\n```\n{tool_call["arguments"]["content"]}\n```"
             )
     except:
         pass
@@ -232,6 +247,46 @@ def delete_file_or_directory(type: str, path: str, tool_call_permission: bool = 
             output_entries.append("<error>Could not delete file or directory</error>")
     joined_output_entries: str = "\n".join(output_entries)
     return f'<file_or_directory_deletion type="{type}" path="{path}">\n{joined_output_entries}\n</file_or_directory_deletion>'
+
+
+def edit_file(
+    path: str, search_for: str, replace_with: str, max_substitutions: int, tool_call_permission: bool = True
+) -> str:
+    output_entries: list[str] = []
+    if not tool_call_permission:
+        output_entries.append("<error>File editing manually denied by the user</error>")
+    else:
+        if max_substitutions < 1:
+            output_entries.append("<error>max_substitutions must be greater than or equal to 1</error>")
+        elif len(search_for) == 0:
+            output_entries.append("<error>search_for cannot be empty</error>")
+        else:
+            try:
+                with open(path, "r") as file:
+                    file_content: str = file.read()
+                number_of_occurrences: int = file_content.count(search_for)
+                output_entries.append(f"<number_of_occurrences>{number_of_occurrences}</number_of_occurrences>")
+                if number_of_occurrences == 0:
+                    output_entries.append(
+                        "<error>No occurrences of the searched text were found. No substitutions were made.</error>"
+                    )
+                elif number_of_occurrences > max_substitutions:
+                    output_entries.append(
+                        f"<error>Found {number_of_occurrences} occurrences of the searched text, but max_substitutions was set to {max_substitutions}. Please be more specific and include more context in the search text to narrow down the match.</error>"
+                    )
+                else:
+                    new_content: str = file_content.replace(search_for, replace_with, max_substitutions)
+                    with open(path, "w") as file:
+                        file.write(new_content)
+                    output_entries.append("<result>File edited successfully</result>")
+            except FileNotFoundError:
+                output_entries.append("<error>File not found</error>")
+            except PermissionError:
+                output_entries.append("<error>Permission denied by the system</error>")
+            except:
+                output_entries.append("<error>Could not edit file</error>")
+    joined_output_entries: str = "\n".join(output_entries)
+    return f'<file_edit path="{path}" max_substitutions="{max_substitutions}">\n{joined_output_entries}\n</file_edit>'
 
 
 def execute_shell_command(command: str, tool_call_permission: bool = True) -> str:
@@ -472,7 +527,20 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
     tool_name: str = ""
     try:
         tool_name = tool_call["tool_name"]
-        if tool_call["tool_name"] == "execute_shell_command":
+        if tool_call["tool_name"] == "create_directory":
+            create_directory_path: str = tool_call["arguments"]["path"]
+            return create_directory(create_directory_path)
+        elif tool_call["tool_name"] == "delete_file_or_directory":
+            delete_type: str = tool_call["arguments"]["type"]
+            delete_path: str = tool_call["arguments"]["path"]
+            return delete_file_or_directory(delete_type, delete_path, tool_call_permission)
+        elif tool_call["tool_name"] == "edit_file":
+            path: str = tool_call["arguments"]["path"]
+            search_for: str = tool_call["arguments"]["search_for"]
+            replace_with: str = tool_call["arguments"]["replace_with"]
+            max_substitutions: int = tool_call["arguments"]["max_substitutions"]
+            return edit_file(path, search_for, replace_with, max_substitutions, tool_call_permission)
+        elif tool_call["tool_name"] == "execute_shell_command":
             command: str = tool_call["arguments"]["command"]
             return execute_shell_command(command, tool_call_permission)
         elif tool_call["tool_name"] == "generate_random_integer":
@@ -501,13 +569,6 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
             write_file_path: str = tool_call["arguments"]["path"]
             write_file_content: str = tool_call["arguments"]["content"]
             return write_file(write_file_path, write_file_content, tool_call_permission)
-        elif tool_call["tool_name"] == "create_directory":
-            create_directory_path: str = tool_call["arguments"]["path"]
-            return create_directory(create_directory_path)
-        elif tool_call["tool_name"] == "delete_file_or_directory":
-            delete_type: str = tool_call["arguments"]["type"]
-            delete_path: str = tool_call["arguments"]["path"]
-            return delete_file_or_directory(delete_type, delete_path, tool_call_permission)
     except:
         pass
     if len(tool_name) != 0:

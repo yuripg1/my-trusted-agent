@@ -46,6 +46,28 @@ DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
             },
         },
     },
+    "edit_file": {
+        "type": "function",
+        "function": {
+            "name": "edit_file",
+            "description": "Edit a file by searching for specific piece of text and replacing it with another piece of text (return an error if the text being searched for is found more times than the number of substitutions requested or if it is not found)",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "Path of the file to edit"},
+                    "search_for": {"type": "string", "description": "The exact text to search for"},
+                    "replace_with": {"type": "string", "description": "The text to replace occurrences with"},
+                    "max_substitutions": {
+                        "type": "integer",
+                        "description": "Maximum number of substitutions allowed",
+                        "minimum": 1,
+                    },
+                },
+                "required": ["path", "search_for", "replace_with", "max_substitutions"],
+                "additionalProperties": False,
+            },
+        },
+    },
     "execute_shell_command": {
         "type": "function",
         "function": {
