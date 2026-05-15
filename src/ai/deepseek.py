@@ -130,18 +130,6 @@ class DeepSeekAi:
         if len(messages) != 0:
             del messages[-1]
 
-    def compact_messages(self, messages: list[DeepSeekMessage]) -> list[DeepSeekMessage]:
-        compacted_messages: list[DeepSeekMessage] = []
-        for message in messages:
-            if message["role"] == "tool":
-                continue
-            if message["role"] == "assistant":
-                compacted_message: DeepSeekMessage = {"role": "assistant", "content": message.get("content", "")}
-                compacted_messages.append(compacted_message)
-            else:
-                compacted_messages.append(message)
-        return compacted_messages
-
     def add_tools(self, tools: list[DeepSeekTool], tool_names: list[str]) -> None:
         for tool_name in tool_names:
             if tool_name in DEEPSEEK_TOOLS:

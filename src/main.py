@@ -12,7 +12,6 @@ from tool.core import (
     get_individual_tool_call_message,
     get_individual_tool_call_permission,
 )
-from tool.execute_shell_command import execute_shell_command
 from ui.core import Ui
 
 
@@ -80,8 +79,6 @@ def ai_chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui
                     replay_message = session.get_nth_message(ai, replay_message_index)
             elif user_input == "/rewind":
                 session.rewind_message(ai)
-            elif user_input == "/compact":
-                session.compact(ai)
             elif user_input == "/exit":
                 break
             else:
