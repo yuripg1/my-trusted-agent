@@ -6,7 +6,7 @@ from tool.generate_random_integer import generate_random_integer
 class TestGenerateRandomInteger:
     """Tests for the `generate_random_integer` tool"""
 
-    def test_success_result_format(self) -> None:
+    def test_success(self) -> None:
         """Generate a random integer"""
         min: int = randint(11, 19)
         max: int = randint(31, 39)

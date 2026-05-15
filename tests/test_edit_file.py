@@ -8,7 +8,7 @@ from tool.edit_file import edit_file
 class TestEditFile:
     """Tests for the `edit_file` tool"""
 
-    def test_successful_single_substitution(self, tmp_path: Path) -> None:
+    def test_successful_substitution(self, tmp_path: Path) -> None:
         """Edit a file with a correct number of substitutions"""
         number_of_occurrences: int = randint(2, 8)
         searched_for_text: str = "hello"
@@ -69,7 +69,7 @@ class TestEditFile:
             == f'<file_edit path="{str(target)}" number_of_substitutions="{number_of_substitutions}">\n<error>File not found</error>\n</file_edit>'
         )
 
-    def test_permission_denied(self, tmp_path: Path) -> None:
+    def test_permission_error(self, tmp_path: Path) -> None:
         """Do not edit a file due to permission error"""
         number_of_occurrences: int = randint(2, 8)
         searched_for_text: str = "hello"

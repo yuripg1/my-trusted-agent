@@ -71,7 +71,7 @@ class TestDeleteFileOrDirectory:
         )
         assert target.exists()
 
-    def test_permission_denied_by_system(self, tmp_path: Path) -> None:
+    def test_permission_error(self, tmp_path: Path) -> None:
         """Do not delete a path due to permission error"""
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("content")
