@@ -1,7 +1,8 @@
 from io import BytesIO
+from typing import Any, Literal, Required, TypedDict
+
 from primp import Client, Response
 from pypdf import PdfReader
-from typing import Any, Literal, TypedDict, Required
 
 from tool.common import BaseToolCall
 

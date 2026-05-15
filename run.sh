@@ -2,7 +2,7 @@
 set -eu -o pipefail
 
 VENV_DIR="./.venv"
-PYCACHE_DIR="./.pycache"
+CACHE_DIR="./.cache"
 python3 -m venv ${VENV_DIR}
-"${VENV_DIR}/bin/pip3" install -q -r "./requirements.txt"
-PYTHONPYCACHEPREFIX="${PYCACHE_DIR}" "${VENV_DIR}/bin/python3" "./src/main.py"
+"${VENV_DIR}/bin/pip3" install -q -r ./requirements.txt
+PYTHONPYCACHEPREFIX="${CACHE_DIR}/pycache" "${VENV_DIR}/bin/python3" ./src/main.py

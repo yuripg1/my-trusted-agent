@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Literal, TypedDict, Required
+from typing import Literal, Required, TypedDict
 
 from tool.common import BaseToolCall
 

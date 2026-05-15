@@ -1,5 +1,5 @@
 from random import randint
-from typing import Literal, TypedDict, Required
+from typing import Literal, Required, TypedDict
 
 from tool.common import BaseToolCall
 
@@ -16,8 +16,8 @@ class GenerateRandomIntegerToolCall(BaseToolCall):
 
 def generate_random_integer(min: int, max: int) -> str:
     output_entries: list[str] = []
-    if max < min:
-        output_entries.append('<error>"max" is less than "min"</error>')
+    if min > max:
+        output_entries.append('<error>"min" is greater than "max"</error>')
     else:
         random_integer: int = randint(min, max)
         output_entries.append(f"<result>{random_integer}</result>")

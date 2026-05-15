@@ -1,6 +1,6 @@
 from os import makedirs
 from os.path import dirname
-from sqlite3 import connect, Connection, Row
+from sqlite3 import Connection, Row, connect
 
 
 def open_db_connection(db_path: str) -> Connection:
@@ -17,7 +17,8 @@ def close_db_connection(db_connection: Connection) -> None:
 def init_db(conn: Connection) -> None:
     db_version = conn.execute("PRAGMA user_version").fetchone()[0]
     if db_version < 1:
-        conn.execute("""
+        conn.execute(
+            """
             CREATE TABLE sessions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 ai_provider TEXT NOT NULL,
@@ -28,6 +29,7 @@ def init_db(conn: Connection) -> None:
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),
                 updated_at TEXT NOT NULL DEFAULT (datetime('now'))
             )
-        """.strip())
+            """.strip()
+        )
         conn.execute("PRAGMA user_version = 1")
     conn.commit()

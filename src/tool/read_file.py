@@ -1,4 +1,4 @@
-from typing import Literal, TypedDict, Required
+from typing import Literal, Required, TypedDict
 
 from tool.common import BaseToolCall
 
@@ -18,7 +18,7 @@ def read_file(path: str, tool_call_permission: bool = True) -> str:
         output_entries.append("<error>File reading manually denied by the user</error>")
     else:
         try:
-            with open(path, "r") as file:
+            with open(path) as file:
                 file_content = file.read()
                 output_entries.append(f"<content>\n{file_content}\n</content>")
         except FileNotFoundError:

@@ -54,9 +54,9 @@ def get_individual_tool_call_message(tool_call: ToolCall) -> str:
     try:
         tool_name = tool_call["tool_name"]
         if tool_call["tool_name"] == "create_directory":
-            return f"Creating directory at **{tool_call["arguments"]["path"]}**"
+            return f"Creating directory at **{tool_call['arguments']['path']}**"
         elif tool_call["tool_name"] == "delete_file_or_directory":
-            return f"Deleting **{tool_call["arguments"]["path"]}** (**{tool_call["arguments"]["type"]}**)"
+            return f"Deleting **{tool_call['arguments']['path']}** (**{tool_call['arguments']['type']}**)"
         elif tool_call["tool_name"] == "edit_file":
             search_for_text: str = tool_call["arguments"]["search_for"]
             replace_with_text: str = tool_call["arguments"]["replace_with"]
@@ -71,25 +71,25 @@ def get_individual_tool_call_message(tool_call: ToolCall) -> str:
                 )
             )
             edit_content: str = make_safe_code_fence("\n".join(diff_lines), "diff")
-            return f"Editing file at **{tool_call["arguments"]["path"]}** (**{tool_call["arguments"]["number_of_substitutions"]}** substitutions)\n\n{edit_content}"
+            return f"Editing file at **{tool_call['arguments']['path']}** (**{tool_call['arguments']['number_of_substitutions']}** substitutions)\n\n{edit_content}"
         elif tool_call["tool_name"] == "execute_shell_command":
-            command_content: str = make_safe_code_fence(f"$ {tool_call["arguments"]["command"]}", "shell")
+            command_content: str = make_safe_code_fence(f"$ {tool_call['arguments']['command']}", "shell")
             return f"Executing shell command\n\n{command_content}"
         elif tool_call["tool_name"] == "generate_random_integer":
-            return f"Generating a random integer between **{tool_call["arguments"]["min"]}** and **{tool_call["arguments"]["max"]}**"
+            return f"Generating a random integer between **{tool_call['arguments']['min']}** and **{tool_call['arguments']['max']}**"
         elif tool_call["tool_name"] == "list_directory":
-            return f"Listing directory at **{tool_call["arguments"]["path"]}**"
+            return f"Listing directory at **{tool_call['arguments']['path']}**"
         elif tool_call["tool_name"] == "read_file":
-            return f"Reading file at **{tool_call["arguments"]["path"]}**"
+            return f"Reading file at **{tool_call['arguments']['path']}**"
         elif tool_call["tool_name"] == "read_pdf_document":
-            return f"Reading PDF document at **{tool_call["arguments"]["location"]}** (**{tool_call["arguments"]["location_type"]}**)"
+            return f"Reading PDF document at **{tool_call['arguments']['location']}** (**{tool_call['arguments']['location_type']}**)"
         elif tool_call["tool_name"] == "read_web_page":
-            return f"Reading web site at **{tool_call["arguments"]["url"]}**"
+            return f"Reading web site at **{tool_call['arguments']['url']}**"
         elif tool_call["tool_name"] == "search_web":
-            return f"Searching the web for **{tool_call["arguments"]["query"]}** (**{tool_call["arguments"]["max_results_per_page"]}** results - page **{tool_call["arguments"]["results_page_number"]}**)"
+            return f"Searching the web for **{tool_call['arguments']['query']}** (**{tool_call['arguments']['max_results_per_page']}** results - page **{tool_call['arguments']['results_page_number']}**)"
         elif tool_call["tool_name"] == "write_file":
             write_content: str = make_safe_code_fence(tool_call["arguments"]["content"])
-            return f"Writing file at **{tool_call["arguments"]["path"]}** (**{tool_call["arguments"]["mode"]}** mode)\n\n{write_content}"
+            return f"Writing file at **{tool_call['arguments']['path']}** (**{tool_call['arguments']['mode']}** mode)\n\n{write_content}"
     except:
         pass
     if len(tool_name) != 0:

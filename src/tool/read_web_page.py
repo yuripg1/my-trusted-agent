@@ -1,6 +1,7 @@
+from typing import Literal, Required, TypedDict
+
 from primp import Client, Response
 from trafilatura import extract
-from typing import Literal, TypedDict, Required
 
 from tool.common import BaseToolCall
 from tool.read_pdf_document import read_pdf_document
