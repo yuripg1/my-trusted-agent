@@ -1,4 +1,4 @@
-from typing import cast, Literal
+from typing import Literal, cast
 
 from environment import Environment
 from ui.terminal import TerminalUi

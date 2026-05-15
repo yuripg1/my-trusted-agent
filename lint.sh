@@ -6,3 +6,5 @@ CACHE_DIR="./.cache"
 python3 -m venv ${VENV_DIR}
 "${VENV_DIR}/bin/pip3" install -q -r ./requirements-dev.txt
 PYTHONPYCACHEPREFIX="${CACHE_DIR}/pycache" "${VENV_DIR}/bin/python3" -m mypy --cache-dir "${CACHE_DIR}/mypy" ./src
+"${VENV_DIR}/bin/python3" -m ruff check ./src ./tests
+"${VENV_DIR}/bin/python3" -m ruff format --check ./src ./tests

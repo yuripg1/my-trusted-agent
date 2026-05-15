@@ -1,9 +1,11 @@
+from collections.abc import Mapping
 from json import dumps, loads
-from requests import post, Response
 from time import sleep
-from typing import Any, Literal, Mapping, NotRequired, Required, TypedDict
+from typing import Any, Literal, NotRequired, Required, TypedDict
 
-from ai.deepseek_api_tools import DeepSeekTool, DeepSeekToolFunction, DEEPSEEK_TOOLS
+from requests import Response, post
+
+from ai.deepseek_api_tools import DEEPSEEK_TOOLS, DeepSeekTool, DeepSeekToolFunction
 from tool.core import ToolCall
 from tool.create_directory import CreateDirectoryArguments, CreateDirectoryToolCall
 from tool.delete_file_or_directory import DeleteFileOrDirectoryArguments, DeleteFileOrDirectoryToolCall
@@ -165,10 +167,7 @@ class DeepSeekAi:
             self.__add_to_messages(messages, "tool", trimmed_tool_call_output, "", [], tool_call["id"])
 
     def request_assistant_reply(self, messages: list[DeepSeekMessage], tools: list[DeepSeekTool]) -> int:
-        headers: Mapping[str, str] = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
+        headers: Mapping[str, str] = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
         payload_thinking: DeepSeekRequestThinking = {"type": self.thinking}
         payload: DeepSeekRequest = {
             "model": self.model,

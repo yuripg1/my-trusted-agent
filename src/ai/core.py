@@ -1,5 +1,5 @@
 from json import dumps, loads
-from typing import cast, Literal, NotRequired, Required, TypedDict
+from typing import Literal, NotRequired, Required, TypedDict, cast
 
 from ai.deepseek import (
     DeepSeekAi,

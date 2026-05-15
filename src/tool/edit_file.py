@@ -1,4 +1,4 @@
-from typing import Literal, TypedDict, Required
+from typing import Literal, Required, TypedDict
 
 from tool.common import BaseToolCall
 
@@ -24,14 +24,14 @@ def edit_file(
     else:
         number_of_occurrences: int | None = None
         try:
-            with open(path, "r") as file:
+            with open(path) as file:
                 file_content: str = file.read()
             number_of_occurrences = file_content.count(search_for)
             if number_of_occurrences == 0:
                 output_entries.append("<error>No occurrences of the searched text were found</error>")
             elif number_of_occurrences != number_of_substitutions:
                 output_entries.append(
-                    f"<error>The number of occurrences of the searched text does not match the expected number of substitutions</error>"
+                    "<error>The number of occurrences of the searched text does not match the expected number of substitutions</error>"
                 )
             else:
                 new_content: str = file_content.replace(search_for, replace_with, number_of_substitutions)

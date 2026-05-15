@@ -1,5 +1,6 @@
+from typing import Literal, Required, TypedDict
+
 from ddgs import DDGS
-from typing import Literal, TypedDict, Required
 
 from tool.common import BaseToolCall
 

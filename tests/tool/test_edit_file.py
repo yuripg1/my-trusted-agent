@@ -12,7 +12,7 @@ class TestEditFile:
         """Edit a file with a correct number of substitutions"""
         number_of_occurrences: int = randint(2, 8)
         searched_for_text: str = "hello"
-        original_file_content: str = f"pre_content {f" {searched_for_text} " * number_of_occurrences} post_content"
+        original_file_content: str = f"pre_content {f' {searched_for_text} ' * number_of_occurrences} post_content"
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text(original_file_content)
         replaced_with_text: str = "goodbye"
@@ -22,7 +22,7 @@ class TestEditFile:
             result
             == f'<file_edit path="{str(target)}" number_of_substitutions="{number_of_substitutions}">\n<result>File edited successfully</result>\n<number_of_occurrences>{number_of_occurrences}</number_of_occurrences>\n</file_edit>'
         )
-        modified_file_content: str = f"pre_content {f" {replaced_with_text} " * number_of_occurrences} post_content"
+        modified_file_content: str = f"pre_content {f' {replaced_with_text} ' * number_of_occurrences} post_content"
         assert target.read_text() == modified_file_content
 
     def test_search_text_not_found(self, tmp_path: Path) -> None:
@@ -45,7 +45,7 @@ class TestEditFile:
         """Do not edit a file due to the number of occurrences not matching expected substitutions"""
         number_of_occurrences: int = randint(2, 8)
         searched_for_text: str = "hello"
-        original_file_content: str = f"pre_content {f" {searched_for_text} " * number_of_occurrences} post_content"
+        original_file_content: str = f"pre_content {f' {searched_for_text} ' * number_of_occurrences} post_content"
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text(original_file_content)
         replaced_with_text: str = "goodbye"
@@ -73,7 +73,7 @@ class TestEditFile:
         """Do not edit a file due to permission error"""
         number_of_occurrences: int = randint(2, 8)
         searched_for_text: str = "hello"
-        original_file_content: str = f"pre_content {f" {searched_for_text} " * number_of_occurrences} post_content"
+        original_file_content: str = f"pre_content {f' {searched_for_text} ' * number_of_occurrences} post_content"
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text(original_file_content)
         replaced_with_text: str = "goodbye"
@@ -90,7 +90,7 @@ class TestEditFile:
         """Do not edit a file due to an exception"""
         number_of_occurrences: int = randint(2, 8)
         searched_for_text: str = "hello"
-        original_file_content: str = f"pre_content {f" {searched_for_text} " * number_of_occurrences} post_content"
+        original_file_content: str = f"pre_content {f' {searched_for_text} ' * number_of_occurrences} post_content"
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text(original_file_content)
         replaced_with_text: str = "goodbye"
@@ -107,7 +107,7 @@ class TestEditFile:
         """Do not edit a file due to being denied by the user"""
         number_of_occurrences: int = randint(2, 8)
         searched_for_text: str = "hello"
-        original_file_content: str = f"pre_content {f" {searched_for_text} " * number_of_occurrences} post_content"
+        original_file_content: str = f"pre_content {f' {searched_for_text} ' * number_of_occurrences} post_content"
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text(original_file_content)
         replaced_with_text: str = "goodbye"

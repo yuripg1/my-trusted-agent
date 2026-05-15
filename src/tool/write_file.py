@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Literal, TypedDict, Required
+from typing import Literal, Required, TypedDict
 
 from tool.common import BaseToolCall
 
@@ -40,8 +40,6 @@ def write_file(path: str, mode: str, content: str, tool_call_permission: bool = 
                 output_entries.append("<result>File written successfully</result>")
             else:
                 output_entries.append(f'<error>Invalid mode "{mode}"</error>')
-        except FileExistsError:
-            output_entries.append("<error>File already exists</error>")
         except PermissionError:
             output_entries.append("<error>Permission denied by the system</error>")
         except:

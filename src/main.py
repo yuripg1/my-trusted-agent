@@ -2,15 +2,15 @@ from sqlite3 import Connection
 
 from ai.core import Ai, AiMessage
 from database import close_db_connection, init_db, open_db_connection
-from environment import Environment
 from entity.session import Session
+from environment import Environment
 from tool.core import (
-    execute_tool_call,
-    get_individual_tool_call_permission,
-    get_group_tool_call_permission,
-    get_group_tool_call_messages,
-    get_individual_tool_call_message,
     ToolCall,
+    execute_tool_call,
+    get_group_tool_call_messages,
+    get_group_tool_call_permission,
+    get_individual_tool_call_message,
+    get_individual_tool_call_permission,
 )
 from tool.execute_shell_command import execute_shell_command
 from ui.core import Ui

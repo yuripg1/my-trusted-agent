@@ -1,7 +1,10 @@
 from rich.align import AlignMethod
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.padding import Padding, PaddingDimensions
 
+HORIZONTAL_PADDING: int = 1
+RICH_PADDING: PaddingDimensions = (0, HORIZONTAL_PADDING)
 RULE_ALIGN: AlignMethod = "center"
 
 
@@ -37,17 +40,20 @@ class TerminalUi:
         rich_console_instance = Console()
         session_info: str = self.get_formatted_session_info(session_id, context_length)
         rich_console_instance.rule(f"[ User ] {session_info}", align=RULE_ALIGN)
-        print(f"\n{message}\n\n", end="")
+        print("\n", end="")
+        rich_console_instance.print(Padding(f"[bold]>[/] {message}", RICH_PADDING))
+        print("\n", end="")
 
     def get_user_input(self, session_id: int | None, context_length: int) -> str:
         rich_console_instance = Console()
         session_info: str = self.get_formatted_session_info(session_id, context_length)
         rich_console_instance.rule(f"[ User ] {session_info}", align=RULE_ALIGN)
         print("\n", end="")
+        input_padding: str = " " * HORIZONTAL_PADDING
         user_input_lines: list[str] = []
         capturing_user_input: bool = True
         while capturing_user_input:
-            user_input: str = rich_console_instance.input(" [bold]>[/] ").strip()
+            user_input: str = rich_console_instance.input(f"{input_padding}[bold]>[/] ").strip()
             if len(user_input) != 0:
                 if user_input[-1] == "\\":
                     user_input = user_input[:-1].strip()
@@ -67,12 +73,12 @@ class TerminalUi:
         if self.show_reasoning and len(reasoning) != 0:
             rich_console_instance.rule(f"[ Assistant ] [ Reasoning ] {session_info}", align=RULE_ALIGN)
             print("\n", end="")
-            rich_console_instance.print(Markdown(reasoning))
+            rich_console_instance.print(Padding(Markdown(reasoning), RICH_PADDING))
             print("\n", end="")
         if len(message) != 0:
             rich_console_instance.rule(f"[ Assistant ] {session_info}", align=RULE_ALIGN)
             print("\n", end="")
-            rich_console_instance.print(Markdown(message))
+            rich_console_instance.print(Padding(Markdown(message), RICH_PADDING))
             print("\n", end="")
 
     def display_group_tool_call_message(
@@ -82,12 +88,13 @@ class TerminalUi:
         session_info: str = self.get_formatted_session_info(session_id, context_length)
         rich_console_instance.rule(f"[ Tool ] {session_info}", align=RULE_ALIGN)
         print("\n", end="")
-        rich_console_instance.print(Markdown("\n\n".join(tool_call_messages)))
+        rich_console_instance.print(Padding(Markdown("\n\n".join(tool_call_messages)), RICH_PADDING))
         print("\n", end="")
         if tool_call_permission:
             return True
+        input_padding: str = " " * HORIZONTAL_PADDING
         try:
-            input("Press ENTER to continue...")
+            rich_console_instance.input(f"{input_padding}Press ENTER to continue... ")
             print("\n", end="")
             return True
         except KeyboardInterrupt:
@@ -96,12 +103,13 @@ class TerminalUi:
 
     def display_individual_tool_call_message(self, tool_call_message: str, tool_call_permission: bool) -> bool:
         rich_console_instance = Console()
-        rich_console_instance.print(Markdown(tool_call_message))
+        rich_console_instance.print(Padding(Markdown(tool_call_message), RICH_PADDING))
         print("\n", end="")
         if tool_call_permission:
             return True
+        input_padding: str = " " * HORIZONTAL_PADDING
         try:
-            input("Press ENTER to continue...")
+            rich_console_instance.input(f"{input_padding}Press ENTER to continue... ")
             print("\n", end="")
             return True
         except KeyboardInterrupt:
