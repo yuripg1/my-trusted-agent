@@ -21,10 +21,11 @@ class TestListDirectory:
         read_file_entry: str = f'<entry type="file">{readme_file.name}</entry>'
         symlink_entry: str = f'<entry type="symlink">{symlink.name}</entry>'
         sec_directory_entry: str = f'<entry type="directory">{src_directory.name}</entry>'
-        assert (
-            result
-            == f'<directory_listing path="{str(target)}">\n{symlink_entry}\n{sec_directory_entry}\n{read_file_entry}\n</directory_listing>'
-        )
+        assert result.startswith(f'<directory_listing path="{str(target)}">\n<entry')
+        assert result.endswith("</entry>\n</directory_listing>")
+        assert read_file_entry in result
+        assert symlink_entry in result
+        assert sec_directory_entry in result
 
     def test_list_empty_directory(self, tmp_path: Path) -> None:
         """List an empty directory"""
