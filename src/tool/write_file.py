@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Literal, Required, TypedDict
 
-from tool.common import BaseToolCall
+from tool.common import BaseToolCall, get_language_from_filename, make_safe_code_fence
 
 
 class WriteFileArguments(TypedDict):
@@ -13,6 +13,16 @@ class WriteFileArguments(TypedDict):
 class WriteFileToolCall(BaseToolCall):
     tool_name: Required[Literal["write_file"]]
     arguments: Required[WriteFileArguments]
+
+
+def get_write_file_message(tool_call: WriteFileToolCall) -> str:
+    write_path: str = tool_call["arguments"]["path"]
+    write_mode: str = tool_call["arguments"]["mode"]
+    write_info_string: str = ""
+    if write_mode in ["create_or_overwrite", "create_if_not_exists"]:
+        write_info_string = get_language_from_filename(write_path)
+    write_formatted_content: str = make_safe_code_fence(tool_call["arguments"]["content"], write_info_string)
+    return f"Writing file at **{write_path}** (**{write_mode}** mode)\n\n{write_formatted_content}"
 
 
 def write_file(path: str, mode: str, content: str, tool_call_permission: bool = True) -> str:

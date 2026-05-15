@@ -14,6 +14,10 @@ class DeleteFileOrDirectoryToolCall(BaseToolCall):
     arguments: Required[DeleteFileOrDirectoryArguments]
 
 
+def get_delete_file_or_directory_message(tool_call: DeleteFileOrDirectoryToolCall) -> str:
+    return f"Deleting **{tool_call['arguments']['path']}** (**{tool_call['arguments']['type']}**)"
+
+
 def delete_file_or_directory(type: str, path: str, tool_call_permission: bool = True) -> str:
     output_entries: list[str] = []
     if not tool_call_permission:

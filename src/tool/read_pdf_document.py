@@ -20,6 +20,10 @@ class ReadPdfDocumentToolCall(BaseToolCall):
 REQUEST_TIMEOUT: int = 300
 
 
+def get_read_pdf_document_message(tool_call: ReadPdfDocumentToolCall) -> str:
+    return f"Reading PDF document at **{tool_call['arguments']['location']}** (**{tool_call['arguments']['location_type']}**)"
+
+
 def read_pdf_document(location_type: str, location: str, tool_call_permission: bool = True, note: str = "") -> str:
     output_entries: list[str] = []
     if not tool_call_permission:

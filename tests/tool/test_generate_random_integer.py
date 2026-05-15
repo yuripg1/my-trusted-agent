@@ -1,6 +1,23 @@
 from random import randint
 
-from tool.generate_random_integer import generate_random_integer
+from tool.generate_random_integer import (
+    GenerateRandomIntegerToolCall,
+    generate_random_integer,
+    get_generate_random_integer_message,
+)
+
+
+class TestGetGenerateRandomIntegerMessage:
+    """Tests for the `get_generate_random_integer_message` function"""
+
+    def test_format(self) -> None:
+        """Format the message correctly"""
+
+        tool_call: GenerateRandomIntegerToolCall = {
+            "tool_name": "generate_random_integer",
+            "arguments": {"min": 1, "max": 10},
+        }
+        assert get_generate_random_integer_message(tool_call) == "Generating a random integer between **1** and **10**"
 
 
 class TestGenerateRandomInteger:

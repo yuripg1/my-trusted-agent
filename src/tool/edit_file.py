@@ -1,6 +1,7 @@
+from difflib import unified_diff
 from typing import Literal, Required, TypedDict
 
-from tool.common import BaseToolCall
+from tool.common import BaseToolCall, make_safe_code_fence
 
 
 class EditFileArguments(TypedDict):
@@ -13,6 +14,23 @@ class EditFileArguments(TypedDict):
 class EditFileToolCall(BaseToolCall):
     tool_name: Required[Literal["edit_file"]]
     arguments: Required[EditFileArguments]
+
+
+def get_edit_file_message(tool_call: EditFileToolCall) -> str:
+    search_for_text: str = tool_call["arguments"]["search_for"]
+    replace_with_text: str = tool_call["arguments"]["replace_with"]
+    file_path: str = tool_call["arguments"]["path"]
+    diff_lines: list[str] = list(
+        unified_diff(
+            search_for_text.splitlines(),
+            replace_with_text.splitlines(),
+            fromfile=file_path,
+            tofile=file_path,
+            lineterm="",
+        )
+    )
+    edit_content: str = make_safe_code_fence("\n".join(diff_lines), "diff")
+    return f"Editing file at **{tool_call['arguments']['path']}** (**{tool_call['arguments']['number_of_substitutions']}** substitutions)\n\n{edit_content}"
 
 
 def edit_file(

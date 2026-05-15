@@ -19,6 +19,10 @@ class ReadWebPageToolCall(BaseToolCall):
 REQUEST_TIMEOUT: int = 300
 
 
+def get_read_web_page_message(tool_call: ReadWebPageToolCall) -> str:
+    return f"Reading web site at **{tool_call['arguments']['url']}**"
+
+
 def read_web_page(url: str) -> str:
     output_entries: list[str] = []
     errored: bool = False

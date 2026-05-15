@@ -1,4 +1,25 @@
-from tool.execute_shell_command import execute_shell_command
+from tool.execute_shell_command import (
+    ExecuteShellCommandToolCall,
+    execute_shell_command,
+    get_execute_shell_command_message,
+)
+
+
+class TestGetExecuteShellCommandMessage:
+    """Tests for the `get_execute_shell_command_message` function"""
+
+    def test_format(self) -> None:
+        """Format the message correctly"""
+
+        tool_call: ExecuteShellCommandToolCall = {
+            "tool_name": "execute_shell_command",
+            "arguments": {"command": "echo hello"},
+        }
+        result: str = get_execute_shell_command_message(tool_call)
+        assert result.startswith("Executing shell command\n\n")
+        assert "```shell" in result
+        assert "$ echo hello" in result
+        assert result.endswith("```")
 
 
 class TestExecuteShellCommand:

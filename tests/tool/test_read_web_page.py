@@ -1,6 +1,16 @@
 from unittest.mock import MagicMock, patch
 
-from tool.read_web_page import read_web_page
+from tool.read_web_page import ReadWebPageToolCall, get_read_web_page_message, read_web_page
+
+
+class TestGetReadWebPageMessage:
+    """Tests for the `get_read_web_page_message` function"""
+
+    def test_format(self) -> None:
+        """Format the message correctly"""
+
+        tool_call: ReadWebPageToolCall = {"tool_name": "read_web_page", "arguments": {"url": "https://example.com"}}
+        assert get_read_web_page_message(tool_call) == "Reading web site at **https://example.com**"
 
 
 class TestReadWebPage:

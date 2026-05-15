@@ -1,7 +1,17 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from tool.list_directory import list_directory
+from tool.list_directory import ListDirectoryToolCall, get_list_directory_message, list_directory
+
+
+class TestGetListDirectoryMessage:
+    """Tests for the `get_list_directory_message` function"""
+
+    def test_format(self) -> None:
+        """Format the message correctly"""
+
+        tool_call: ListDirectoryToolCall = {"tool_name": "list_directory", "arguments": {"path": "/some/dir"}}
+        assert get_list_directory_message(tool_call) == "Listing directory at **/some/dir**"
 
 
 class TestListDirectory:

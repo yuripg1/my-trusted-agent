@@ -13,6 +13,10 @@ class CreateDirectoryToolCall(BaseToolCall):
     arguments: Required[CreateDirectoryArguments]
 
 
+def get_create_directory_message(tool_call: CreateDirectoryToolCall) -> str:
+    return f"Creating directory at **{tool_call['arguments']['path']}**"
+
+
 def create_directory(path: str) -> str:
     output_entries: list[str] = []
     try:

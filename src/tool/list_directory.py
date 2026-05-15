@@ -13,6 +13,10 @@ class ListDirectoryToolCall(BaseToolCall):
     arguments: Required[ListDirectoryArguments]
 
 
+def get_list_directory_message(tool_call: ListDirectoryToolCall) -> str:
+    return f"Listing directory at **{tool_call['arguments']['path']}**"
+
+
 def list_directory(path: str) -> str:
     output_entries: list[str] = []
     try:

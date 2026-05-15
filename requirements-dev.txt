@@ -4,3 +4,5 @@ pytest~=9.0.3
 pytest-cov~=7.1.0
 reportlab~=4.5.1
 ruff~=0.15.13
+types-pygments~=2.20.0.20260508
+types-requests~=2.33.0.20260513

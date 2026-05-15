@@ -20,6 +20,10 @@ TIMEOUT: int = 300
 SAFESEARCH: str = "off"
 
 
+def get_search_web_message(tool_call: SearchWebToolCall) -> str:
+    return f"Searching the web for **{tool_call['arguments']['query']}** (**{tool_call['arguments']['max_results_per_page']}** results - page **{tool_call['arguments']['results_page_number']}**)"
+
+
 def search_web(query: str, max_results_per_page: int, results_page_number: int) -> str:
     output_entries: list[str] = []
     output_entries.append(f"<query>{query}</query>")

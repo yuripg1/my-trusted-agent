@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from reportlab.pdfgen import canvas as pdf_canvas
 
-from tool.read_pdf_document import read_pdf_document
+from tool.read_pdf_document import ReadPdfDocumentToolCall, get_read_pdf_document_message, read_pdf_document
 
 
 def _create_test_pdf(
@@ -18,6 +18,22 @@ def _create_test_pdf(
         c.drawString(100, 700, page_content)
         c.showPage()
     c.save()
+
+
+class TestGetReadPdfDocumentMessage:
+    """Tests for the `get_read_pdf_document_message` function"""
+
+    def test_format(self) -> None:
+        """Format the message correctly"""
+
+        tool_call: ReadPdfDocumentToolCall = {
+            "tool_name": "read_pdf_document",
+            "arguments": {"location_type": "web", "location": "https://example.com/doc.pdf"},
+        }
+        assert (
+            get_read_pdf_document_message(tool_call)
+            == "Reading PDF document at **https://example.com/doc.pdf** (**web**)"
+        )
 
 
 class TestReadPdfDocument:

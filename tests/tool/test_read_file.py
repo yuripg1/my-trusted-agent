@@ -1,7 +1,17 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from tool.read_file import read_file
+from tool.read_file import ReadFileToolCall, get_read_file_message, read_file
+
+
+class TestGetReadFileMessage:
+    """Tests for the `get_read_file_message` function"""
+
+    def test_format(self) -> None:
+        """Format the message correctly"""
+
+        tool_call: ReadFileToolCall = {"tool_name": "read_file", "arguments": {"path": "/some/file.txt"}}
+        assert get_read_file_message(tool_call) == "Reading file at **/some/file.txt**"
 
 
 class TestReadFile:

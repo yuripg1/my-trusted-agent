@@ -1,7 +1,51 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from tool.write_file import write_file
+from tool.write_file import WriteFileToolCall, get_write_file_message, write_file
+
+
+class TestGetWriteFileMessage:
+    """Tests for the `get_write_file_message` function"""
+
+    def test_format_create_or_overwrite(self) -> None:
+        """Format the message for a new file with detected language"""
+
+        tool_call: WriteFileToolCall = {
+            "tool_name": "write_file",
+            "arguments": {"path": "/path/main.py", "mode": "create_or_overwrite", "content": "print('hello')"},
+        }
+        result: str = get_write_file_message(tool_call)
+        assert result.startswith("Writing file at **/path/main.py** (**create_or_overwrite** mode)\n\n")
+        assert "```python" in result
+        assert "print('hello')" in result
+        assert result.endswith("```")
+
+    def test_format_append(self) -> None:
+        """Format the message for append mode (no language detection)"""
+
+        tool_call: WriteFileToolCall = {
+            "tool_name": "write_file",
+            "arguments": {"path": "/path/data.txt", "mode": "append", "content": "new line"},
+        }
+        result: str = get_write_file_message(tool_call)
+        assert result.startswith("Writing file at **/path/data.txt** (**append** mode)\n\n")
+        assert "```" in result
+        assert "```python" not in result
+        assert "new line" in result
+        assert result.endswith("```")
+
+    def test_format_create_if_not_exists(self) -> None:
+        """Format the message for create_if_not_exists mode with detected language"""
+
+        tool_call: WriteFileToolCall = {
+            "tool_name": "write_file",
+            "arguments": {"path": "/path/script.js", "mode": "create_if_not_exists", "content": "console.log('hello')"},
+        }
+        result: str = get_write_file_message(tool_call)
+        assert result.startswith("Writing file at **/path/script.js** (**create_if_not_exists** mode)\n\n")
+        assert "```javascript" in result
+        assert "console.log('hello')" in result
+        assert result.endswith("```")
 
 
 class TestWriteFile:

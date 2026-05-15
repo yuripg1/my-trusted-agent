@@ -1,7 +1,24 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from tool.delete_file_or_directory import delete_file_or_directory
+from tool.delete_file_or_directory import (
+    DeleteFileOrDirectoryToolCall,
+    delete_file_or_directory,
+    get_delete_file_or_directory_message,
+)
+
+
+class TestGetDeleteFileOrDirectoryMessage:
+    """Tests for the `get_delete_file_or_directory_message` function"""
+
+    def test_format(self) -> None:
+        """Format the message correctly"""
+
+        tool_call: DeleteFileOrDirectoryToolCall = {
+            "tool_name": "delete_file_or_directory",
+            "arguments": {"type": "file", "path": "/some/file.txt"},
+        }
+        assert get_delete_file_or_directory_message(tool_call) == "Deleting **/some/file.txt** (**file**)"
 
 
 class TestDeleteFileOrDirectory:

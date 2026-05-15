@@ -1,7 +1,7 @@
 from subprocess import CompletedProcess, run
 from typing import Literal, Required, TypedDict
 
-from tool.common import BaseToolCall
+from tool.common import BaseToolCall, make_safe_code_fence
 
 
 class ExecuteShellCommandArguments(TypedDict):
@@ -11,6 +11,11 @@ class ExecuteShellCommandArguments(TypedDict):
 class ExecuteShellCommandToolCall(BaseToolCall):
     tool_name: Required[Literal["execute_shell_command"]]
     arguments: Required[ExecuteShellCommandArguments]
+
+
+def get_execute_shell_command_message(tool_call: ExecuteShellCommandToolCall) -> str:
+    command_content: str = make_safe_code_fence(f"$ {tool_call['arguments']['command']}", "shell")
+    return f"Executing shell command\n\n{command_content}"
 
 
 def execute_shell_command(command: str, tool_call_permission: bool = True) -> str:
