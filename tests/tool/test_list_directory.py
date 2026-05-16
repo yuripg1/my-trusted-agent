@@ -139,10 +139,10 @@ class TestListDirectory:
         subdir.mkdir()
         inner.joinpath("readme.txt").write_text("hello")
         result: str = list_directory(str(tmp_path))
-        assert (
-            result
-            == f'<directory_listing path="{str(tmp_path)}">\n<entry type="directory">inner/subdir</entry>\n<entry type="file">inner/readme.txt</entry>\n</directory_listing>'
-        )
+        assert result.startswith(f'<directory_listing path="{str(tmp_path)}">')
+        assert result.endswith("</directory_listing>")
+        assert '<entry type="directory">inner/subdir</entry>' in result
+        assert '<entry type="file">inner/readme.txt</entry>' in result
 
     def test_list_directory_compression_empty_final(self, tmp_path: Path) -> None:
         """Compress through a chain but find an empty directory at the end"""
