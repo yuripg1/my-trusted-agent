@@ -31,7 +31,7 @@ def _resolve_compressed_path(path: Path, depth: int = 0) -> Path:
         entries: list[Path] = list(path.iterdir())
         if len(entries) == 1 and entries[0].is_dir() and not entries[0].is_symlink():
             return _resolve_compressed_path(entries[0], depth + 1)
-    except:
+    except Exception:
         pass
     return path
 
@@ -59,13 +59,13 @@ def list_directory(path: str) -> str:
                             extra_attributes += ' target_type="directory"'
                         elif target_path.is_file():
                             extra_attributes += ' target_type="file"'
-                    except:
+                    except Exception:
                         pass
                 elif directory_entry.is_dir():
                     directory_entry_type = "directory"
                 elif directory_entry.is_file():
                     directory_entry_type = "file"
-            except:
+            except Exception:
                 pass
             if len(directory_entry_type) != 0:
                 output_entries.append(f'<entry type="{directory_entry_type}"{extra_attributes}>{entry_name}</entry>')
@@ -77,7 +77,7 @@ def list_directory(path: str) -> str:
         output_entries.append("<error>Path is not a directory</error>")
     except PermissionError:
         output_entries.append("<error>Permission denied by the system</error>")
-    except:
+    except Exception:
         output_entries.append("<error>Could not list directory</error>")
     if len(output_entries) == 0:
         output_entries.append("<note>The directory is empty</note>")

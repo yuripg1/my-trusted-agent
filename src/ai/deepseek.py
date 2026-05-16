@@ -1,4 +1,5 @@
 from collections.abc import Mapping
+from contextlib import suppress
 from json import dumps, loads
 from time import sleep
 from typing import Any, Literal, NotRequired, Required, TypedDict
@@ -87,7 +88,7 @@ class DeepSeekAi:
         thinking: DeepSeekThinkingType,
         reasoning_effort: DeepSeekReasoningEffortType,
         max_tokens: int,
-    ):
+    ) -> None:
         self.api_key = api_key
         self.base_url = base_url
         self.model = model
@@ -170,12 +171,10 @@ class DeepSeekAi:
         if payload["thinking"]["type"] == "enabled":
             payload["reasoning_effort"] = self.reasoning_effort
         response: Response | None = None
-        try:
+        with suppress(Exception):
             response = post(
                 f"{self.base_url}/chat/completions", headers=headers, json=payload, timeout=API_REQUEST_TIMEOUT
             )
-        except:
-            pass
         if response is None or response.status_code != 200:
             if (
                 response is None

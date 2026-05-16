@@ -28,7 +28,7 @@ def create_directory(path: str) -> str:
         output_entries.append("<result>Directory created successfully</result>")
     except PermissionError:
         output_entries.append("<error>Permission denied by the system</error>")
-    except:
+    except Exception:
         output_entries.append("<error>Could not create directory</error>")
     joined_output_entries: str = "\n".join(output_entries)
     return f'<directory_creation path="{path}">\n{joined_output_entries}\n</directory_creation>'

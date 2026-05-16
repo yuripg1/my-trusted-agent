@@ -56,7 +56,7 @@ def delete_path(type: str, path: str, tool_call_permission: bool = True) -> str:
                 output_entries.append(f'<error>Invalid type "{type}"</error>')
         except PermissionError:
             output_entries.append("<error>Permission denied by the system</error>")
-        except:
+        except Exception:
             output_entries.append("<error>Could not delete path</error>")
     joined_output_entries: str = "\n".join(output_entries)
     return f'<path_deletion type="{type}" path="{path}">\n{joined_output_entries}\n</path_deletion>'

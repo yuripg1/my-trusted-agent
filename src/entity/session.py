@@ -30,7 +30,7 @@ class Session:
         if fetched_data is not None:
             self.id = id
             self.ai_provider = ai.provider
-            self.is_raw = True if int(fetched_data["is_raw"]) else False
+            self.is_raw = True if int(fetched_data["is_raw"]) == 1 else False
             self.context_length = int(fetched_data["context_length"])
             self.__tools = ai.decode_tools_json(str(fetched_data["tools"]))
             self.__messages = ai.decode_messages_json(str(fetched_data["messages"]))

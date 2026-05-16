@@ -33,7 +33,7 @@ def read_file(path: str, tool_call_permission: bool = True) -> str:
             output_entries.append("<error>File not found</error>")
         except PermissionError:
             output_entries.append("<error>Permission denied by the system</error>")
-        except:
+        except Exception:
             output_entries.append("<error>Could not read file</error>")
     joined_output_entries: str = "\n".join(output_entries)
     return f'<file_read path="{path}">\n{joined_output_entries}\n</file_read>'

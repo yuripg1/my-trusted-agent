@@ -43,7 +43,7 @@ def read_web_page(url: str) -> str:
         else:
             raw_web_page_content = response.text
             content_type = response.headers.get("content-type", "").strip()
-    except:
+    except Exception:
         output_entries.append("<error>Could not fetch the web page</error>")
         errored = True
     if "application/pdf" in content_type.lower():
@@ -55,7 +55,7 @@ def read_web_page(url: str) -> str:
                 trimmed_extracted_content: str = extracted_content.strip()
                 if len(trimmed_extracted_content) != 0:
                     output_entries.append(f"<content>\n{trimmed_extracted_content}\n</content>")
-        except:
+        except Exception:
             output_entries.append("<error>Could not read the web page</error>")
             errored = True
     if len(output_entries) == 0:

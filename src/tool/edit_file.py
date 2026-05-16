@@ -64,7 +64,7 @@ def edit_file(
             output_entries.append("<error>File not found</error>")
         except PermissionError:
             output_entries.append("<error>Permission denied by the system</error>")
-        except:
+        except Exception:
             output_entries.append("<error>Could not edit file</error>")
         if number_of_occurrences is not None:
             output_entries.append(f"<number_of_occurrences>{number_of_occurrences}</number_of_occurrences>")

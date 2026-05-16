@@ -58,7 +58,7 @@ def move_path(type: str, source: str, destination: str, tool_call_permission: bo
                 output_entries.append(f'<error>Invalid type "{type}"</error>')
         except PermissionError:
             output_entries.append("<error>Permission denied by the system</error>")
-        except:
+        except Exception:
             output_entries.append("<error>Could not move path</error>")
     joined_output_entries: str = "\n".join(output_entries)
     return f'<path_move type="{type}" source="{source}" destination="{destination}">\n{joined_output_entries}\n</path_move>'

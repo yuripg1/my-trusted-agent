@@ -91,7 +91,7 @@ def get_individual_tool_call_message(tool_call: ToolCall) -> str:
             return get_search_web_message(tool_call)
         elif tool_call["tool_name"] == "write_file":
             return get_write_file_message(tool_call)
-    except:
+    except Exception:
         pass
     if len(tool_name) != 0:
         return f'Error on "{tool_name}"'
@@ -131,7 +131,7 @@ def get_individual_tool_call_permission(tool_call: ToolCall) -> bool:
             return get_search_web_permission(tool_call)
         elif tool_call["tool_name"] == "write_file":
             return get_write_file_permission(tool_call)
-    except:
+    except Exception:
         pass
     return False
 
@@ -196,7 +196,7 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
             write_file_mode: str = tool_call["arguments"]["mode"]
             write_file_content: str = tool_call["arguments"]["content"]
             return write_file(write_file_path, write_file_mode, write_file_content, tool_call_permission)
-    except:
+    except Exception:
         pass
     if len(tool_name) != 0:
         return f'Error on "{tool_name}"'

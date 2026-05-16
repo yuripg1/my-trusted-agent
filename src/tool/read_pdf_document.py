@@ -54,7 +54,7 @@ def read_pdf_document(location_type: str, location: str, tool_call_permission: b
             else:
                 output_entries.append(f'<error>Invalid location_type "{location_type}"</error>')
                 errored = True
-        except:
+        except Exception:
             output_entries.append("<error>Could not fetch the PDF document</error>")
             errored = True
         if not errored:
@@ -74,7 +74,7 @@ def read_pdf_document(location_type: str, location: str, tool_call_permission: b
                     if len(output_pages_entries) != 0:
                         joined_output_pages_entries = "\n".join(output_pages_entries)
                         output_entries.append(f"<pages>\n{joined_output_pages_entries}\n</pages>")
-            except:
+            except Exception:
                 output_entries.append("<error>Could not read the PDF document</error>")
                 errored = True
         if len(output_entries) == 0:

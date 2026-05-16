@@ -2,8 +2,8 @@ cache-dir = ".cache/ruff"
 line-length = 120
 
 [lint]
-select = ["E", "F", "I", "W", "UP"]
-ignore = ["E501", "E722"]
+select = ["E", "F", "I", "N", "RUF100", "UP", "W"]
+ignore = ["E501"]
 
 [format]
 quote-style = "double"

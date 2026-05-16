@@ -1,3 +1,4 @@
+from contextlib import suppress
 from typing import Literal, Required, TypedDict
 
 from ddgs import DDGS
@@ -32,14 +33,12 @@ def search_web(query: str, max_results_per_page: int, results_page_number: int) 
     output_entries: list[str] = []
     output_entries.append(f"<query>{query}</query>")
     raw_search_results = []
-    try:
+    with suppress(Exception):
         raw_search_results = list(
             DDGS(timeout=_TIMEOUT).text(
                 query=query, safesearch=_SAFESEARCH, max_results=max_results_per_page, page=results_page_number
             )
         )
-    except:
-        pass
     if len(raw_search_results) == 0:
         output_entries.append("<error>No search results found</error>")
     else:

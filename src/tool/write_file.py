@@ -56,7 +56,7 @@ def write_file(path: str, mode: str, content: str, tool_call_permission: bool = 
                 output_entries.append(f'<error>Invalid mode "{mode}"</error>')
         except PermissionError:
             output_entries.append("<error>Permission denied by the system</error>")
-        except:
+        except Exception:
             output_entries.append("<error>Could not write file</error>")
     joined_output_entries: str = "\n".join(output_entries)
     return f'<file_write path="{path}" mode="{mode}">\n{joined_output_entries}\n</file_write>'
