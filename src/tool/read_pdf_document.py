@@ -20,6 +20,10 @@ class ReadPdfDocumentToolCall(BaseToolCall):
 _REQUEST_TIMEOUT: int = 300
 
 
+def get_read_pdf_document_permission(tool_call: ReadPdfDocumentToolCall) -> bool:
+    return tool_call["arguments"]["location_type"] == "web"
+
+
 def get_read_pdf_document_message(tool_call: ReadPdfDocumentToolCall) -> str:
     return f"Reading PDF document at **{tool_call['arguments']['location']}** (**{tool_call['arguments']['location_type']}**)"
 

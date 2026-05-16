@@ -18,6 +18,10 @@ def get_delete_path_message(tool_call: DeletePathToolCall) -> str:
     return f"Deleting **{tool_call['arguments']['path']}** (**{tool_call['arguments']['type']}**)"
 
 
+def get_delete_path_permission(tool_call: DeletePathToolCall) -> bool:
+    return False
+
+
 def delete_path(type: str, path: str, tool_call_permission: bool = True) -> str:
     output_entries: list[str] = []
     if not tool_call_permission:

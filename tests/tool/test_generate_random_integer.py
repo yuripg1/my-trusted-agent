@@ -4,6 +4,7 @@ from tool.generate_random_integer import (
     GenerateRandomIntegerToolCall,
     generate_random_integer,
     get_generate_random_integer_message,
+    get_generate_random_integer_permission,
 )
 
 
@@ -17,6 +18,18 @@ class TestGetGenerateRandomIntegerMessage:
             "arguments": {"min": 1, "max": 10},
         }
         assert get_generate_random_integer_message(tool_call) == "Generating a random integer between **1** and **10**"
+
+
+class TestGetGenerateRandomIntegerPermission:
+    """Tests for the `get_generate_random_integer_permission` function"""
+
+    def test_auto_approved(self) -> None:
+        """Permission should be automatically granted"""
+        tool_call: GenerateRandomIntegerToolCall = {
+            "tool_name": "generate_random_integer",
+            "arguments": {"min": 1, "max": 10},
+        }
+        assert get_generate_random_integer_permission(tool_call) is True
 
 
 class TestGenerateRandomInteger:

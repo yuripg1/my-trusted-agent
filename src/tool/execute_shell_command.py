@@ -13,6 +13,10 @@ class ExecuteShellCommandToolCall(BaseToolCall):
     arguments: Required[ExecuteShellCommandArguments]
 
 
+def get_execute_shell_command_permission(tool_call: ExecuteShellCommandToolCall) -> bool:
+    return False
+
+
 def get_execute_shell_command_message(tool_call: ExecuteShellCommandToolCall) -> str:
     command_content: str = make_safe_code_fence(f"$ {tool_call['arguments']['command']}", "shell")
     return f"Executing shell command\n\n{command_content}"

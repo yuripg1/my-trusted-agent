@@ -16,6 +16,10 @@ def get_read_file_message(tool_call: ReadFileToolCall) -> str:
     return f"Reading file at **{tool_call['arguments']['path']}**"
 
 
+def get_read_file_permission(tool_call: ReadFileToolCall) -> bool:
+    return False
+
+
 def read_file(path: str, tool_call_permission: bool = True) -> str:
     output_entries: list[str] = []
     if not tool_call_permission:

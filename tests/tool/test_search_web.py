@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from tool.search_web import SearchWebToolCall, get_search_web_message, search_web
+from tool.search_web import SearchWebToolCall, get_search_web_message, get_search_web_permission, search_web
 
 
 class TestGetSearchWebMessage:
@@ -13,6 +13,18 @@ class TestGetSearchWebMessage:
             "arguments": {"query": "python", "max_results_per_page": 10, "results_page_number": 2},
         }
         assert get_search_web_message(tool_call) == "Searching the web for **python** (**10** results - page **2**)"
+
+
+class TestGetSearchWebPermission:
+    """Tests for the `get_search_web_permission` function"""
+
+    def test_auto_approved(self) -> None:
+        """Permission should be automatically granted"""
+        tool_call: SearchWebToolCall = {
+            "tool_name": "search_web",
+            "arguments": {"query": "python", "max_results_per_page": 10, "results_page_number": 2},
+        }
+        assert get_search_web_permission(tool_call) is True
 
 
 class TestSearchWeb:

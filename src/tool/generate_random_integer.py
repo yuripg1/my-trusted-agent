@@ -18,6 +18,10 @@ def get_generate_random_integer_message(tool_call: GenerateRandomIntegerToolCall
     return f"Generating a random integer between **{tool_call['arguments']['min']}** and **{tool_call['arguments']['max']}**"
 
 
+def get_generate_random_integer_permission(tool_call: GenerateRandomIntegerToolCall) -> bool:
+    return True
+
+
 def generate_random_integer(min: int, max: int) -> str:
     output_entries: list[str] = []
     if min > max:

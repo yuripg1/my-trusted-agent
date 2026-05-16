@@ -15,6 +15,10 @@ class WriteFileToolCall(BaseToolCall):
     arguments: Required[WriteFileArguments]
 
 
+def get_write_file_permission(tool_call: WriteFileToolCall) -> bool:
+    return False
+
+
 def get_write_file_message(tool_call: WriteFileToolCall) -> str:
     write_path: str = tool_call["arguments"]["path"]
     write_mode: str = tool_call["arguments"]["mode"]

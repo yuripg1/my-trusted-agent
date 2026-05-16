@@ -1,7 +1,7 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from tool.delete_path import DeletePathToolCall, delete_path, get_delete_path_message
+from tool.delete_path import DeletePathToolCall, delete_path, get_delete_path_message, get_delete_path_permission
 
 
 class TestGetDeletePathMessage:
@@ -14,6 +14,18 @@ class TestGetDeletePathMessage:
             "arguments": {"type": "file", "path": "/some/file.txt"},
         }
         assert get_delete_path_message(tool_call) == "Deleting **/some/file.txt** (**file**)"
+
+
+class TestGetDeletePathPermission:
+    """Tests for the `get_delete_path_permission` function"""
+
+    def test_requires_approval(self) -> None:
+        """Permission should require user approval"""
+        tool_call: DeletePathToolCall = {
+            "tool_name": "delete_path",
+            "arguments": {"type": "file", "path": "/some/file.txt"},
+        }
+        assert get_delete_path_permission(tool_call) is False
 
 
 class TestDeletePath:

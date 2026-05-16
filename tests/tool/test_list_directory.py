@@ -1,7 +1,12 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from tool.list_directory import ListDirectoryToolCall, get_list_directory_message, list_directory
+from tool.list_directory import (
+    ListDirectoryToolCall,
+    get_list_directory_message,
+    get_list_directory_permission,
+    list_directory,
+)
 
 
 class TestGetListDirectoryMessage:
@@ -11,6 +16,15 @@ class TestGetListDirectoryMessage:
         """Format the message correctly"""
         tool_call: ListDirectoryToolCall = {"tool_name": "list_directory", "arguments": {"path": "/some/dir"}}
         assert get_list_directory_message(tool_call) == "Listing directory at **/some/dir**"
+
+
+class TestGetListDirectoryPermission:
+    """Tests for the `get_list_directory_permission` function"""
+
+    def test_auto_approved(self) -> None:
+        """Permission should be automatically granted"""
+        tool_call: ListDirectoryToolCall = {"tool_name": "list_directory", "arguments": {"path": "/some/dir"}}
+        assert get_list_directory_permission(tool_call) is True
 
 
 class TestListDirectory:

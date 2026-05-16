@@ -2,6 +2,7 @@ from tool.execute_shell_command import (
     ExecuteShellCommandToolCall,
     execute_shell_command,
     get_execute_shell_command_message,
+    get_execute_shell_command_permission,
 )
 
 
@@ -16,6 +17,18 @@ class TestGetExecuteShellCommandMessage:
         }
         result: str = get_execute_shell_command_message(tool_call)
         assert result == "Executing shell command\n\n```shell\n$ echo hello\n```"
+
+
+class TestGetExecuteShellCommandPermission:
+    """Tests for the `get_execute_shell_command_permission` function"""
+
+    def test_requires_approval(self) -> None:
+        """Permission should require user approval"""
+        tool_call: ExecuteShellCommandToolCall = {
+            "tool_name": "execute_shell_command",
+            "arguments": {"command": "echo hello"},
+        }
+        assert get_execute_shell_command_permission(tool_call) is False
 
 
 class TestExecuteShellCommand:

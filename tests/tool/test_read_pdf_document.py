@@ -3,7 +3,12 @@ from unittest.mock import MagicMock, patch
 
 from reportlab.pdfgen import canvas as pdf_canvas
 
-from tool.read_pdf_document import ReadPdfDocumentToolCall, get_read_pdf_document_message, read_pdf_document
+from tool.read_pdf_document import (
+    ReadPdfDocumentToolCall,
+    get_read_pdf_document_message,
+    get_read_pdf_document_permission,
+    read_pdf_document,
+)
 
 
 def create_test_pdf(target: Path, page_contents: list[str] | None = None) -> None:
@@ -30,6 +35,26 @@ class TestGetReadPdfDocumentMessage:
             get_read_pdf_document_message(tool_call)
             == "Reading PDF document at **https://example.com/doc.pdf** (**web**)"
         )
+
+
+class TestGetReadPdfDocumentPermission:
+    """Tests for the `get_read_pdf_document_permission` function"""
+
+    def test_web_auto_approved(self) -> None:
+        """Permission should be granted for web PDFs"""
+        tool_call: ReadPdfDocumentToolCall = {
+            "tool_name": "read_pdf_document",
+            "arguments": {"location_type": "web", "location": "https://example.com/doc.pdf"},
+        }
+        assert get_read_pdf_document_permission(tool_call) is True
+
+    def test_local_requires_approval(self) -> None:
+        """Permission should require user approval for local PDFs"""
+        tool_call: ReadPdfDocumentToolCall = {
+            "tool_name": "read_pdf_document",
+            "arguments": {"location_type": "local", "location": "/path/to/doc.pdf"},
+        }
+        assert get_read_pdf_document_permission(tool_call) is False
 
 
 class TestReadPdfDocument:

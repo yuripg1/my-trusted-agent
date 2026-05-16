@@ -1,7 +1,12 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from tool.create_directory import CreateDirectoryToolCall, create_directory, get_create_directory_message
+from tool.create_directory import (
+    CreateDirectoryToolCall,
+    create_directory,
+    get_create_directory_message,
+    get_create_directory_permission,
+)
 
 
 class TestGetCreateDirectoryMessage:
@@ -11,6 +16,15 @@ class TestGetCreateDirectoryMessage:
         """Format the message correctly"""
         tool_call: CreateDirectoryToolCall = {"tool_name": "create_directory", "arguments": {"path": "/some/path"}}
         assert get_create_directory_message(tool_call) == "Creating directory at **/some/path**"
+
+
+class TestGetCreateDirectoryPermission:
+    """Tests for the `get_create_directory_permission` function"""
+
+    def test_auto_approved(self) -> None:
+        """Permission should be automatically granted"""
+        tool_call: CreateDirectoryToolCall = {"tool_name": "create_directory", "arguments": {"path": "/some/path"}}
+        assert get_create_directory_permission(tool_call) is True
 
 
 class TestCreateDirectory:

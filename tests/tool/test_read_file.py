@@ -1,7 +1,7 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from tool.read_file import ReadFileToolCall, get_read_file_message, read_file
+from tool.read_file import ReadFileToolCall, get_read_file_message, get_read_file_permission, read_file
 
 
 class TestGetReadFileMessage:
@@ -11,6 +11,15 @@ class TestGetReadFileMessage:
         """Format the message correctly"""
         tool_call: ReadFileToolCall = {"tool_name": "read_file", "arguments": {"path": "/some/file.txt"}}
         assert get_read_file_message(tool_call) == "Reading file at **/some/file.txt**"
+
+
+class TestGetReadFilePermission:
+    """Tests for the `get_read_file_permission` function"""
+
+    def test_requires_approval(self) -> None:
+        """Permission should require user approval"""
+        tool_call: ReadFileToolCall = {"tool_name": "read_file", "arguments": {"path": "/some/file.txt"}}
+        assert get_read_file_permission(tool_call) is False
 
 
 class TestReadFile:

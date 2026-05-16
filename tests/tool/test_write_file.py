@@ -1,7 +1,7 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from tool.write_file import WriteFileToolCall, get_write_file_message, write_file
+from tool.write_file import WriteFileToolCall, get_write_file_message, get_write_file_permission, write_file
 
 
 class TestGetWriteFileMessage:
@@ -42,6 +42,18 @@ class TestGetWriteFileMessage:
         }
         result: str = get_write_file_message(tool_call)
         assert result == f"Writing file at **{path}** (**{mode}** mode)\n\n```javascript\n{content}\n```"
+
+
+class TestGetWriteFilePermission:
+    """Tests for the `get_write_file_permission` function"""
+
+    def test_requires_approval(self) -> None:
+        """Permission should require user approval"""
+        tool_call: WriteFileToolCall = {
+            "tool_name": "write_file",
+            "arguments": {"path": "/path/file.txt", "mode": "create_or_overwrite", "content": "content"},
+        }
+        assert get_write_file_permission(tool_call) is False
 
 
 class TestWriteFile:

@@ -16,6 +16,10 @@ class EditFileToolCall(BaseToolCall):
     arguments: Required[EditFileArguments]
 
 
+def get_edit_file_permission(tool_call: EditFileToolCall) -> bool:
+    return False
+
+
 def get_edit_file_message(tool_call: EditFileToolCall) -> str:
     search_for_text: str = tool_call["arguments"]["search_for"]
     replace_with_text: str = tool_call["arguments"]["replace_with"]

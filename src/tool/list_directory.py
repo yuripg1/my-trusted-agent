@@ -20,6 +20,10 @@ def get_list_directory_message(tool_call: ListDirectoryToolCall) -> str:
     return f"Listing directory at **{tool_call['arguments']['path']}**"
 
 
+def get_list_directory_permission(tool_call: ListDirectoryToolCall) -> bool:
+    return True
+
+
 def _resolve_compressed_path(path: Path, depth: int = 0) -> Path:
     if depth >= _MAX_COMPRESSION_DEPTH:
         return path

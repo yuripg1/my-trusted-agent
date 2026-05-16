@@ -1,6 +1,11 @@
 from unittest.mock import MagicMock, patch
 
-from tool.read_web_page import ReadWebPageToolCall, get_read_web_page_message, read_web_page
+from tool.read_web_page import (
+    ReadWebPageToolCall,
+    get_read_web_page_message,
+    get_read_web_page_permission,
+    read_web_page,
+)
 
 
 class TestGetReadWebPageMessage:
@@ -10,6 +15,15 @@ class TestGetReadWebPageMessage:
         """Format the message correctly"""
         tool_call: ReadWebPageToolCall = {"tool_name": "read_web_page", "arguments": {"url": "https://example.com"}}
         assert get_read_web_page_message(tool_call) == "Reading web site at **https://example.com**"
+
+
+class TestGetReadWebPagePermission:
+    """Tests for the `get_read_web_page_permission` function"""
+
+    def test_auto_approved(self) -> None:
+        """Permission should be automatically granted"""
+        tool_call: ReadWebPageToolCall = {"tool_name": "read_web_page", "arguments": {"url": "https://example.com"}}
+        assert get_read_web_page_permission(tool_call) is True
 
 
 class TestReadWebPage:

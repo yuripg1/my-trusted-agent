@@ -2,7 +2,7 @@ from pathlib import Path
 from random import randint
 from unittest.mock import patch
 
-from tool.edit_file import EditFileToolCall, edit_file, get_edit_file_message
+from tool.edit_file import EditFileToolCall, edit_file, get_edit_file_message, get_edit_file_permission
 
 
 class TestGetEditFileMessage:
@@ -22,6 +22,23 @@ class TestGetEditFileMessage:
         result: str = get_edit_file_message(tool_call)
         assert result.startswith("Editing file at **/path/file.txt** (**1** substitutions)\n\n```diff")
         assert result.endswith("```")
+
+
+class TestGetEditFilePermission:
+    """Tests for the `get_edit_file_permission` function"""
+
+    def test_requires_approval(self) -> None:
+        """Permission should require user approval"""
+        tool_call: EditFileToolCall = {
+            "tool_name": "edit_file",
+            "arguments": {
+                "path": "/path/file.txt",
+                "search_for": "hello",
+                "replace_with": "goodbye",
+                "number_of_substitutions": 1,
+            },
+        }
+        assert get_edit_file_permission(tool_call) is False
 
 
 class TestEditFile:
