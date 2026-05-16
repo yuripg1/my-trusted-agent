@@ -9,7 +9,6 @@ class TestGetListDirectoryMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-
         tool_call: ListDirectoryToolCall = {"tool_name": "list_directory", "arguments": {"path": "/some/dir"}}
         assert get_list_directory_message(tool_call) == "Listing directory at **/some/dir**"
 
@@ -29,7 +28,9 @@ class TestListDirectory:
         src_directory.mkdir()
         result: str = list_directory(str(target))
         read_file_entry: str = f'<entry type="file">{readme_file.name}</entry>'
-        symlink_entry: str = f'<entry type="symlink">{symlink.name}</entry>'
+        symlink_entry: str = (
+            f'<entry type="symlink" target="{str(readme_file)}" target_type="file">{symlink.name}</entry>'
+        )
         sec_directory_entry: str = f'<entry type="directory">{src_directory.name}</entry>'
         assert result.startswith(f'<directory_listing path="{str(target)}">\n<entry')
         assert result.endswith("</entry>\n</directory_listing>")
@@ -37,13 +38,130 @@ class TestListDirectory:
         assert symlink_entry in result
         assert sec_directory_entry in result
 
+    def test_list_directory_with_symlink_to_directory(self, tmp_path: Path) -> None:
+        """List a directory containing a symlink pointing to another directory"""
+        target: Path = tmp_path.joinpath("docs")
+        target.mkdir()
+        target.joinpath("notes.txt").write_text("hello")
+        symlink: Path = tmp_path.joinpath("link_to_docs")
+        symlink.symlink_to(target)
+        result: str = list_directory(str(tmp_path))
+        expected_symlink_entry: str = (
+            f'<entry type="symlink" target="{str(target)}" target_type="directory">{symlink.name}</entry>'
+        )
+        assert expected_symlink_entry in result
+
+    def test_list_directory_with_broken_symlink(self, tmp_path: Path) -> None:
+        """List a directory containing a symlink whose target no longer exists"""
+        target: Path = tmp_path.joinpath("ghost.txt")
+        target.write_text("hello")
+        symlink: Path = tmp_path.joinpath("broken_link")
+        symlink.symlink_to(target)
+        target.unlink()
+        result: str = list_directory(str(tmp_path))
+        resolved_target: str = str(symlink.resolve(strict=False))
+        expected_symlink_entry: str = f'<entry type="symlink" target="{resolved_target}">{symlink.name}</entry>'
+        assert expected_symlink_entry in result
+
+    def test_list_directory_with_symlink_resolve_failure(self, tmp_path: Path) -> None:
+        """List a directory containing a symlink whose target cannot be resolved"""
+        target: Path = tmp_path.joinpath("docs")
+        target.mkdir()
+        symlink: Path = target.joinpath("link")
+        symlink.symlink_to("/nonexistent")
+        with patch.object(Path, "resolve", side_effect=Exception("Resolve error")):
+            result: str = list_directory(str(target))
+            expected_symlink_entry: str = f'<entry type="symlink">{symlink.name}</entry>'
+            assert expected_symlink_entry in result
+
+    def test_list_directory_with_single_directory_compression(self, tmp_path: Path) -> None:
+        """Compress a chain of a single directory entry"""
+        target: Path = tmp_path.joinpath("outer")
+        target.mkdir()
+        inner: Path = target.joinpath("inner")
+        inner.mkdir()
+        inner.joinpath("file1.txt").write_text("one")
+        inner.joinpath("file2.txt").write_text("two")
+        result: str = list_directory(str(tmp_path))
+        assert result.startswith(f'<directory_listing path="{str(tmp_path)}">')
+        assert result.endswith("</directory_listing>")
+        assert '<entry type="file">outer/inner/file1.txt</entry>' in result
+        assert '<entry type="file">outer/inner/file2.txt</entry>' in result
+
+    def test_list_directory_with_nested_compression(self, tmp_path: Path) -> None:
+        """Compress a chain of multiple single-directory entries"""
+        target: Path = tmp_path.joinpath("a")
+        target.mkdir()
+        b: Path = target.joinpath("b")
+        b.mkdir()
+        c: Path = b.joinpath("c")
+        c.mkdir()
+        c.joinpath("data.txt").write_text("content")
+        result: str = list_directory(str(tmp_path))
+        assert (
+            result
+            == f'<directory_listing path="{str(tmp_path)}">\n<entry type="file">a/b/c/data.txt</entry>\n</directory_listing>'
+        )
+
+    def test_list_directory_compression_stops_at_symlink(self, tmp_path: Path) -> None:
+        """Do not compress through a symlink directory"""
+        target: Path = tmp_path.joinpath("real_dir")
+        target.mkdir()
+        target.joinpath("file.txt").write_text("content")
+        link: Path = tmp_path.joinpath("link_to_dir")
+        link.symlink_to(target)
+        result: str = list_directory(str(tmp_path))
+        resolved_target: str = str(target.resolve())
+        expected_symlink_entry: str = (
+            f'<entry type="symlink" target="{resolved_target}" target_type="directory">{link.name}</entry>'
+        )
+        assert expected_symlink_entry in result
+
+    def test_list_directory_compression_stops_at_multiple_entries(self, tmp_path: Path) -> None:
+        """Compress through a single directory, then show the full contents of the next level"""
+        inner: Path = tmp_path.joinpath("inner")
+        inner.mkdir()
+        subdir: Path = inner.joinpath("subdir")
+        subdir.mkdir()
+        inner.joinpath("readme.txt").write_text("hello")
+        result: str = list_directory(str(tmp_path))
+        assert (
+            result
+            == f'<directory_listing path="{str(tmp_path)}">\n<entry type="directory">inner/subdir</entry>\n<entry type="file">inner/readme.txt</entry>\n</directory_listing>'
+        )
+
+    def test_list_directory_compression_empty_final(self, tmp_path: Path) -> None:
+        """Compress through a chain but find an empty directory at the end"""
+        target: Path = tmp_path.joinpath("a")
+        target.mkdir()
+        b: Path = target.joinpath("b")
+        b.mkdir()
+        result: str = list_directory(str(tmp_path))
+        assert (
+            result
+            == f'<directory_listing path="{str(tmp_path)}">\n<note>The directory is empty</note>\n</directory_listing>'
+        )
+
+    def test_list_directory_compression_max_depth(self, tmp_path: Path) -> None:
+        """Stop compressing at the maximum depth limit"""
+        current: Path = tmp_path
+        for i in range(15):
+            next_dir: Path = current.joinpath(f"level_{i}")
+            next_dir.mkdir()
+            current = next_dir
+        current.joinpath("file.txt").write_text("deep")
+        result: str = list_directory(str(tmp_path))
+        expected_prefix: str = "/".join([f"level_{i}" for i in range(10)]) + "/"
+        assert f'<entry type="directory">{expected_prefix}level_10</entry>' in result
+
     def test_list_empty_directory(self, tmp_path: Path) -> None:
         """List an empty directory"""
         target: Path = tmp_path.joinpath("empty_dir")
         target.mkdir()
         result: str = list_directory(str(target))
         assert (
-            result == f'<directory_listing path="{str(target)}">\n<error>No entries found</error>\n</directory_listing>'
+            result
+            == f'<directory_listing path="{str(target)}">\n<note>The directory is empty</note>\n</directory_listing>'
         )
 
     def test_directory_not_found(self) -> None:

@@ -26,20 +26,20 @@ DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
             },
         },
     },
-    "delete_file_or_directory": {
+    "delete_path": {
         "type": "function",
         "function": {
-            "name": "delete_file_or_directory",
-            "description": "Delete a file or an empty directory",
+            "name": "delete_path",
+            "description": "Delete a file, an empty directory, or a symlink",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "type": {
                         "type": "string",
-                        "description": 'The type of the path ("file" or "directory")',
-                        "enum": ["file", "directory"],
+                        "description": 'The type of the path: "file", "directory", or "symlink"',
+                        "enum": ["file", "directory", "symlink"],
                     },
-                    "path": {"type": "string", "description": "Path of the file or directory"},
+                    "path": {"type": "string", "description": "Path of the file, directory, or symlink to delete"},
                 },
                 "required": ["type", "path"],
                 "additionalProperties": False,
@@ -72,7 +72,7 @@ DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
         "type": "function",
         "function": {
             "name": "execute_shell_command",
-            "description": "Execute any shell command and return the resulting stdout, stderr, and exit code",
+            "description": "Execute any shell command and return the resulting stdout, stderr, and exit code (you should prefer using the other available tools; treat shell command execution as a powerful last resort to be used when the other available tools do not suffice)",
             "parameters": {
                 "type": "object",
                 "properties": {"command": {"type": "string", "description": "The command to be executed"}},

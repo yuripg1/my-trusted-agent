@@ -16,8 +16,8 @@ class SearchWebToolCall(BaseToolCall):
     arguments: Required[SearchWebArguments]
 
 
-TIMEOUT: int = 300
-SAFESEARCH: str = "off"
+_TIMEOUT: int = 300
+_SAFESEARCH: str = "off"
 
 
 def get_search_web_message(tool_call: SearchWebToolCall) -> str:
@@ -30,8 +30,8 @@ def search_web(query: str, max_results_per_page: int, results_page_number: int) 
     raw_search_results = []
     try:
         raw_search_results = list(
-            DDGS(timeout=TIMEOUT).text(
-                query=query, safesearch=SAFESEARCH, max_results=max_results_per_page, page=results_page_number
+            DDGS(timeout=_TIMEOUT).text(
+                query=query, safesearch=_SAFESEARCH, max_results=max_results_per_page, page=results_page_number
             )
         )
     except:

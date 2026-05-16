@@ -9,7 +9,6 @@ class TestGetCreateDirectoryMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-
         tool_call: CreateDirectoryToolCall = {"tool_name": "create_directory", "arguments": {"path": "/some/path"}}
         assert get_create_directory_message(tool_call) == "Creating directory at **/some/path**"
 

@@ -8,7 +8,6 @@ class TestGetReadWebPageMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-
         tool_call: ReadWebPageToolCall = {"tool_name": "read_web_page", "arguments": {"url": "https://example.com"}}
         assert get_read_web_page_message(tool_call) == "Reading web site at **https://example.com**"
 

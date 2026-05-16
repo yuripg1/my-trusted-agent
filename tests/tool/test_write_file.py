@@ -9,43 +9,39 @@ class TestGetWriteFileMessage:
 
     def test_format_create_or_overwrite(self) -> None:
         """Format the message for a new file with detected language"""
-
+        path: str = "/path/main.py"
+        mode: str = "create_or_overwrite"
+        content: str = "print('hello')"
         tool_call: WriteFileToolCall = {
             "tool_name": "write_file",
-            "arguments": {"path": "/path/main.py", "mode": "create_or_overwrite", "content": "print('hello')"},
+            "arguments": {"path": path, "mode": mode, "content": content},
         }
         result: str = get_write_file_message(tool_call)
-        assert result.startswith("Writing file at **/path/main.py** (**create_or_overwrite** mode)\n\n")
-        assert "```python" in result
-        assert "print('hello')" in result
-        assert result.endswith("```")
+        assert result == f"Writing file at **{path}** (**{mode}** mode)\n\n```python\n{content}\n```"
 
     def test_format_append(self) -> None:
         """Format the message for append mode (no language detection)"""
-
+        path: str = "/path/data.txt"
+        mode: str = "append"
+        content: str = "new line"
         tool_call: WriteFileToolCall = {
             "tool_name": "write_file",
             "arguments": {"path": "/path/data.txt", "mode": "append", "content": "new line"},
         }
         result: str = get_write_file_message(tool_call)
-        assert result.startswith("Writing file at **/path/data.txt** (**append** mode)\n\n")
-        assert "```" in result
-        assert "```python" not in result
-        assert "new line" in result
-        assert result.endswith("```")
+        assert result == f"Writing file at **{path}** (**{mode}** mode)\n\n```\n{content}\n```"
 
     def test_format_create_if_not_exists(self) -> None:
         """Format the message for create_if_not_exists mode with detected language"""
-
+        path: str = "/path/script.js"
+        mode: str = "create_if_not_exists"
+        content: str = "console.log('hello')"
         tool_call: WriteFileToolCall = {
             "tool_name": "write_file",
-            "arguments": {"path": "/path/script.js", "mode": "create_if_not_exists", "content": "console.log('hello')"},
+            "arguments": {"path": path, "mode": mode, "content": content},
         }
         result: str = get_write_file_message(tool_call)
-        assert result.startswith("Writing file at **/path/script.js** (**create_if_not_exists** mode)\n\n")
-        assert "```javascript" in result
-        assert "console.log('hello')" in result
-        assert result.endswith("```")
+        assert result == f"Writing file at **{path}** (**{mode}** mode)\n\n```javascript\n{content}\n```"
 
 
 class TestWriteFile:

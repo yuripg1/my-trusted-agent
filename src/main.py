@@ -16,7 +16,7 @@ from tool.execute_shell_command import execute_shell_command
 from ui.core import Ui
 
 
-def get_default_system_messages(environment: Environment, ui_system_message: str) -> list[str]:
+def _get_default_system_messages(environment: Environment, ui_system_message: str) -> list[str]:
     system_messages: list[str] = []
     default_instruction_messages: list[str] = [
         f"By default, you must always reply using {environment.language} with proper grammar (unless you see the need to reply in a different language)",
@@ -37,10 +37,10 @@ def get_default_system_messages(environment: Environment, ui_system_message: str
     return system_messages
 
 
-def get_default_tool_names() -> list[str]:
+def _get_default_tool_names() -> list[str]:
     tool_names: list[str] = [
         "create_directory",
-        "delete_file_or_directory",
+        "delete_path",
         "edit_file",
         "execute_shell_command",
         "generate_random_integer",
@@ -54,7 +54,7 @@ def get_default_tool_names() -> list[str]:
     return tool_names
 
 
-def ai_chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui: Ui) -> None:
+def _ai_chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui: Ui) -> None:
     graceful_exit: bool = True
     session: Session = Session(ai)
     ui.startup()
@@ -85,9 +85,9 @@ def ai_chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui
             else:
                 if not session.is_raw and session.get_messages_count(ai) == 0:
                     session.add_system_messages(
-                        ai, get_default_system_messages(environment, ui.get_system_instruction())
+                        ai, _get_default_system_messages(environment, ui.get_system_instruction())
                     )
-                    session.add_tools(ai, get_default_tool_names())
+                    session.add_tools(ai, _get_default_tool_names())
                 has_added_user_message: bool = session.add_user_message(ai, user_input)
                 if not has_added_user_message:
                     continue
@@ -134,7 +134,7 @@ def main() -> None:
     init_db(db_connection)
     ai = Ai(environment)
     ui = Ui(environment)
-    ai_chat_loop(environment, db_connection, ai, ui)
+    _ai_chat_loop(environment, db_connection, ai, ui)
     close_db_connection(db_connection)
 
 

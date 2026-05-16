@@ -16,7 +16,7 @@ class ReadWebPageToolCall(BaseToolCall):
     arguments: Required[ReadWebPageArguments]
 
 
-REQUEST_TIMEOUT: int = 300
+_REQUEST_TIMEOUT: int = 300
 
 
 def get_read_web_page_message(tool_call: ReadWebPageToolCall) -> str:
@@ -30,7 +30,7 @@ def read_web_page(url: str) -> str:
     content_type: str = ""
     raw_web_page_content: str = ""
     try:
-        client = Client(impersonate="random", impersonate_os="random", timeout=REQUEST_TIMEOUT)
+        client = Client(impersonate="random", impersonate_os="random", timeout=_REQUEST_TIMEOUT)
         response: Response = client.get(url)
         status_code = response.status_code
         if status_code < 200 or status_code > 299:

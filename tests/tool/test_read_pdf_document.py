@@ -6,10 +6,7 @@ from reportlab.pdfgen import canvas as pdf_canvas
 from tool.read_pdf_document import ReadPdfDocumentToolCall, get_read_pdf_document_message, read_pdf_document
 
 
-def _create_test_pdf(
-    target: Path,
-    page_contents: list[str] | None = None,
-) -> None:
+def create_test_pdf(target: Path, page_contents: list[str] | None = None) -> None:
     """Create a PDF file with the given page contents for testing."""
     if page_contents is None:
         page_contents = ["First page content"]
@@ -25,7 +22,6 @@ class TestGetReadPdfDocumentMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-
         tool_call: ReadPdfDocumentToolCall = {
             "tool_name": "read_pdf_document",
             "arguments": {"location_type": "web", "location": "https://example.com/doc.pdf"},
@@ -42,7 +38,7 @@ class TestReadPdfDocument:
     def test_read_local_pdf_successfully(self, tmp_path: Path) -> None:
         """Read a local PDF document successfully"""
         target: Path = tmp_path.joinpath("doc.pdf")
-        _create_test_pdf(target, ["First page content", "Second page content"])
+        create_test_pdf(target, ["First page content", "Second page content"])
         location_type: str = "local"
         location: str = str(target)
         result: str = read_pdf_document(location_type, location)
@@ -69,7 +65,7 @@ class TestReadPdfDocument:
     def test_reading_denied_by_user(self, tmp_path: Path) -> None:
         """Do not read a PDF due to being denied by the user"""
         target: Path = tmp_path.joinpath("doc.pdf")
-        _create_test_pdf(target)
+        create_test_pdf(target)
         location_type: str = "local"
         location: str = str(target)
         result: str = read_pdf_document(location_type, location, tool_call_permission=False)
@@ -79,7 +75,7 @@ class TestReadPdfDocument:
     def test_note_included(self, tmp_path: Path) -> None:
         """Include a note in the output"""
         target: Path = tmp_path.joinpath("doc.pdf")
-        _create_test_pdf(target)
+        create_test_pdf(target)
         location_type: str = "local"
         location: str = str(target)
         note: str = "Test note"
@@ -93,7 +89,7 @@ class TestReadPdfDocument:
         status_code: int = 200
         content_type: str = "application/pdf"
         pdf_file: Path = tmp_path.joinpath("doc.pdf")
-        _create_test_pdf(pdf_file, ["Web page 1 content", "Web page 2 content"])
+        create_test_pdf(pdf_file, ["Web page 1 content", "Web page 2 content"])
         pdf_bytes: bytes = pdf_file.read_bytes()
         mock_response: MagicMock = MagicMock()
         mock_response.status_code = status_code

@@ -8,7 +8,7 @@ from requests import Response, post
 from ai.deepseek_api_tools import DEEPSEEK_TOOLS, DeepSeekTool, DeepSeekToolFunction
 from tool.core import ToolCall
 from tool.create_directory import CreateDirectoryArguments, CreateDirectoryToolCall
-from tool.delete_file_or_directory import DeleteFileOrDirectoryArguments, DeleteFileOrDirectoryToolCall
+from tool.delete_path import DeletePathArguments, DeletePathToolCall
 from tool.edit_file import EditFileArguments, EditFileToolCall
 from tool.execute_shell_command import ExecuteShellCommandArguments, ExecuteShellCommandToolCall
 from tool.generate_random_integer import GenerateRandomIntegerArguments, GenerateRandomIntegerToolCall
@@ -94,7 +94,7 @@ class DeepSeekAi:
         self.reasoning_effort = reasoning_effort
         self.max_tokens = max_tokens
 
-    def __add_to_messages(
+    def _add_to_messages(
         self,
         messages: list[DeepSeekMessage],
         role: DeepSeekRoleType,
@@ -139,12 +139,12 @@ class DeepSeekAi:
         for system_message in system_messages:
             trimmed_system_message: str = system_message.strip()
             if len(trimmed_system_message) != 0:
-                self.__add_to_messages(messages, "system", trimmed_system_message)
+                self._add_to_messages(messages, "system", trimmed_system_message)
 
     def add_user_message(self, messages: list[DeepSeekMessage], user_message: str) -> bool:
         trimmed_user_message: str = user_message.strip()
         if len(trimmed_user_message) != 0:
-            self.__add_to_messages(messages, "user", trimmed_user_message)
+            self._add_to_messages(messages, "user", trimmed_user_message)
             return True
         else:
             return False
@@ -152,7 +152,7 @@ class DeepSeekAi:
     def add_tool_call(self, messages: list[DeepSeekMessage], tool_call: ToolCall, tool_call_output: str) -> None:
         trimmed_tool_call_output: str = tool_call_output.strip()
         if len(trimmed_tool_call_output) != 0:
-            self.__add_to_messages(messages, "tool", trimmed_tool_call_output, "", [], tool_call["id"])
+            self._add_to_messages(messages, "tool", trimmed_tool_call_output, "", [], tool_call["id"])
 
     def request_assistant_reply(self, messages: list[DeepSeekMessage], tools: list[DeepSeekTool]) -> int:
         headers: Mapping[str, str] = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
@@ -203,7 +203,7 @@ class DeepSeekAi:
                     ),
                 )
             )
-        self.__add_to_messages(messages, "assistant", content, reasoning_content, tool_calls)
+        self._add_to_messages(messages, "assistant", content, reasoning_content, tool_calls)
         return total_tokens
 
     def get_messages_count(self, messages: list[DeepSeekMessage]) -> int:
@@ -230,13 +230,13 @@ class DeepSeekAi:
                                 arguments=CreateDirectoryArguments(path=tool_call_arguments["path"]),
                             )
                         )
-                    elif tool_call["function"]["name"] == "delete_file_or_directory":
+                    elif tool_call["function"]["name"] == "delete_path":
                         tool_call_arguments = loads(tool_call["function"]["arguments"])
                         tool_calls.append(
-                            DeleteFileOrDirectoryToolCall(
+                            DeletePathToolCall(
                                 id=tool_call["id"],
-                                tool_name="delete_file_or_directory",
-                                arguments=DeleteFileOrDirectoryArguments(
+                                tool_name="delete_path",
+                                arguments=DeletePathArguments(
                                     type=tool_call_arguments["type"], path=tool_call_arguments["path"]
                                 ),
                             )

@@ -1,11 +1,7 @@
 from typing import TypeAlias
 
 from tool.create_directory import CreateDirectoryToolCall, create_directory, get_create_directory_message
-from tool.delete_file_or_directory import (
-    DeleteFileOrDirectoryToolCall,
-    delete_file_or_directory,
-    get_delete_file_or_directory_message,
-)
+from tool.delete_path import DeletePathToolCall, delete_path, get_delete_path_message
 from tool.edit_file import EditFileToolCall, edit_file, get_edit_file_message
 from tool.execute_shell_command import (
     ExecuteShellCommandToolCall,
@@ -26,7 +22,7 @@ from tool.write_file import WriteFileToolCall, get_write_file_message, write_fil
 
 ToolCall: TypeAlias = (
     CreateDirectoryToolCall
-    | DeleteFileOrDirectoryToolCall
+    | DeletePathToolCall
     | EditFileToolCall
     | ExecuteShellCommandToolCall
     | GenerateRandomIntegerToolCall
@@ -45,8 +41,8 @@ def get_individual_tool_call_message(tool_call: ToolCall) -> str:
         tool_name = tool_call["tool_name"]
         if tool_call["tool_name"] == "create_directory":
             return get_create_directory_message(tool_call)
-        elif tool_call["tool_name"] == "delete_file_or_directory":
-            return get_delete_file_or_directory_message(tool_call)
+        elif tool_call["tool_name"] == "delete_path":
+            return get_delete_path_message(tool_call)
         elif tool_call["tool_name"] == "edit_file":
             return get_edit_file_message(tool_call)
         elif tool_call["tool_name"] == "execute_shell_command":
@@ -108,10 +104,10 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
         if tool_call["tool_name"] == "create_directory":
             create_directory_path: str = tool_call["arguments"]["path"]
             return create_directory(create_directory_path)
-        elif tool_call["tool_name"] == "delete_file_or_directory":
-            delete_type: str = tool_call["arguments"]["type"]
-            delete_path: str = tool_call["arguments"]["path"]
-            return delete_file_or_directory(delete_type, delete_path, tool_call_permission)
+        elif tool_call["tool_name"] == "delete_path":
+            type: str = tool_call["arguments"]["type"]
+            delete_path_path: str = tool_call["arguments"]["path"]
+            return delete_path(type, delete_path_path, tool_call_permission)
         elif tool_call["tool_name"] == "edit_file":
             path: str = tool_call["arguments"]["path"]
             search_for: str = tool_call["arguments"]["search_for"]

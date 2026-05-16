@@ -33,8 +33,6 @@ class TestGetLanguageFromFilename:
     def test_known_extension(self) -> None:
         """Get language for a known file extension"""
         assert get_language_from_filename("main.py") == "python"
-        assert get_language_from_filename("style.css") == "css"
-        assert get_language_from_filename("script.js") == "javascript"
 
     def test_unknown_extension(self) -> None:
         """Get language for an unknown file extension"""

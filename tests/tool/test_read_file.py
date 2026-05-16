@@ -9,7 +9,6 @@ class TestGetReadFileMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-
         tool_call: ReadFileToolCall = {"tool_name": "read_file", "arguments": {"path": "/some/file.txt"}}
         assert get_read_file_message(tool_call) == "Reading file at **/some/file.txt**"
 

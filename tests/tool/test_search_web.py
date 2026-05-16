@@ -8,7 +8,6 @@ class TestGetSearchWebMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-
         tool_call: SearchWebToolCall = {
             "tool_name": "search_web",
             "arguments": {"query": "python", "max_results_per_page": 10, "results_page_number": 2},

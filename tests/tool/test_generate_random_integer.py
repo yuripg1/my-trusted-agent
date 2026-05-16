@@ -12,7 +12,6 @@ class TestGetGenerateRandomIntegerMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-
         tool_call: GenerateRandomIntegerToolCall = {
             "tool_name": "generate_random_integer",
             "arguments": {"min": 1, "max": 10},

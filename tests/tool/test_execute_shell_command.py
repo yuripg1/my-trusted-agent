@@ -10,16 +10,12 @@ class TestGetExecuteShellCommandMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-
         tool_call: ExecuteShellCommandToolCall = {
             "tool_name": "execute_shell_command",
             "arguments": {"command": "echo hello"},
         }
         result: str = get_execute_shell_command_message(tool_call)
-        assert result.startswith("Executing shell command\n\n")
-        assert "```shell" in result
-        assert "$ echo hello" in result
-        assert result.endswith("```")
+        assert result == "Executing shell command\n\n```shell\n$ echo hello\n```"
 
 
 class TestExecuteShellCommand:

@@ -10,7 +10,6 @@ class TestGetEditFileMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-
         tool_call: EditFileToolCall = {
             "tool_name": "edit_file",
             "arguments": {
@@ -21,8 +20,7 @@ class TestGetEditFileMessage:
             },
         }
         result: str = get_edit_file_message(tool_call)
-        assert result.startswith("Editing file at **/path/file.txt** (**1** substitutions)\n\n")
-        assert "```diff" in result
+        assert result.startswith("Editing file at **/path/file.txt** (**1** substitutions)\n\n```diff")
         assert result.endswith("```")
 
 

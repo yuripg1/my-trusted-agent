@@ -17,7 +17,7 @@ class ReadPdfDocumentToolCall(BaseToolCall):
     arguments: Required[ReadPdfDocumentArguments]
 
 
-REQUEST_TIMEOUT: int = 300
+_REQUEST_TIMEOUT: int = 300
 
 
 def get_read_pdf_document_message(tool_call: ReadPdfDocumentToolCall) -> str:
@@ -35,7 +35,7 @@ def read_pdf_document(location_type: str, location: str, tool_call_permission: b
         raw_pdf_document_content: Any = None
         try:
             if location_type == "web" or location.startswith(("http", "https")):
-                client: Client = Client(impersonate="random", impersonate_os="random", timeout=REQUEST_TIMEOUT)
+                client: Client = Client(impersonate="random", impersonate_os="random", timeout=_REQUEST_TIMEOUT)
                 response: Response = client.get(location)
                 status_code = response.status_code
                 if status_code < 200 or status_code > 299:

@@ -3,9 +3,9 @@ from rich.console import Console
 from rich.markdown import Markdown
 from rich.padding import Padding, PaddingDimensions
 
-HORIZONTAL_PADDING: int = 1
-RICH_PADDING: PaddingDimensions = (0, HORIZONTAL_PADDING)
-RULE_ALIGN: AlignMethod = "center"
+_HORIZONTAL_PADDING: int = 1
+_RICH_PADDING: PaddingDimensions = (0, _HORIZONTAL_PADDING)
+_RULE_ALIGN: AlignMethod = "center"
 
 
 class TerminalUi:
@@ -27,7 +27,7 @@ class TerminalUi:
         rich_console_instance.rule()
         print("\n", end="")
 
-    def get_formatted_session_info(self, session_id: int | None, context_length: int) -> str:
+    def _get_formatted_session_info(self, session_id: int | None, context_length: int) -> str:
         session_info_list: list[str] = []
         if session_id is not None:
             session_info_list.append(f"[ Session ID: {session_id} ]")
@@ -38,18 +38,18 @@ class TerminalUi:
 
     def display_user_message(self, session_id: int | None, context_length: int, message: str) -> None:
         rich_console_instance = Console()
-        session_info: str = self.get_formatted_session_info(session_id, context_length)
-        rich_console_instance.rule(f"[ User ] {session_info}", align=RULE_ALIGN)
+        session_info: str = self._get_formatted_session_info(session_id, context_length)
+        rich_console_instance.rule(f"[ User ] {session_info}", align=_RULE_ALIGN)
         print("\n", end="")
-        rich_console_instance.print(Padding(f"[bold]>[/] {message}", RICH_PADDING))
+        rich_console_instance.print(Padding(f"[bold]>[/] {message}", _RICH_PADDING))
         print("\n", end="")
 
     def get_user_input(self, session_id: int | None, context_length: int) -> str:
         rich_console_instance = Console()
-        session_info: str = self.get_formatted_session_info(session_id, context_length)
-        rich_console_instance.rule(f"[ User ] {session_info}", align=RULE_ALIGN)
+        session_info: str = self._get_formatted_session_info(session_id, context_length)
+        rich_console_instance.rule(f"[ User ] {session_info}", align=_RULE_ALIGN)
         print("\n", end="")
-        input_padding: str = " " * HORIZONTAL_PADDING
+        input_padding: str = " " * _HORIZONTAL_PADDING
         user_input_lines: list[str] = []
         capturing_user_input: bool = True
         while capturing_user_input:
@@ -69,30 +69,30 @@ class TerminalUi:
         self, session_id: int | None, context_length: int, message: str, reasoning: str
     ) -> None:
         rich_console_instance = Console()
-        session_info: str = self.get_formatted_session_info(session_id, context_length)
+        session_info: str = self._get_formatted_session_info(session_id, context_length)
         if self.show_reasoning and len(reasoning) != 0:
-            rich_console_instance.rule(f"[ Assistant ] [ Reasoning ] {session_info}", align=RULE_ALIGN)
+            rich_console_instance.rule(f"[ Assistant ] [ Reasoning ] {session_info}", align=_RULE_ALIGN)
             print("\n", end="")
-            rich_console_instance.print(Padding(Markdown(reasoning), RICH_PADDING))
+            rich_console_instance.print(Padding(Markdown(reasoning), _RICH_PADDING))
             print("\n", end="")
         if len(message) != 0:
-            rich_console_instance.rule(f"[ Assistant ] {session_info}", align=RULE_ALIGN)
+            rich_console_instance.rule(f"[ Assistant ] {session_info}", align=_RULE_ALIGN)
             print("\n", end="")
-            rich_console_instance.print(Padding(Markdown(message), RICH_PADDING))
+            rich_console_instance.print(Padding(Markdown(message), _RICH_PADDING))
             print("\n", end="")
 
     def display_group_tool_call_message(
         self, session_id: int | None, context_length: int, tool_call_messages: list[str], tool_call_permission: bool
     ) -> bool:
         rich_console_instance = Console()
-        session_info: str = self.get_formatted_session_info(session_id, context_length)
-        rich_console_instance.rule(f"[ Tool ] {session_info}", align=RULE_ALIGN)
+        session_info: str = self._get_formatted_session_info(session_id, context_length)
+        rich_console_instance.rule(f"[ Tool ] {session_info}", align=_RULE_ALIGN)
         print("\n", end="")
-        rich_console_instance.print(Padding(Markdown("\n\n".join(tool_call_messages)), RICH_PADDING))
+        rich_console_instance.print(Padding(Markdown("\n\n".join(tool_call_messages)), _RICH_PADDING))
         print("\n", end="")
         if tool_call_permission:
             return True
-        input_padding: str = " " * HORIZONTAL_PADDING
+        input_padding: str = " " * _HORIZONTAL_PADDING
         try:
             rich_console_instance.input(f"{input_padding}Press ENTER to continue... ")
             print("\n", end="")
@@ -103,11 +103,11 @@ class TerminalUi:
 
     def display_individual_tool_call_message(self, tool_call_message: str, tool_call_permission: bool) -> bool:
         rich_console_instance = Console()
-        rich_console_instance.print(Padding(Markdown(tool_call_message), RICH_PADDING))
+        rich_console_instance.print(Padding(Markdown(tool_call_message), _RICH_PADDING))
         print("\n", end="")
         if tool_call_permission:
             return True
-        input_padding: str = " " * HORIZONTAL_PADDING
+        input_padding: str = " " * _HORIZONTAL_PADDING
         try:
             rich_console_instance.input(f"{input_padding}Press ENTER to continue... ")
             print("\n", end="")
