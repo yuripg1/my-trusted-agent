@@ -58,6 +58,8 @@ ToolCall: TypeAlias = (
     | WriteFileToolCall
 )
 
+def get_tool_system_instruction() -> str:
+    return "You can issue many independent tool calls at once and they will be executed sequentially in order"
 
 def get_individual_tool_call_message(tool_call: ToolCall) -> str:
     tool_name: str = ""

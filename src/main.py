@@ -11,6 +11,7 @@ from tool.core import (
     get_group_tool_call_permission,
     get_individual_tool_call_message,
     get_individual_tool_call_permission,
+    get_tool_system_instruction,
 )
 from tool.execute_shell_command import execute_shell_command
 from ui.core import Ui
@@ -31,6 +32,7 @@ def _get_default_system_messages(environment: Environment, ui_system_message: st
         "date",
     ]
     system_messages.extend(default_instruction_messages)
+    system_messages.append(get_tool_system_instruction())
     system_messages.append(ui_system_message)
     for system_command in system_commands:
         system_messages.append(execute_shell_command(system_command))
