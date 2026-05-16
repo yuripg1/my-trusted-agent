@@ -6,12 +6,7 @@ from tool.create_directory import (
     get_create_directory_message,
     get_create_directory_permission,
 )
-from tool.delete_path import (
-    DeletePathToolCall,
-    delete_path,
-    get_delete_path_message,
-    get_delete_path_permission,
-)
+from tool.delete_path import DeletePathToolCall, delete_path, get_delete_path_message, get_delete_path_permission
 from tool.edit_file import EditFileToolCall, edit_file, get_edit_file_message, get_edit_file_permission
 from tool.execute_shell_command import (
     ExecuteShellCommandToolCall,
@@ -31,6 +26,7 @@ from tool.list_directory import (
     get_list_directory_permission,
     list_directory,
 )
+from tool.move_path import MovePathToolCall, get_move_path_message, get_move_path_permission, move_path
 from tool.read_file import ReadFileToolCall, get_read_file_message, get_read_file_permission, read_file
 from tool.read_pdf_document import (
     ReadPdfDocumentToolCall,
@@ -54,6 +50,7 @@ ToolCall: TypeAlias = (
     | ExecuteShellCommandToolCall
     | GenerateRandomIntegerToolCall
     | ListDirectoryToolCall
+    | MovePathToolCall
     | ReadFileToolCall
     | ReadPdfDocumentToolCall
     | ReadWebPageToolCall
@@ -78,6 +75,8 @@ def get_individual_tool_call_message(tool_call: ToolCall) -> str:
             return get_generate_random_integer_message(tool_call)
         elif tool_call["tool_name"] == "list_directory":
             return get_list_directory_message(tool_call)
+        elif tool_call["tool_name"] == "move_path":
+            return get_move_path_message(tool_call)
         elif tool_call["tool_name"] == "read_file":
             return get_read_file_message(tool_call)
         elif tool_call["tool_name"] == "read_pdf_document":
@@ -116,6 +115,8 @@ def get_individual_tool_call_permission(tool_call: ToolCall) -> bool:
             return get_generate_random_integer_permission(tool_call)
         elif tool_call["tool_name"] == "list_directory":
             return get_list_directory_permission(tool_call)
+        elif tool_call["tool_name"] == "move_path":
+            return get_move_path_permission(tool_call)
         elif tool_call["tool_name"] == "read_file":
             return get_read_file_permission(tool_call)
         elif tool_call["tool_name"] == "read_pdf_document":
@@ -165,6 +166,11 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
         elif tool_call["tool_name"] == "list_directory":
             directory_path: str = tool_call["arguments"]["path"]
             return list_directory(directory_path)
+        elif tool_call["tool_name"] == "move_path":
+            move_type: str = tool_call["arguments"]["type"]
+            move_source: str = tool_call["arguments"]["source"]
+            move_destination: str = tool_call["arguments"]["destination"]
+            return move_path(move_type, move_source, move_destination, tool_call_permission)
         elif tool_call["tool_name"] == "read_file":
             file_path: str = tool_call["arguments"]["path"]
             return read_file(file_path, tool_call_permission)

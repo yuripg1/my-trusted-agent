@@ -110,6 +110,27 @@ DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
             },
         },
     },
+    "move_path": {
+        "type": "function",
+        "function": {
+            "name": "move_path",
+            "description": "Move or rename a file, directory, or symlink from source to destination",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "description": 'The type of the path: "file", "directory", or "symlink"',
+                        "enum": ["file", "directory", "symlink"],
+                    },
+                    "source": {"type": "string", "description": "Current path of the file, directory, or symlink"},
+                    "destination": {"type": "string", "description": "New path for the file, directory, or symlink"},
+                },
+                "required": ["type", "source", "destination"],
+                "additionalProperties": False,
+            },
+        },
+    },
     "read_file": {
         "type": "function",
         "function": {

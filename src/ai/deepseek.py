@@ -13,6 +13,7 @@ from tool.edit_file import EditFileArguments, EditFileToolCall
 from tool.execute_shell_command import ExecuteShellCommandArguments, ExecuteShellCommandToolCall
 from tool.generate_random_integer import GenerateRandomIntegerArguments, GenerateRandomIntegerToolCall
 from tool.list_directory import ListDirectoryArguments, ListDirectoryToolCall
+from tool.move_path import MovePathArguments, MovePathToolCall
 from tool.read_file import ReadFileArguments, ReadFileToolCall
 from tool.read_pdf_document import ReadPdfDocumentArguments, ReadPdfDocumentToolCall
 from tool.read_web_page import ReadWebPageArguments, ReadWebPageToolCall
@@ -282,6 +283,19 @@ class DeepSeekAi:
                                 id=tool_call["id"],
                                 tool_name="list_directory",
                                 arguments=ListDirectoryArguments(path=tool_call_arguments["path"]),
+                            )
+                        )
+                    elif tool_call["function"]["name"] == "move_path":
+                        tool_call_arguments = loads(tool_call["function"]["arguments"])
+                        tool_calls.append(
+                            MovePathToolCall(
+                                id=tool_call["id"],
+                                tool_name="move_path",
+                                arguments=MovePathArguments(
+                                    type=tool_call_arguments["type"],
+                                    source=tool_call_arguments["source"],
+                                    destination=tool_call_arguments["destination"],
+                                ),
                             )
                         )
                     elif tool_call["function"]["name"] == "read_file":
