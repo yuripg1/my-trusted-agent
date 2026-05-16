@@ -8,9 +8,9 @@ from tool.core import (
     ToolCall,
     execute_tool_call,
     get_group_tool_call_messages,
-    get_group_tool_call_permission,
     get_individual_tool_call_message,
     get_individual_tool_call_permission,
+    get_number_of_required_permissions,
     get_tool_system_instruction,
 )
 from tool.execute_shell_command import execute_shell_command
@@ -106,24 +106,33 @@ def _ai_chat_loop(environment: Environment, db_connection: Connection, ai: Ai, u
                     if len(tool_calls) == 0:
                         session.auto_save(ai, db_connection)
                         break
-                    group_tool_call_permission: bool = get_group_tool_call_permission(tool_calls)
+                    number_of_required_permissions: int = get_number_of_required_permissions(tool_calls)
+                    group_tool_call_permission: bool = number_of_required_permissions == 0
                     group_tool_call_messages: list[str] = get_group_tool_call_messages(tool_calls)
                     group_tool_call_permission = ui.display_group_tool_call_message(
                         session.id, session.context_length, group_tool_call_messages, group_tool_call_permission
                     )
+                    number_of_denied_permissions: int = 0
                     for tool_call in tool_calls:
                         tool_call_output: str = ""
                         if group_tool_call_permission:
                             tool_call_output = execute_tool_call(tool_call, group_tool_call_permission)
                         else:
                             individual_tool_call_permission: bool = get_individual_tool_call_permission(tool_call)
-                            if len(tool_calls) > 1:
+                            if number_of_required_permissions > 1:
                                 individual_tool_call_message: str = get_individual_tool_call_message(tool_call)
                                 individual_tool_call_permission = ui.display_individual_tool_call_message(
                                     individual_tool_call_message, individual_tool_call_permission
                                 )
+                            if not individual_tool_call_permission:
+                                number_of_denied_permissions += 1
                             tool_call_output = execute_tool_call(tool_call, individual_tool_call_permission)
                         session.add_tool_call(ai, tool_call, tool_call_output)
+                    if (
+                        not group_tool_call_permission
+                        and number_of_required_permissions == number_of_denied_permissions
+                    ):
+                        break
         except KeyboardInterrupt:
             graceful_exit = False
             break

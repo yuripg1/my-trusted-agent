@@ -136,11 +136,12 @@ def get_individual_tool_call_permission(tool_call: ToolCall) -> bool:
     return False
 
 
-def get_group_tool_call_permission(tool_calls: list[ToolCall]) -> bool:
+def get_number_of_required_permissions(tool_calls: list[ToolCall]) -> int:
+    number_of_required_permissions: int = 0
     for tool_call in tool_calls:
         if not get_individual_tool_call_permission(tool_call):
-            return False
-    return True
+            number_of_required_permissions += 1
+    return number_of_required_permissions
 
 
 def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
