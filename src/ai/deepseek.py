@@ -299,11 +299,16 @@ class DeepSeekAi:
                         )
                     elif tool_call["function"]["name"] == "read_file":
                         tool_call_arguments = loads(tool_call["function"]["arguments"])
+                        read_file_arguments: ReadFileArguments = {"path": tool_call_arguments["path"]}
+                        if "start_line" in tool_call_arguments:
+                            read_file_arguments["start_line"] = int(tool_call_arguments["start_line"])
+                        if "end_line" in tool_call_arguments:
+                            read_file_arguments["end_line"] = int(tool_call_arguments["end_line"])
                         tool_calls.append(
                             ReadFileToolCall(
                                 id=tool_call["id"],
                                 tool_name="read_file",
-                                arguments=ReadFileArguments(path=tool_call_arguments["path"]),
+                                arguments=read_file_arguments,
                             )
                         )
                     elif tool_call["function"]["name"] == "read_pdf_document":

@@ -138,10 +138,22 @@ DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
         "type": "function",
         "function": {
             "name": "read_file",
-            "description": "Read and return the text contents of a file",
+            "description": "Read and return the text contents of a file (in full or partially)",
             "parameters": {
                 "type": "object",
-                "properties": {"path": {"type": "string", "description": "Path of the file"}},
+                "properties": {
+                    "path": {"type": "string", "description": "Path of the file"},
+                    "start_line": {
+                        "type": "integer",
+                        "description": "Start reading from this line number (inclusive; defaults to the first line)",
+                        "minimum": 1,
+                    },
+                    "end_line": {
+                        "type": "integer",
+                        "description": "Stop reading at this line number (inclusive; defaults to the last line)",
+                        "minimum": 1,
+                    },
+                },
                 "required": ["path"],
                 "additionalProperties": False,
             },

@@ -178,7 +178,9 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
             return move_path(move_type, move_source, move_destination, tool_call_permission)
         elif tool_call["tool_name"] == "read_file":
             file_path: str = tool_call["arguments"]["path"]
-            return read_file(file_path, tool_call_permission)
+            start_line: int | None = tool_call["arguments"].get("start_line", None)
+            end_line: int | None = tool_call["arguments"].get("end_line", None)
+            return read_file(file_path, tool_call_permission, start_line=start_line, end_line=end_line)
         elif tool_call["tool_name"] == "read_pdf_document":
             location_type: str = tool_call["arguments"]["location_type"]
             location: str = tool_call["arguments"]["location"]
