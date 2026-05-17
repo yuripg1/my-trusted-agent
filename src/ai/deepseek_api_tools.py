@@ -39,7 +39,10 @@ DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
                         "description": 'The type of the path: "file", "directory", or "symlink"',
                         "enum": ["file", "directory", "symlink"],
                     },
-                    "path": {"type": "string", "description": "Path of the file, empty directory, or symlink to delete"},
+                    "path": {
+                        "type": "string",
+                        "description": "Path of the file, empty directory, or symlink to delete",
+                    },
                 },
                 "required": ["type", "path"],
                 "additionalProperties": False,

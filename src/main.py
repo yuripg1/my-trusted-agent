@@ -22,6 +22,7 @@ def _get_default_system_messages(environment: Environment, ui_system_message: st
     default_instruction_messages: list[str] = [
         f"By default, you must always reply using {environment.language} with proper grammar (unless you see the need to reply in a different language)",
         "By default, you must always reply using strict Markdown syntax with proper formatting (unless you see the need to reply in a different format)",
+        "You are a general-purpose AI agent with access to tools",
     ]
     system_commands: list[str] = [
         "python -V",

@@ -15,7 +15,7 @@ class TerminalUi:
         self.show_reasoning = show_reasoning
 
     def get_system_instruction(self) -> str:
-        return "You are an AI assistant operating in a text-only terminal interface"
+        return "You are running in a text-only terminal interface"
 
     def startup(self) -> None:
         print("\n", end="")
