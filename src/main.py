@@ -70,18 +70,20 @@ def _ai_chat_loop(environment: Environment, db_connection: Connection, ai: Ai, u
             elif user_input == "/raw":
                 session = Session(ai, is_raw=True)
             elif user_input.startswith("/load "):
-                referenced_session_id = int(user_input.split(" ")[1])
+                load_input_parts: list[str] = user_input.split(" ")
+                referenced_session_id = int(load_input_parts[1])
+                should_replay: bool = len(load_input_parts) >= 3 and load_input_parts[2] == "replay"
                 session = Session(ai).load(ai, referenced_session_id, db_connection)
-            elif user_input == "/replay":
-                replay_message_index: int = 0
-                replay_message = session.get_nth_message(ai, replay_message_index)
-                while replay_message is not None:
-                    if replay_message["role"] == "user":
-                        ui.display_user_message(session.id, session.context_length, replay_message["message"])
-                    elif replay_message["role"] == "assistant":
-                        ui.display_assistant_message(session.id, session.context_length, replay_message["message"])
-                    replay_message_index += 1
+                if should_replay:
+                    replay_message_index: int = 0
                     replay_message = session.get_nth_message(ai, replay_message_index)
+                    while replay_message is not None:
+                        if replay_message["role"] == "user":
+                            ui.display_user_message(session.id, session.context_length, replay_message["message"])
+                        elif replay_message["role"] == "assistant":
+                            ui.display_assistant_message(session.id, session.context_length, replay_message["message"])
+                        replay_message_index += 1
+                        replay_message = session.get_nth_message(ai, replay_message_index)
             elif user_input == "/rewind":
                 session.rewind_message(ai)
             elif user_input == "/exit":
