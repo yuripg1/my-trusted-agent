@@ -54,7 +54,10 @@ class TestReadFile:
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("hello world")
         result: str = read_file(str(target))
-        assert result == f'<file_read path="{str(target)}">\n<content>\nhello world\n</content>\n</file_read>'
+        assert (
+            result
+            == f'<file_read path="{str(target)}">\n<number_of_lines>1</number_of_lines>\n<content>\nhello world\n</content>\n</file_read>'
+        )
 
     def test_read_file_not_found(self, tmp_path: Path) -> None:
         """Do not read a file that does not exist"""
@@ -100,7 +103,7 @@ class TestReadFile:
         result: str = read_file(str(target), start_line=start_line, end_line=end_line)
         assert (
             result
-            == f'<file_read path="{str(target)}" start_line="{start_line}" end_line="{end_line}">\n<content>\nline2\nline3\nline4\n</content>\n</file_read>'
+            == f'<file_read path="{str(target)}" start_line="{start_line}" end_line="{end_line}">\n<number_of_lines>3</number_of_lines>\n<content>\nline2\nline3\nline4\n</content>\n</file_read>'
         )
 
     def test_read_from_start_line(self, tmp_path: Path) -> None:
@@ -111,7 +114,7 @@ class TestReadFile:
         result: str = read_file(str(target), start_line=start_line)
         assert (
             result
-            == f'<file_read path="{str(target)}" start_line="{start_line}">\n<content>\nline2\nline3\n</content>\n</file_read>'
+            == f'<file_read path="{str(target)}" start_line="{start_line}">\n<number_of_lines>2</number_of_lines>\n<content>\nline2\nline3\n</content>\n</file_read>'
         )
 
     def test_read_up_to_end_line(self, tmp_path: Path) -> None:
@@ -122,7 +125,7 @@ class TestReadFile:
         result: str = read_file(str(target), end_line=end_line)
         assert (
             result
-            == f'<file_read path="{str(target)}" end_line="{end_line}">\n<content>\nline1\nline2\n</content>\n</file_read>'
+            == f'<file_read path="{str(target)}" end_line="{end_line}">\n<number_of_lines>2</number_of_lines>\n<content>\nline1\nline2\n</content>\n</file_read>'
         )
 
     def test_read_single_line(self, tmp_path: Path) -> None:
@@ -134,7 +137,7 @@ class TestReadFile:
         result: str = read_file(str(target), start_line=start_line, end_line=end_line)
         assert (
             result
-            == f'<file_read path="{str(target)}" start_line="{start_line}" end_line="{end_line}">\n<content>\nline2\n</content>\n</file_read>'
+            == f'<file_read path="{str(target)}" start_line="{start_line}" end_line="{end_line}">\n<number_of_lines>1</number_of_lines>\n<content>\nline2\n</content>\n</file_read>'
         )
 
     def test_read_crlf_file(self, tmp_path: Path) -> None:
@@ -146,7 +149,29 @@ class TestReadFile:
         result: str = read_file(str(target), start_line=start_line, end_line=end_line)
         assert (
             result
-            == f'<file_read path="{str(target)}" start_line="{start_line}" end_line="{end_line}">\n<content>\nline2\n</content>\n</file_read>'
+            == f'<file_read path="{str(target)}" start_line="{start_line}" end_line="{end_line}">\n<number_of_lines>1</number_of_lines>\n<content>\nline2\n</content>\n</file_read>'
+        )
+
+    def test_read_start_line_past_eof(self, tmp_path: Path) -> None:
+        """Read with start_line beyond end of file returns 0 lines"""
+        target: Path = tmp_path.joinpath("file.txt")
+        target.write_text("line1\nline2\nline3\n")
+        start_line: int = 5
+        result: str = read_file(str(target), start_line=start_line)
+        assert (
+            result
+            == f'<file_read path="{str(target)}" start_line="{start_line}">\n<number_of_lines>0</number_of_lines>\n<content>\n\n</content>\n</file_read>'
+        )
+
+    def test_read_end_line_beyond_file(self, tmp_path: Path) -> None:
+        """Read with end_line beyond end of file returns fewer lines than requested"""
+        target: Path = tmp_path.joinpath("file.txt")
+        target.write_text("line1\nline2\nline3\n")
+        end_line: int = 10
+        result: str = read_file(str(target), end_line=end_line)
+        assert (
+            result
+            == f'<file_read path="{str(target)}" end_line="{end_line}">\n<number_of_lines>3</number_of_lines>\n<content>\nline1\nline2\nline3\n</content>\n</file_read>'
         )
 
     def test_read_start_line_less_than_1(self, tmp_path: Path) -> None:
