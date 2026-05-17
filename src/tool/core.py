@@ -60,7 +60,7 @@ ToolCall: TypeAlias = (
 
 
 def get_tool_system_instruction() -> str:
-    return "You can issue many independent tool calls at once and they will be executed sequentially in order"
+    return "You should prefer batching independent tool calls (they will be executed sequentially and in order) instead of issuing them one by one"
 
 
 def get_individual_tool_call_message(tool_call: ToolCall) -> str:

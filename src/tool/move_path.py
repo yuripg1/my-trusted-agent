@@ -1,4 +1,5 @@
 from pathlib import Path
+from shutil import move
 from typing import Literal, Required, TypedDict
 
 from tool.common import BaseToolCall
@@ -36,22 +37,22 @@ def move_path(type: str, source: str, destination: str, tool_call_permission: bo
             elif type == "file":
                 if source_path.is_file() and not source_path.is_symlink():
                     dest_path.parent.mkdir(parents=True, exist_ok=True)
-                    source_path.rename(dest_path)
-                    output_entries.append("<result>Path moved successfully</result>")
+                    move(str(source_path), str(dest_path))
+                    output_entries.append("<result>File moved successfully</result>")
                 else:
                     output_entries.append("<error>Expected a file but found a different type</error>")
             elif type == "directory":
                 if source_path.is_dir() and not source_path.is_symlink():
                     dest_path.parent.mkdir(parents=True, exist_ok=True)
-                    source_path.rename(dest_path)
-                    output_entries.append("<result>Path moved successfully</result>")
+                    move(str(source_path), str(dest_path))
+                    output_entries.append("<result>Directory moved successfully</result>")
                 else:
                     output_entries.append("<error>Expected a directory but found a different type</error>")
             elif type == "symlink":
                 if source_path.is_symlink():
                     dest_path.parent.mkdir(parents=True, exist_ok=True)
-                    source_path.rename(dest_path)
-                    output_entries.append("<result>Path moved successfully</result>")
+                    move(str(source_path), str(dest_path))
+                    output_entries.append("<result>Symlink moved successfully</result>")
                 else:
                     output_entries.append("<error>Expected a symlink but found a different type</error>")
             else:

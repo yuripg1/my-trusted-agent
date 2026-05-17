@@ -47,6 +47,7 @@ def _get_default_tool_names() -> list[str]:
         "execute_shell_command",
         "generate_random_integer",
         "list_directory",
+        "move_path",
         "read_file",
         "read_pdf_document",
         "read_web_page",

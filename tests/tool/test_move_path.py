@@ -40,7 +40,7 @@ class TestMovePath:
         result: str = move_path(type, str(source), str(destination))
         assert (
             result
-            == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>Path moved successfully</result>\n</path_move>'
+            == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>File moved successfully</result>\n</path_move>'
         )
         assert not source.exists()
         assert destination.read_text() == "content"
@@ -54,7 +54,7 @@ class TestMovePath:
         result: str = move_path(type, str(source), str(destination))
         assert (
             result
-            == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>Path moved successfully</result>\n</path_move>'
+            == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>File moved successfully</result>\n</path_move>'
         )
         assert not source.exists()
         assert destination.read_text() == "content"
@@ -69,7 +69,7 @@ class TestMovePath:
         result: str = move_path(type, str(source), str(destination))
         assert (
             result
-            == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>Path moved successfully</result>\n</path_move>'
+            == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>Directory moved successfully</result>\n</path_move>'
         )
         assert not source.exists()
         assert destination.is_dir()
@@ -86,7 +86,7 @@ class TestMovePath:
         result: str = move_path(type, str(source), str(destination))
         assert (
             result
-            == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>Path moved successfully</result>\n</path_move>'
+            == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>Symlink moved successfully</result>\n</path_move>'
         )
         assert not source.exists()
         assert destination.is_symlink()
@@ -104,7 +104,7 @@ class TestMovePath:
         result: str = move_path(type, str(source), str(destination))
         assert (
             result
-            == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>Path moved successfully</result>\n</path_move>'
+            == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>Symlink moved successfully</result>\n</path_move>'
         )
         assert not source.exists()
         assert destination.is_symlink()
@@ -123,7 +123,7 @@ class TestMovePath:
         result: str = move_path(type, str(source), str(destination))
         assert (
             result
-            == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>Path moved successfully</result>\n</path_move>'
+            == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>Symlink moved successfully</result>\n</path_move>'
         )
         assert not source.exists()
         assert destination.is_symlink()
@@ -213,7 +213,7 @@ class TestMovePath:
         source: Path = tmp_path.joinpath("file.txt")
         source.write_text("content")
         destination: Path = tmp_path.joinpath("dest.txt")
-        with patch.object(Path, "rename", side_effect=PermissionError("Permission error")):
+        with patch("tool.move_path.move", side_effect=PermissionError("Permission error")):
             result: str = move_path(type, str(source), str(destination))
             assert (
                 result
@@ -227,7 +227,7 @@ class TestMovePath:
         source: Path = tmp_path.joinpath("file.txt")
         source.write_text("content")
         destination: Path = tmp_path.joinpath("dest.txt")
-        with patch.object(Path, "rename", side_effect=Exception("Exception")):
+        with patch("tool.move_path.move", side_effect=Exception("Exception")):
             result: str = move_path(type, str(source), str(destination))
             assert (
                 result
