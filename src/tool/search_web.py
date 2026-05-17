@@ -1,5 +1,5 @@
 from contextlib import suppress
-from typing import Literal, Required, TypedDict
+from typing import Literal, NotRequired, Required, TypedDict
 
 from ddgs import DDGS
 
@@ -9,7 +9,7 @@ from tool.common import BaseToolCall
 class SearchWebArguments(TypedDict):
     query: Required[str]
     max_results_per_page: Required[int]
-    results_page_number: Required[int]
+    results_page_number: NotRequired[int]
 
 
 class SearchWebToolCall(BaseToolCall):
@@ -22,14 +22,14 @@ _SAFESEARCH: str = "off"
 
 
 def get_search_web_message(tool_call: SearchWebToolCall) -> str:
-    return f"Searching the web for **{tool_call['arguments']['query']}** (**{tool_call['arguments']['max_results_per_page']}** results - page **{tool_call['arguments']['results_page_number']}**)"
+    return f"Searching the web for **{tool_call['arguments']['query']}** (**{tool_call['arguments']['max_results_per_page']}** results - page **{tool_call['arguments'].get('results_page_number', 1)}**)"
 
 
 def get_search_web_permission(tool_call: SearchWebToolCall) -> bool:
     return True
 
 
-def search_web(query: str, max_results_per_page: int, results_page_number: int) -> str:
+def search_web(query: str, max_results_per_page: int, results_page_number: int = 1) -> str:
     output_entries: list[str] = []
     output_entries.append(f"<query>{query}</query>")
     raw_search_results = []

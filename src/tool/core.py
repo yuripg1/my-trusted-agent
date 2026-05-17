@@ -189,7 +189,7 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
         elif tool_call["tool_name"] == "search_web":
             query: str = tool_call["arguments"]["query"]
             max_results_per_page: int = tool_call["arguments"]["max_results_per_page"]
-            results_page_number: int = tool_call["arguments"]["results_page_number"]
+            results_page_number: int = tool_call["arguments"].get("results_page_number", 1)
             return search_web(query, max_results_per_page, results_page_number)
         elif tool_call["tool_name"] == "write_file":
             write_file_path: str = tool_call["arguments"]["path"]

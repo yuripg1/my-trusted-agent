@@ -336,7 +336,7 @@ class DeepSeekAi:
                                 arguments=SearchWebArguments(
                                     query=tool_call_arguments["query"],
                                     max_results_per_page=tool_call_arguments["max_results_per_page"],
-                                    results_page_number=tool_call_arguments["results_page_number"],
+                                    results_page_number=tool_call_arguments.get("results_page_number", 1),
                                 ),
                             )
                         )
