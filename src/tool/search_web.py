@@ -32,20 +32,27 @@ def get_search_web_permission(tool_call: SearchWebToolCall) -> bool:
 def search_web(query: str, max_results_per_page: int, results_page_number: int = 1) -> str:
     output_entries: list[str] = []
     output_entries.append(f"<query>{query}</query>")
-    raw_search_results = []
-    with suppress(Exception):
-        raw_search_results = list(
-            DDGS(timeout=_TIMEOUT).text(
-                query=query, safesearch=_SAFESEARCH, max_results=max_results_per_page, page=results_page_number
-            )
-        )
-    if len(raw_search_results) == 0:
-        output_entries.append("<error>No search results found</error>")
+    if max_results_per_page < 1:
+        output_entries.append('<error>"max_results_per_page" must be greater than or equal to 1</error>')
+    elif max_results_per_page > 10:
+        output_entries.append('<error>"max_results_per_page" must be less than or equal to 10</error>')
+    elif results_page_number < 1:
+        output_entries.append('<error>"results_page_number" must be greater than or equal to 1</error>')
     else:
-        for page_result_number, search_result_data in enumerate(raw_search_results, 1):
-            search_result_number: int = ((results_page_number - 1) * max_results_per_page) + page_result_number
-            output_entries.append(
-                f'<search_result result_number="{search_result_number}">\n<title>{str(search_result_data["title"]).strip()}</title>\n<href>{str(search_result_data["href"]).strip()}</href>\n<snippet>\n{str(search_result_data["body"]).strip()}\n</snippet>\n</search_result>'
+        raw_search_results = []
+        with suppress(Exception):
+            raw_search_results = list(
+                DDGS(timeout=_TIMEOUT).text(
+                    query=query, safesearch=_SAFESEARCH, max_results=max_results_per_page, page=results_page_number
+                )
             )
+        if len(raw_search_results) == 0:
+            output_entries.append("<error>No search results found</error>")
+        else:
+            for page_result_number, search_result_data in enumerate(raw_search_results, 1):
+                search_result_number: int = ((results_page_number - 1) * max_results_per_page) + page_result_number
+                output_entries.append(
+                    f'<search_result result_number="{search_result_number}">\n<title>{str(search_result_data["title"]).strip()}</title>\n<href>{str(search_result_data["href"]).strip()}</href>\n<snippet>\n{str(search_result_data["body"]).strip()}\n</snippet>\n</search_result>'
+                )
     joined_output_entries: str = "\n".join(output_entries)
     return f'<web_search max_results_per_page="{max_results_per_page}" results_page_number="{results_page_number}">\n{joined_output_entries}\n</web_search>'

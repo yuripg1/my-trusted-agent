@@ -74,3 +74,27 @@ class TestSearchWeb:
             result: str = search_web(query, max_results_per_page, results_page_number)
         expected_result: str = f'<web_search max_results_per_page="{max_results_per_page}" results_page_number="{results_page_number}">\n<query>{query}</query>\n<error>No search results found</error>\n</web_search>'
         assert result == expected_result
+
+    def test_max_results_per_page_less_than_1(self) -> None:
+        """Do not search when max_results_per_page is less than 1"""
+        result: str = search_web("query", max_results_per_page=0)
+        assert (
+            result
+            == '<web_search max_results_per_page="0" results_page_number="1">\n<query>query</query>\n<error>"max_results_per_page" must be greater than or equal to 1</error>\n</web_search>'
+        )
+
+    def test_max_results_per_page_greater_than_10(self) -> None:
+        """Do not search when max_results_per_page is greater than 10"""
+        result: str = search_web("query", max_results_per_page=11)
+        assert (
+            result
+            == '<web_search max_results_per_page="11" results_page_number="1">\n<query>query</query>\n<error>"max_results_per_page" must be less than or equal to 10</error>\n</web_search>'
+        )
+
+    def test_results_page_number_less_than_1(self) -> None:
+        """Do not search when results_page_number is less than 1"""
+        result: str = search_web("query", max_results_per_page=10, results_page_number=0)
+        assert (
+            result
+            == '<web_search max_results_per_page="10" results_page_number="0">\n<query>query</query>\n<error>"results_page_number" must be greater than or equal to 1</error>\n</web_search>'
+        )
