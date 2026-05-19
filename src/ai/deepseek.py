@@ -6,7 +6,7 @@ from typing import Any, Literal, NotRequired, Required, TypedDict
 
 from requests import Response, post
 
-from ai.deepseek_api_tools import DEEPSEEK_TOOLS, DeepSeekTool, DeepSeekToolFunction
+from ai.deepseek_tools import DEEPSEEK_TOOLS, DeepSeekTool, DeepSeekToolFunction
 from tool.core import ToolCall
 from tool.create_directory import CreateDirectoryArguments, CreateDirectoryToolCall
 from tool.delete_path import DeletePathArguments, DeletePathToolCall

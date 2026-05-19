@@ -8,7 +8,7 @@ from ai.deepseek import (
     DeepSeekReasoningEffortType,
     DeepSeekThinkingType,
 )
-from ai.deepseek_api_tools import DeepSeekTool
+from ai.deepseek_tools import DeepSeekTool
 from environment import Environment
 from tool.core import ToolCall
 
