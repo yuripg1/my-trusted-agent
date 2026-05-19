@@ -21,6 +21,12 @@ from tool.generate_random_integer import (
     get_generate_random_integer_message,
     get_generate_random_integer_permission,
 )
+from tool.invalid import (
+    InvalidToolCall,
+    execute_invalid,
+    get_invalid_message,
+    get_invalid_permission,
+)
 from tool.list_directory import (
     ListDirectoryToolCall,
     get_list_directory_message,
@@ -50,6 +56,7 @@ ToolCall: TypeAlias = (
     | EditFileToolCall
     | ExecuteShellCommandToolCall
     | GenerateRandomIntegerToolCall
+    | InvalidToolCall
     | ListDirectoryToolCall
     | MovePathToolCall
     | ReadFileToolCall
@@ -78,6 +85,8 @@ def get_individual_tool_call_message(tool_call: ToolCall) -> str:
             return get_execute_shell_command_message(tool_call)
         elif tool_call["tool_name"] == "generate_random_integer":
             return get_generate_random_integer_message(tool_call)
+        elif tool_call["tool_name"] == "invalid":
+            return get_invalid_message(tool_call)
         elif tool_call["tool_name"] == "list_directory":
             return get_list_directory_message(tool_call)
         elif tool_call["tool_name"] == "move_path":
@@ -116,6 +125,8 @@ def get_individual_tool_call_permission(tool_call: ToolCall) -> bool:
             return get_execute_shell_command_permission(tool_call)
         elif tool_call["tool_name"] == "generate_random_integer":
             return get_generate_random_integer_permission(tool_call)
+        elif tool_call["tool_name"] == "invalid":
+            return get_invalid_permission(tool_call)
         elif tool_call["tool_name"] == "list_directory":
             return get_list_directory_permission(tool_call)
         elif tool_call["tool_name"] == "move_path":
@@ -165,6 +176,8 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
             min: int = tool_call["arguments"]["min"]
             max: int = tool_call["arguments"]["max"]
             return generate_random_integer(min, max)
+        elif tool_call["tool_name"] == "invalid":
+            return execute_invalid(tool_call)
         elif tool_call["tool_name"] == "list_directory":
             directory_path: str = tool_call["arguments"]["path"]
             return list_directory(directory_path)

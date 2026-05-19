@@ -13,6 +13,7 @@ from tool.delete_path import DeletePathArguments, DeletePathToolCall
 from tool.edit_file import EditFileArguments, EditFileToolCall
 from tool.execute_shell_command import ExecuteShellCommandArguments, ExecuteShellCommandToolCall
 from tool.generate_random_integer import GenerateRandomIntegerArguments, GenerateRandomIntegerToolCall
+from tool.invalid import InvalidArguments, InvalidToolCall
 from tool.list_directory import ListDirectoryArguments, ListDirectoryToolCall
 from tool.move_path import MovePathArguments, MovePathToolCall
 from tool.read_file import ReadFileArguments, ReadFileToolCall
@@ -42,7 +43,7 @@ class DeepSeekToolCall(TypedDict):
 
 class DeepSeekMessage(TypedDict):
     role: Required[DeepSeekRoleType]
-    content: NotRequired[str]
+    content: Required[str]
     reasoning_content: NotRequired[str]
     tool_calls: NotRequired[list[DeepSeekToolCall]]
     tool_call_id: NotRequired[str]
@@ -63,10 +64,10 @@ class DeepSeekRequest(TypedDict):
     tool_choice: Required[str]
 
 
-API_STREAM: bool = False
-API_TOOL_CHOICE: DeepSeekToolChoiceType = "auto"
-API_WAIT_AFTER_ERROR: int = 2
-API_REQUEST_TIMEOUT: int = 600
+_API_STREAM: bool = False
+_API_TOOL_CHOICE: DeepSeekToolChoiceType = "auto"
+_API_WAIT_AFTER_ERROR: int = 2
+_API_REQUEST_TIMEOUT: int = 600
 
 
 class DeepSeekAi:
@@ -164,8 +165,8 @@ class DeepSeekAi:
             "messages": messages,
             "thinking": payload_thinking,
             "max_tokens": self.max_tokens,
-            "stream": API_STREAM,
-            "tool_choice": API_TOOL_CHOICE,
+            "stream": _API_STREAM,
+            "tool_choice": _API_TOOL_CHOICE,
             "tools": tools,
         }
         if payload["thinking"]["type"] == "enabled":
@@ -173,7 +174,7 @@ class DeepSeekAi:
         response: Response | None = None
         with suppress(Exception):
             response = post(
-                f"{self.base_url}/chat/completions", headers=headers, json=payload, timeout=API_REQUEST_TIMEOUT
+                f"{self.base_url}/chat/completions", headers=headers, json=payload, timeout=_API_REQUEST_TIMEOUT
             )
         if response is None or response.status_code != 200:
             if (
@@ -181,7 +182,7 @@ class DeepSeekAi:
                 or response.status_code == 429
                 or (response.status_code >= 500 and response.status_code <= 599)
             ):
-                sleep(API_WAIT_AFTER_ERROR)
+                sleep(_API_WAIT_AFTER_ERROR)
                 return self.request_assistant_reply(messages, tools)
             print(dumps(payload, indent=2))
             print(response.status_code)
@@ -221,140 +222,159 @@ class DeepSeekAi:
             nth_message: DeepSeekMessage = messages[message_index]
             if "tool_calls" in nth_message:
                 for tool_call in nth_message["tool_calls"]:
-                    if tool_call["function"]["name"] == "create_directory":
+                    tool_name: str = tool_call["function"]["name"]
+                    try:
                         tool_call_arguments = loads(tool_call["function"]["arguments"])
+                    except Exception:
                         tool_calls.append(
-                            CreateDirectoryToolCall(
+                            InvalidToolCall(
                                 id=tool_call["id"],
-                                tool_name="create_directory",
-                                arguments=CreateDirectoryArguments(path=tool_call_arguments["path"]),
-                            )
-                        )
-                    elif tool_call["function"]["name"] == "delete_path":
-                        tool_call_arguments = loads(tool_call["function"]["arguments"])
-                        tool_calls.append(
-                            DeletePathToolCall(
-                                id=tool_call["id"],
-                                tool_name="delete_path",
-                                arguments=DeletePathArguments(
-                                    type=tool_call_arguments["type"], path=tool_call_arguments["path"]
+                                tool_name="invalid",
+                                arguments=InvalidArguments(
+                                    tool_name=tool_name, error_message="There was a problem parsing the arguments JSON"
                                 ),
                             )
                         )
-                    elif tool_call["function"]["name"] == "edit_file":
-                        tool_call_arguments = loads(tool_call["function"]["arguments"])
-                        tool_calls.append(
-                            EditFileToolCall(
-                                id=tool_call["id"],
-                                tool_name="edit_file",
-                                arguments=EditFileArguments(
-                                    path=tool_call_arguments["path"],
-                                    search_for=tool_call_arguments["search_for"],
-                                    replace_with=tool_call_arguments["replace_with"],
-                                    number_of_substitutions=tool_call_arguments["number_of_substitutions"],
-                                ),
+                        continue
+                    try:
+                        if tool_call["function"]["name"] == "create_directory":
+                            tool_calls.append(
+                                CreateDirectoryToolCall(
+                                    id=tool_call["id"],
+                                    tool_name="create_directory",
+                                    arguments=CreateDirectoryArguments(path=tool_call_arguments["path"]),
+                                )
                             )
-                        )
-                    elif tool_call["function"]["name"] == "execute_shell_command":
-                        tool_call_arguments = loads(tool_call["function"]["arguments"])
-                        tool_calls.append(
-                            ExecuteShellCommandToolCall(
-                                id=tool_call["id"],
-                                tool_name="execute_shell_command",
-                                arguments=ExecuteShellCommandArguments(command=tool_call_arguments["command"]),
+                        elif tool_call["function"]["name"] == "delete_path":
+                            tool_calls.append(
+                                DeletePathToolCall(
+                                    id=tool_call["id"],
+                                    tool_name="delete_path",
+                                    arguments=DeletePathArguments(
+                                        type=tool_call_arguments["type"], path=tool_call_arguments["path"]
+                                    ),
+                                )
                             )
-                        )
-                    elif tool_call["function"]["name"] == "generate_random_integer":
-                        tool_call_arguments = loads(tool_call["function"]["arguments"])
-                        tool_calls.append(
-                            GenerateRandomIntegerToolCall(
-                                id=tool_call["id"],
-                                tool_name="generate_random_integer",
-                                arguments=GenerateRandomIntegerArguments(
-                                    min=tool_call_arguments["min"], max=tool_call_arguments["max"]
-                                ),
+                        elif tool_call["function"]["name"] == "edit_file":
+                            tool_calls.append(
+                                EditFileToolCall(
+                                    id=tool_call["id"],
+                                    tool_name="edit_file",
+                                    arguments=EditFileArguments(
+                                        path=tool_call_arguments["path"],
+                                        search_for=tool_call_arguments["search_for"],
+                                        replace_with=tool_call_arguments["replace_with"],
+                                        number_of_substitutions=tool_call_arguments["number_of_substitutions"],
+                                    ),
+                                )
                             )
-                        )
-                    elif tool_call["function"]["name"] == "list_directory":
-                        tool_call_arguments = loads(tool_call["function"]["arguments"])
-                        tool_calls.append(
-                            ListDirectoryToolCall(
-                                id=tool_call["id"],
-                                tool_name="list_directory",
-                                arguments=ListDirectoryArguments(path=tool_call_arguments["path"]),
+                        elif tool_call["function"]["name"] == "execute_shell_command":
+                            tool_calls.append(
+                                ExecuteShellCommandToolCall(
+                                    id=tool_call["id"],
+                                    tool_name="execute_shell_command",
+                                    arguments=ExecuteShellCommandArguments(command=tool_call_arguments["command"]),
+                                )
                             )
-                        )
-                    elif tool_call["function"]["name"] == "move_path":
-                        tool_call_arguments = loads(tool_call["function"]["arguments"])
-                        tool_calls.append(
-                            MovePathToolCall(
-                                id=tool_call["id"],
-                                tool_name="move_path",
-                                arguments=MovePathArguments(
-                                    type=tool_call_arguments["type"],
-                                    source=tool_call_arguments["source"],
-                                    destination=tool_call_arguments["destination"],
-                                ),
+                        elif tool_call["function"]["name"] == "generate_random_integer":
+                            tool_calls.append(
+                                GenerateRandomIntegerToolCall(
+                                    id=tool_call["id"],
+                                    tool_name="generate_random_integer",
+                                    arguments=GenerateRandomIntegerArguments(
+                                        min=tool_call_arguments["min"], max=tool_call_arguments["max"]
+                                    ),
+                                )
                             )
-                        )
-                    elif tool_call["function"]["name"] == "read_file":
-                        tool_call_arguments = loads(tool_call["function"]["arguments"])
-                        read_file_arguments: ReadFileArguments = {"path": tool_call_arguments["path"]}
-                        if "start_line" in tool_call_arguments:
-                            read_file_arguments["start_line"] = int(tool_call_arguments["start_line"])
-                        if "end_line" in tool_call_arguments:
-                            read_file_arguments["end_line"] = int(tool_call_arguments["end_line"])
-                        tool_calls.append(
-                            ReadFileToolCall(
-                                id=tool_call["id"],
-                                tool_name="read_file",
-                                arguments=read_file_arguments,
+                        elif tool_call["function"]["name"] == "list_directory":
+                            tool_calls.append(
+                                ListDirectoryToolCall(
+                                    id=tool_call["id"],
+                                    tool_name="list_directory",
+                                    arguments=ListDirectoryArguments(path=tool_call_arguments["path"]),
+                                )
                             )
-                        )
-                    elif tool_call["function"]["name"] == "read_pdf_document":
-                        tool_call_arguments = loads(tool_call["function"]["arguments"])
-                        tool_calls.append(
-                            ReadPdfDocumentToolCall(
-                                id=tool_call["id"],
-                                tool_name="read_pdf_document",
-                                arguments=ReadPdfDocumentArguments(
-                                    location_type=tool_call_arguments["location_type"],
-                                    location=tool_call_arguments["location"],
-                                ),
+                        elif tool_call["function"]["name"] == "move_path":
+                            tool_calls.append(
+                                MovePathToolCall(
+                                    id=tool_call["id"],
+                                    tool_name="move_path",
+                                    arguments=MovePathArguments(
+                                        type=tool_call_arguments["type"],
+                                        source=tool_call_arguments["source"],
+                                        destination=tool_call_arguments["destination"],
+                                    ),
+                                )
                             )
-                        )
-                    elif tool_call["function"]["name"] == "read_web_page":
-                        tool_call_arguments = loads(tool_call["function"]["arguments"])
-                        tool_calls.append(
-                            ReadWebPageToolCall(
-                                id=tool_call["id"],
-                                tool_name="read_web_page",
-                                arguments=ReadWebPageArguments(url=tool_call_arguments["url"]),
+                        elif tool_call["function"]["name"] == "read_file":
+                            read_file_arguments: ReadFileArguments = {"path": tool_call_arguments["path"]}
+                            if "start_line" in tool_call_arguments:
+                                read_file_arguments["start_line"] = int(tool_call_arguments["start_line"])
+                            if "end_line" in tool_call_arguments:
+                                read_file_arguments["end_line"] = int(tool_call_arguments["end_line"])
+                            tool_calls.append(
+                                ReadFileToolCall(
+                                    id=tool_call["id"], tool_name="read_file", arguments=read_file_arguments
+                                )
                             )
-                        )
-                    elif tool_call["function"]["name"] == "search_web":
-                        tool_call_arguments = loads(tool_call["function"]["arguments"])
-                        tool_calls.append(
-                            SearchWebToolCall(
-                                id=tool_call["id"],
-                                tool_name="search_web",
-                                arguments=SearchWebArguments(
-                                    query=tool_call_arguments["query"],
-                                    max_results_per_page=tool_call_arguments["max_results_per_page"],
-                                    results_page_number=tool_call_arguments.get("results_page_number", 1),
-                                ),
+                        elif tool_call["function"]["name"] == "read_pdf_document":
+                            tool_calls.append(
+                                ReadPdfDocumentToolCall(
+                                    id=tool_call["id"],
+                                    tool_name="read_pdf_document",
+                                    arguments=ReadPdfDocumentArguments(
+                                        location_type=tool_call_arguments["location_type"],
+                                        location=tool_call_arguments["location"],
+                                    ),
+                                )
                             )
-                        )
-                    elif tool_call["function"]["name"] == "write_file":
-                        tool_call_arguments = loads(tool_call["function"]["arguments"])
+                        elif tool_call["function"]["name"] == "read_web_page":
+                            tool_calls.append(
+                                ReadWebPageToolCall(
+                                    id=tool_call["id"],
+                                    tool_name="read_web_page",
+                                    arguments=ReadWebPageArguments(url=tool_call_arguments["url"]),
+                                )
+                            )
+                        elif tool_call["function"]["name"] == "search_web":
+                            tool_calls.append(
+                                SearchWebToolCall(
+                                    id=tool_call["id"],
+                                    tool_name="search_web",
+                                    arguments=SearchWebArguments(
+                                        query=tool_call_arguments["query"],
+                                        max_results_per_page=tool_call_arguments["max_results_per_page"],
+                                        results_page_number=tool_call_arguments.get("results_page_number", 1),
+                                    ),
+                                )
+                            )
+                        elif tool_call["function"]["name"] == "write_file":
+                            tool_calls.append(
+                                WriteFileToolCall(
+                                    id=tool_call["id"],
+                                    tool_name="write_file",
+                                    arguments=WriteFileArguments(
+                                        path=tool_call_arguments["path"],
+                                        mode=tool_call_arguments["mode"],
+                                        content=tool_call_arguments["content"],
+                                    ),
+                                )
+                            )
+                        else:
+                            tool_calls.append(
+                                InvalidToolCall(
+                                    id=tool_call["id"],
+                                    tool_name="invalid",
+                                    arguments=InvalidArguments(tool_name=tool_name, error_message="Invalid tool call"),
+                                )
+                            )
+                    except Exception:
                         tool_calls.append(
-                            WriteFileToolCall(
+                            InvalidToolCall(
                                 id=tool_call["id"],
-                                tool_name="write_file",
-                                arguments=WriteFileArguments(
-                                    path=tool_call_arguments["path"],
-                                    mode=tool_call_arguments["mode"],
-                                    content=tool_call_arguments["content"],
+                                tool_name="invalid",
+                                arguments=InvalidArguments(
+                                    tool_name=tool_name, error_message="There was a problem parsing the tool call"
                                 ),
                             )
                         )
@@ -363,9 +383,9 @@ class DeepSeekAi:
     def decode_messages_json(self, parsed_messages: Any) -> list[DeepSeekMessage]:
         messages: list[DeepSeekMessage] = []
         for parsed_message in parsed_messages:
-            new_message: DeepSeekMessage = DeepSeekMessage(role=parsed_message["role"])
-            if "content" in parsed_message:
-                new_message["content"] = str(parsed_message["content"])
+            new_message: DeepSeekMessage = DeepSeekMessage(
+                role=parsed_message["role"], content=str(parsed_message.get("content", ""))
+            )
             if "reasoning_content" in parsed_message:
                 new_message["reasoning_content"] = str(parsed_message["reasoning_content"])
             if "tool_call_id" in parsed_message:
