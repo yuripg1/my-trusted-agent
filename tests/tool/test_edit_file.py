@@ -56,7 +56,7 @@ class TestEditFile:
         result: str = edit_file(str(target), searched_for_text, replaced_with_text, number_of_substitutions)
         assert (
             result
-            == f'<file_edit path="{str(target)}" number_of_substitutions="{number_of_substitutions}">\n<result>File edited successfully</result>\n<number_of_occurrences>{number_of_occurrences}</number_of_occurrences>\n</file_edit>'
+            == f'<file_edit path="{str(target)}" number_of_substitutions="{number_of_substitutions}">\n<result>File edited successfully</result>\n<old_number_of_file_lines>1</old_number_of_file_lines>\n<new_number_of_file_lines>1</new_number_of_file_lines>\n<number_of_occurrences>{number_of_occurrences}</number_of_occurrences>\n</file_edit>'
         )
         modified_file_content: str = f"pre_content {f' {replaced_with_text} ' * number_of_occurrences} post_content"
         assert target.read_text() == modified_file_content
@@ -153,6 +153,39 @@ class TestEditFile:
         )
         assert (
             result
-            == f'<file_edit path="{str(target)}" number_of_substitutions="{number_of_substitutions}">\n<error>File editing manually denied by the user</error>\n</file_edit>'
+            == f'<file_edit path="{str(target)}" number_of_substitutions="{number_of_substitutions}">\n<error>File editing manually denied by the user. The file was not modified</error>\n</file_edit>'
         )
         assert target.read_text() == original_file_content
+
+    def test_same_search_and_replace(self, tmp_path: Path) -> None:
+        """Do not edit a file when search_for and replace_with are equal"""
+        target: Path = tmp_path.joinpath("file.txt")
+        target.write_text("hello world")
+        result: str = edit_file(str(target), "hello", "hello", 1)
+        assert (
+            result
+            == f'<file_edit path="{str(target)}" number_of_substitutions="1">\n<error>"search_for" and "replace_with" must be different</error>\n</file_edit>'
+        )
+        assert target.read_text() == "hello world"
+
+    def test_same_search_and_replace_empty_strings(self, tmp_path: Path) -> None:
+        """Do not edit a file when both search_for and replace_with are empty"""
+        target: Path = tmp_path.joinpath("file.txt")
+        target.write_text("hello")
+        result: str = edit_file(str(target), "", "", 1)
+        assert (
+            result
+            == f'<file_edit path="{str(target)}" number_of_substitutions="1">\n<error>"search_for" and "replace_with" must be different</error>\n</file_edit>'
+        )
+        assert target.read_text() == "hello"
+
+    def test_successful_substitution_with_line_count_change(self, tmp_path: Path) -> None:
+        """Edit a file and see that the line count changes"""
+        target: Path = tmp_path.joinpath("file.txt")
+        target.write_text("item1\nitem2\nitem3\n")
+        result: str = edit_file(str(target), "item2", "replacement\nitem2_new", 1)
+        assert (
+            result
+            == f'<file_edit path="{str(target)}" number_of_substitutions="1">\n<result>File edited successfully</result>\n<old_number_of_file_lines>3</old_number_of_file_lines>\n<new_number_of_file_lines>4</new_number_of_file_lines>\n<number_of_occurrences>1</number_of_occurrences>\n</file_edit>'
+        )
+        assert target.read_text() == "item1\nreplacement\nitem2_new\nitem3\n"

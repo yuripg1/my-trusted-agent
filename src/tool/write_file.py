@@ -32,28 +32,54 @@ def get_write_file_message(tool_call: WriteFileToolCall) -> str:
 def write_file(path: str, mode: str, content: str, tool_call_permission: bool = True) -> str:
     output_entries: list[str] = []
     if not tool_call_permission:
-        output_entries.append("<error>File writing manually denied by the user</error>")
+        output_entries.append(
+            "<error>File writing manually denied by the user. No content was written to the file</error>"
+        )
     else:
+        wrote_successfully: bool = False
+        old_number_of_file_lines: int | None = None
+        new_number_of_file_lines: int = 0
         try:
             Path(path).parent.mkdir(parents=True, exist_ok=True)
             file_path: Path = Path(path)
             if mode == "create_or_overwrite":
+                if file_path.exists():
+                    with open(file_path) as file:
+                        old_number_of_file_lines = len(file.read().splitlines())
+                new_number_of_file_lines = len(content.splitlines())
                 with open(file_path, "w") as file:
                     file.write(content)
-                output_entries.append("<result>File written successfully</result>")
+                wrote_successfully = True
             elif mode == "create_if_not_exists":
                 if file_path.exists():
                     output_entries.append("<error>File already exists</error>")
                 else:
+                    new_number_of_file_lines = len(content.splitlines())
                     with open(file_path, "x") as file:
                         file.write(content)
-                    output_entries.append("<result>File written successfully</result>")
+                    wrote_successfully = True
             elif mode == "append":
+                if file_path.exists():
+                    with open(file_path) as file:
+                        old_content: str = file.read()
+                    old_number_of_file_lines = len(old_content.splitlines())
+                    new_number_of_file_lines = len((old_content + content).splitlines())
+                else:
+                    new_number_of_file_lines = len(content.splitlines())
                 with open(file_path, "a") as file:
                     file.write(content)
-                output_entries.append("<result>File written successfully</result>")
+                wrote_successfully = True
             else:
                 output_entries.append(f'<error>Invalid mode "{mode}"</error>')
+            if wrote_successfully:
+                output_entries.append("<result>File written successfully</result>")
+                if old_number_of_file_lines is not None:
+                    output_entries.append(
+                        f"<old_number_of_file_lines>{old_number_of_file_lines}</old_number_of_file_lines>"
+                    )
+                output_entries.append(
+                    f"<new_number_of_file_lines>{new_number_of_file_lines}</new_number_of_file_lines>"
+                )
         except PermissionError:
             output_entries.append("<error>Permission denied by the system</error>")
         except Exception:

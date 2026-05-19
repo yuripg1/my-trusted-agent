@@ -26,7 +26,9 @@ def execute_shell_command(command: str, tool_call_permission: bool = True) -> st
     output_entries: list[str] = []
     output_entries.append(f"<command>\n{command.strip()}\n</command>")
     if not tool_call_permission:
-        output_entries.append("<error>Bash command execution manually denied by the user</error>")
+        output_entries.append(
+            "<error>Shell command execution manually denied by the user. The command was not executed</error>"
+        )
     else:
         command_execution_result: CompletedProcess[str] = run(command, shell=True, capture_output=True, text=True)
         trimmed_stdout = command_execution_result.stdout.strip()

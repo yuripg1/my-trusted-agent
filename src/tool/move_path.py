@@ -27,7 +27,7 @@ def get_move_path_permission(tool_call: MovePathToolCall) -> bool:
 def move_path(type: str, source: str, destination: str, tool_call_permission: bool = True) -> str:
     output_entries: list[str] = []
     if not tool_call_permission:
-        output_entries.append("<error>Path moving manually denied by the user</error>")
+        output_entries.append("<error>Path moving manually denied by the user. The path was not moved</error>")
     else:
         try:
             source_path: Path = Path(source)

@@ -42,7 +42,9 @@ def edit_file(
 ) -> str:
     output_entries: list[str] = []
     if not tool_call_permission:
-        output_entries.append("<error>File editing manually denied by the user</error>")
+        output_entries.append("<error>File editing manually denied by the user. The file was not modified</error>")
+    elif search_for == replace_with:
+        output_entries.append('<error>"search_for" and "replace_with" must be different</error>')
     else:
         number_of_occurrences: int | None = None
         try:
@@ -56,10 +58,18 @@ def edit_file(
                     "<error>The number of occurrences of the searched text does not match the expected number of substitutions</error>"
                 )
             else:
+                old_number_of_file_lines: int = len(file_content.splitlines())
                 new_content: str = file_content.replace(search_for, replace_with, number_of_substitutions)
+                new_number_of_file_lines: int = len(new_content.splitlines())
                 with open(path, "w") as file:
                     file.write(new_content)
                 output_entries.append("<result>File edited successfully</result>")
+                output_entries.append(
+                    f"<old_number_of_file_lines>{old_number_of_file_lines}</old_number_of_file_lines>"
+                )
+                output_entries.append(
+                    f"<new_number_of_file_lines>{new_number_of_file_lines}</new_number_of_file_lines>"
+                )
         except FileNotFoundError:
             output_entries.append("<error>File not found</error>")
         except PermissionError:

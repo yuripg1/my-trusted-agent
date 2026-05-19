@@ -72,5 +72,5 @@ class TestExecuteShellCommand:
         result: str = execute_shell_command(command, tool_call_permission=False)
         assert (
             result
-            == f"<shell_command_execution>\n<command>\n{command}\n</command>\n<error>Bash command execution manually denied by the user</error>\n</shell_command_execution>"
+            == f"<shell_command_execution>\n<command>\n{command}\n</command>\n<error>Shell command execution manually denied by the user. The command was not executed</error>\n</shell_command_execution>"
         )

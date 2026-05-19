@@ -223,6 +223,6 @@ class TestDeletePath:
         result: str = delete_path(type, str(target), tool_call_permission=False)
         assert (
             result
-            == f'<path_deletion type="{type}" path="{str(target)}">\n<error>Path deletion manually denied by the user</error>\n</path_deletion>'
+            == f'<path_deletion type="{type}" path="{str(target)}">\n<error>Path deletion manually denied by the user. The path was not deleted</error>\n</path_deletion>'
         )
         assert target.exists()

@@ -25,7 +25,7 @@ def get_delete_path_permission(tool_call: DeletePathToolCall) -> bool:
 def delete_path(type: str, path: str, tool_call_permission: bool = True) -> str:
     output_entries: list[str] = []
     if not tool_call_permission:
-        output_entries.append("<error>Path deletion manually denied by the user</error>")
+        output_entries.append("<error>Path deletion manually denied by the user. The path was not deleted</error>")
     else:
         try:
             path_obj: Path = Path(path)

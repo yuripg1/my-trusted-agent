@@ -46,20 +46,23 @@ def read_file(
             elif start_line is not None and end_line is not None and start_line > end_line:
                 output_entries.append('<error>"start_line" must be less than or equal to "end_line"</error>')
             else:
-                number_of_lines: int = 0
-                file_content: str
+                number_of_read_lines: int = 0
+                number_of_file_lines: int = 0
+                file_content: str = ""
                 with open(path) as file:
                     file_content = file.read()
+                file_lines: list[str] = file_content.splitlines()
+                number_of_file_lines = len(file_lines)
                 if start_line is not None or end_line is not None:
-                    lines: list[str] = file_content.splitlines()
-                    start_idx: int = (start_line - 1) if start_line is not None else 0
-                    end_idx: int = end_line if end_line is not None else len(lines)
-                    lines = lines[start_idx:end_idx]
-                    number_of_lines = len(lines)
-                    file_content = "\n".join(lines)
+                    start_index: int = (start_line - 1) if start_line is not None else 0
+                    end_index: int = end_line if end_line is not None else len(file_lines)
+                    read_lines: list[str] = file_lines[start_index:end_index]
+                    number_of_read_lines = len(read_lines)
+                    file_content = "\n".join(read_lines)
                 else:
-                    number_of_lines = len(file_content.splitlines())
-                output_entries.append(f"<number_of_lines>{number_of_lines}</number_of_lines>")
+                    number_of_read_lines = number_of_file_lines
+                output_entries.append(f"<number_of_read_lines>{number_of_read_lines}</number_of_read_lines>")
+                output_entries.append(f"<number_of_file_lines>{number_of_file_lines}</number_of_file_lines>")
                 output_entries.append(f"<content>\n{file_content}\n</content>")
         except FileNotFoundError:
             output_entries.append("<error>File not found</error>")

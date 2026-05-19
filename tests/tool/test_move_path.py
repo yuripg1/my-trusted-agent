@@ -244,6 +244,6 @@ class TestMovePath:
         result: str = move_path(type, str(source), str(destination), tool_call_permission=False)
         assert (
             result
-            == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<error>Path moving manually denied by the user</error>\n</path_move>'
+            == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<error>Path moving manually denied by the user. The path was not moved</error>\n</path_move>'
         )
         assert source.exists()

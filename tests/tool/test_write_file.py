@@ -67,7 +67,7 @@ class TestWriteFile:
         result: str = write_file(str(target), mode, content)
         assert (
             result
-            == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n</file_write>'
+            == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n<new_number_of_file_lines>1</new_number_of_file_lines>\n</file_write>'
         )
         assert target.read_text() == content
 
@@ -80,7 +80,7 @@ class TestWriteFile:
         result: str = write_file(str(target), mode, content)
         assert (
             result
-            == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n</file_write>'
+            == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n<old_number_of_file_lines>1</old_number_of_file_lines>\n<new_number_of_file_lines>1</new_number_of_file_lines>\n</file_write>'
         )
         assert target.read_text() == content
 
@@ -92,7 +92,7 @@ class TestWriteFile:
         result: str = write_file(str(target), mode, content)
         assert (
             result
-            == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n</file_write>'
+            == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n<new_number_of_file_lines>1</new_number_of_file_lines>\n</file_write>'
         )
         assert target.read_text() == content
 
@@ -120,7 +120,7 @@ class TestWriteFile:
         result: str = write_file(str(target), mode, content)
         assert (
             result
-            == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n</file_write>'
+            == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n<old_number_of_file_lines>1</old_number_of_file_lines>\n<new_number_of_file_lines>2</new_number_of_file_lines>\n</file_write>'
         )
         assert target.read_text() == f"{original_content}{content}"
 
@@ -132,9 +132,35 @@ class TestWriteFile:
         result: str = write_file(str(target), mode, content)
         assert (
             result
-            == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n</file_write>'
+            == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n<new_number_of_file_lines>1</new_number_of_file_lines>\n</file_write>'
         )
         assert target.read_text() == content
+
+    def test_append_without_trailing_newline(self, tmp_path: Path) -> None:
+        """Append to a file that does not end with a newline (new content starts with newline)"""
+        target: Path = tmp_path.joinpath("log.txt")
+        target.write_text("line1")
+        mode: str = "append"
+        content: str = "\nline2\n"
+        result: str = write_file(str(target), mode, content)
+        assert (
+            result
+            == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n<old_number_of_file_lines>1</old_number_of_file_lines>\n<new_number_of_file_lines>2</new_number_of_file_lines>\n</file_write>'
+        )
+        assert target.read_text() == "line1\nline2\n"
+
+    def test_append_merges_with_last_line(self, tmp_path: Path) -> None:
+        """Append to a file where new content merges with the last line (no newline separation)"""
+        target: Path = tmp_path.joinpath("log.txt")
+        target.write_text("line1")
+        mode: str = "append"
+        content: str = " appended"
+        result: str = write_file(str(target), mode, content)
+        assert (
+            result
+            == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n<old_number_of_file_lines>1</old_number_of_file_lines>\n<new_number_of_file_lines>1</new_number_of_file_lines>\n</file_write>'
+        )
+        assert target.read_text() == "line1 appended"
 
     def test_invalid_mode(self, tmp_path: Path) -> None:
         """Do not write a file with an invalid mode"""
@@ -182,5 +208,5 @@ class TestWriteFile:
         assert not target.exists()
         assert (
             result
-            == f'<file_write path="{str(target)}" mode="{mode}">\n<error>File writing manually denied by the user</error>\n</file_write>'
+            == f'<file_write path="{str(target)}" mode="{mode}">\n<error>File writing manually denied by the user. No content was written to the file</error>\n</file_write>'
         )
