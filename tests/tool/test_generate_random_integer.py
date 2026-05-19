@@ -62,5 +62,5 @@ class TestGenerateRandomInteger:
         result: str = generate_random_integer(min, max)
         assert (
             result
-            == f'<random_integer_generation min="{min}" max="{max}">\n<error>"min" is greater than "max"</error>\n</random_integer_generation>'
+            == f'<random_integer_generation min="{min}" max="{max}">\n<error>"max" must be greater than or equal to "min"</error>\n</random_integer_generation>'
         )
