@@ -1,3 +1,4 @@
+from contextlib import suppress
 from pathlib import Path
 from typing import Literal, Required, TypedDict
 
@@ -27,12 +28,10 @@ def get_list_directory_permission(tool_call: ListDirectoryToolCall) -> bool:
 def _resolve_compressed_path(path: Path, depth: int = 0) -> Path:
     if depth >= _MAX_COMPRESSION_DEPTH:
         return path
-    try:
+    with suppress(Exception):
         entries: list[Path] = list(path.iterdir())
         if len(entries) == 1 and entries[0].is_dir() and not entries[0].is_symlink():
             return _resolve_compressed_path(entries[0], depth + 1)
-    except Exception:
-        pass
     return path
 
 
@@ -45,32 +44,26 @@ def list_directory(path: str) -> str:
         if compressed_path != directory_path:
             prefix_relative = str(compressed_path.relative_to(directory_path)) + "/"
         for directory_entry in compressed_path.iterdir():
-            directory_entry_type: str = ""
-            extra_attributes: str = ""
+            entry_attributes: str = ""
             entry_name: str = prefix_relative + directory_entry.name
-            try:
+            with suppress(Exception):
                 if directory_entry.is_symlink():
-                    directory_entry_type = "symlink"
-                    try:
-                        target_path: Path = directory_entry.resolve(strict=False)
-                        target: str = str(target_path)
-                        extra_attributes += f' target="{target}"'
-                        if target_path.is_dir():
-                            extra_attributes += ' target_type="directory"'
-                        elif target_path.is_file():
-                            extra_attributes += ' target_type="file"'
-                    except Exception:
-                        pass
+                    entry_attributes += ' type="symlink"'
+                    target_path: Path = directory_entry.resolve(strict=False)
+                    entry_attributes += f' target="{str(target_path)}"'
+                    if target_path.is_dir():
+                        entry_attributes += ' target_type="directory"'
+                        entry_attributes += f' target_entries="{sum(1 for _ in target_path.iterdir())}"'
+                    elif target_path.is_file():
+                        entry_attributes += ' target_type="file"'
+                        entry_attributes += f' target_size="{target_path.stat().st_size}"'
                 elif directory_entry.is_dir():
-                    directory_entry_type = "directory"
+                    entry_attributes += ' type="directory"'
+                    entry_attributes += f' entries="{sum(1 for _ in directory_entry.iterdir())}"'
                 elif directory_entry.is_file():
-                    directory_entry_type = "file"
-            except Exception:
-                pass
-            if len(directory_entry_type) != 0:
-                output_entries.append(f'<entry type="{directory_entry_type}"{extra_attributes}>{entry_name}</entry>')
-            else:
-                output_entries.append(f"<entry>{entry_name}</entry>")
+                    entry_attributes += ' type="file"'
+                    entry_attributes += f' size="{directory_entry.stat().st_size}"'
+            output_entries.append(f"<entry{entry_attributes}>{entry_name}</entry>")
     except FileNotFoundError:
         output_entries.append("<error>Directory not found</error>")
     except NotADirectoryError:

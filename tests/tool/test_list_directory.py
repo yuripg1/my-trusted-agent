@@ -41,11 +41,9 @@ class TestListDirectory:
         src_directory: Path = target.joinpath("src")
         src_directory.mkdir()
         result: str = list_directory(str(target))
-        read_file_entry: str = f'<entry type="file">{readme_file.name}</entry>'
-        symlink_entry: str = (
-            f'<entry type="symlink" target="{str(readme_file)}" target_type="file">{symlink.name}</entry>'
-        )
-        sec_directory_entry: str = f'<entry type="directory">{src_directory.name}</entry>'
+        read_file_entry: str = f'<entry type="file" size="5">{readme_file.name}</entry>'
+        symlink_entry: str = f'<entry type="symlink" target="{str(readme_file)}" target_type="file" target_size="5">{symlink.name}</entry>'
+        sec_directory_entry: str = f'<entry type="directory" entries="0">{src_directory.name}</entry>'
         assert result.startswith(f'<directory_listing path="{str(target)}">\n<entry')
         assert result.endswith("</entry>\n</directory_listing>")
         assert read_file_entry in result
@@ -60,9 +58,7 @@ class TestListDirectory:
         symlink: Path = tmp_path.joinpath("link_to_docs")
         symlink.symlink_to(target)
         result: str = list_directory(str(tmp_path))
-        expected_symlink_entry: str = (
-            f'<entry type="symlink" target="{str(target)}" target_type="directory">{symlink.name}</entry>'
-        )
+        expected_symlink_entry: str = f'<entry type="symlink" target="{str(target)}" target_type="directory" target_entries="1">{symlink.name}</entry>'
         assert expected_symlink_entry in result
 
     def test_list_directory_with_broken_symlink(self, tmp_path: Path) -> None:
@@ -99,8 +95,8 @@ class TestListDirectory:
         result: str = list_directory(str(tmp_path))
         assert result.startswith(f'<directory_listing path="{str(tmp_path)}">')
         assert result.endswith("</directory_listing>")
-        assert '<entry type="file">outer/inner/file1.txt</entry>' in result
-        assert '<entry type="file">outer/inner/file2.txt</entry>' in result
+        assert '<entry type="file" size="3">outer/inner/file1.txt</entry>' in result
+        assert '<entry type="file" size="3">outer/inner/file2.txt</entry>' in result
 
     def test_list_directory_with_nested_compression(self, tmp_path: Path) -> None:
         """Compress a chain of multiple single-directory entries"""
@@ -114,7 +110,7 @@ class TestListDirectory:
         result: str = list_directory(str(tmp_path))
         assert (
             result
-            == f'<directory_listing path="{str(tmp_path)}">\n<entry type="file">a/b/c/data.txt</entry>\n</directory_listing>'
+            == f'<directory_listing path="{str(tmp_path)}">\n<entry type="file" size="7">a/b/c/data.txt</entry>\n</directory_listing>'
         )
 
     def test_list_directory_compression_stops_at_symlink(self, tmp_path: Path) -> None:
@@ -126,9 +122,7 @@ class TestListDirectory:
         link.symlink_to(target)
         result: str = list_directory(str(tmp_path))
         resolved_target: str = str(target.resolve())
-        expected_symlink_entry: str = (
-            f'<entry type="symlink" target="{resolved_target}" target_type="directory">{link.name}</entry>'
-        )
+        expected_symlink_entry: str = f'<entry type="symlink" target="{resolved_target}" target_type="directory" target_entries="1">{link.name}</entry>'
         assert expected_symlink_entry in result
 
     def test_list_directory_compression_stops_at_multiple_entries(self, tmp_path: Path) -> None:
@@ -141,8 +135,8 @@ class TestListDirectory:
         result: str = list_directory(str(tmp_path))
         assert result.startswith(f'<directory_listing path="{str(tmp_path)}">')
         assert result.endswith("</directory_listing>")
-        assert '<entry type="directory">inner/subdir</entry>' in result
-        assert '<entry type="file">inner/readme.txt</entry>' in result
+        assert '<entry type="directory" entries="0">inner/subdir</entry>' in result
+        assert '<entry type="file" size="5">inner/readme.txt</entry>' in result
 
     def test_list_directory_compression_empty_final(self, tmp_path: Path) -> None:
         """Compress through a chain but find an empty directory at the end"""
@@ -166,7 +160,7 @@ class TestListDirectory:
         current.joinpath("file.txt").write_text("deep")
         result: str = list_directory(str(tmp_path))
         expected_prefix: str = "/".join([f"level_{i}" for i in range(10)]) + "/"
-        assert f'<entry type="directory">{expected_prefix}level_10</entry>' in result
+        assert f'<entry type="directory" entries="1">{expected_prefix}level_10</entry>' in result
 
     def test_list_empty_directory(self, tmp_path: Path) -> None:
         """List an empty directory"""

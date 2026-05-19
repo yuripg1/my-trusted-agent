@@ -1,3 +1,4 @@
+from contextlib import suppress
 from typing import TypeAlias
 
 from tool.create_directory import (
@@ -65,7 +66,7 @@ def get_tool_system_instruction() -> str:
 
 def get_individual_tool_call_message(tool_call: ToolCall) -> str:
     tool_name: str = ""
-    try:
+    with suppress(Exception):
         tool_name = tool_call["tool_name"]
         if tool_call["tool_name"] == "create_directory":
             return get_create_directory_message(tool_call)
@@ -91,8 +92,6 @@ def get_individual_tool_call_message(tool_call: ToolCall) -> str:
             return get_search_web_message(tool_call)
         elif tool_call["tool_name"] == "write_file":
             return get_write_file_message(tool_call)
-    except Exception:
-        pass
     if len(tool_name) != 0:
         return f'Error on "{tool_name}"'
     return "Error"
@@ -106,7 +105,7 @@ def get_group_tool_call_messages(tool_calls: list[ToolCall]) -> list[str]:
 
 
 def get_individual_tool_call_permission(tool_call: ToolCall) -> bool:
-    try:
+    with suppress(Exception):
         if tool_call["tool_name"] == "create_directory":
             return get_create_directory_permission(tool_call)
         elif tool_call["tool_name"] == "delete_path":
@@ -131,8 +130,6 @@ def get_individual_tool_call_permission(tool_call: ToolCall) -> bool:
             return get_search_web_permission(tool_call)
         elif tool_call["tool_name"] == "write_file":
             return get_write_file_permission(tool_call)
-    except Exception:
-        pass
     return False
 
 
@@ -146,7 +143,7 @@ def get_number_of_required_permissions(tool_calls: list[ToolCall]) -> int:
 
 def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
     tool_name: str = ""
-    try:
+    with suppress(Exception):
         tool_name = tool_call["tool_name"]
         if tool_call["tool_name"] == "create_directory":
             create_directory_path: str = tool_call["arguments"]["path"]
@@ -198,8 +195,6 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
             write_file_mode: str = tool_call["arguments"]["mode"]
             write_file_content: str = tool_call["arguments"]["content"]
             return write_file(write_file_path, write_file_mode, write_file_content, tool_call_permission)
-    except Exception:
-        pass
     if len(tool_name) != 0:
         return f'Error on "{tool_name}"'
     return "Error"

@@ -25,7 +25,7 @@ def get_generate_random_integer_permission(tool_call: GenerateRandomIntegerToolC
 def generate_random_integer(min: int, max: int) -> str:
     output_entries: list[str] = []
     if min > max:
-        output_entries.append('<error>"min" is greater than "max"</error>')
+        output_entries.append('<error>"max" must be greater than or equal to "min"</error>')
     else:
         random_integer: int = randint(min, max)
         output_entries.append(f"<result>{random_integer}</result>")

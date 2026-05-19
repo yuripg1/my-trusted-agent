@@ -1,7 +1,7 @@
+from contextlib import suppress
 from typing import NotRequired, TypedDict
 
 from pygments.lexers import get_lexer_for_filename
-from pygments.util import ClassNotFound
 
 
 class BaseToolCall(TypedDict):
@@ -30,11 +30,9 @@ def make_safe_code_fence(content: str, info_string: str = "") -> str:
 
 
 def get_language_from_filename(path: str) -> str:
-    try:
+    with suppress(Exception):
         path = path.rstrip("/")
         lexer = get_lexer_for_filename(path)
         if len(lexer.aliases) != 0:
             return lexer.aliases[0]
-    except ClassNotFound:
-        pass
     return ""
