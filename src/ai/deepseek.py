@@ -1,6 +1,7 @@
 from collections.abc import Mapping
 from contextlib import suppress
 from json import dumps, loads
+from sys import exit as sys_exit
 from time import sleep
 from typing import Any, Literal, NotRequired, Required, TypedDict
 
@@ -187,6 +188,7 @@ class DeepSeekAi:
             print(dumps(payload, indent=2))
             print(response.status_code)
             print(dumps(response.json(), indent=2))
+            sys_exit(1)
         data = response.json()
         total_tokens: int = int(data["usage"]["total_tokens"])
         message = data["choices"][0]["message"]
