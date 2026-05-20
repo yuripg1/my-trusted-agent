@@ -31,27 +31,24 @@ def delete_path(type: str, path: str, tool_call_permission: bool = True) -> str:
             path_obj: Path = Path(path)
             if not path_obj.exists() and not path_obj.is_symlink():
                 output_entries.append("<error>Path not found</error>")
+            elif type == "file":
+                if path_obj.is_file() and not path_obj.is_symlink():
+                    path_obj.unlink()
+                    output_entries.append("<result>File deleted successfully</result>")
+                else:
+                    output_entries.append("<error>Expected a file but found a different type</error>")
+            elif type == "directory":
+                if path_obj.is_dir() and not path_obj.is_symlink():
+                    path_obj.rmdir()
+                    output_entries.append("<result>Directory deleted successfully</result>")
+                else:
+                    output_entries.append("<error>Expected a directory but found a different type</error>")
             elif type == "symlink":
                 if path_obj.is_symlink():
                     path_obj.unlink()
                     output_entries.append("<result>Symlink deleted successfully</result>")
                 else:
                     output_entries.append("<error>Expected a symlink but found a different type</error>")
-            elif path_obj.is_symlink():
-                path_obj.unlink()
-                output_entries.append("<result>Symlink deleted successfully</result>")
-            elif type == "file":
-                if path_obj.is_file():
-                    path_obj.unlink()
-                    output_entries.append("<result>File deleted successfully</result>")
-                else:
-                    output_entries.append("<error>Expected a file but found a different type</error>")
-            elif type == "directory":
-                if path_obj.is_dir():
-                    path_obj.rmdir()
-                    output_entries.append("<result>Directory deleted successfully</result>")
-                else:
-                    output_entries.append("<error>Expected a directory but found a different type</error>")
             else:
                 output_entries.append(f'<error>Invalid type "{type}"</error>')
         except PermissionError:

@@ -101,8 +101,8 @@ class TestDeletePath:
         )
         assert target.exists()
 
-    def test_delete_symlink_to_file(self, tmp_path: Path) -> None:
-        """Delete a symlink pointing to a file"""
+    def test_symlink_as_file_is_type_mismatch(self, tmp_path: Path) -> None:
+        """Do not delete a symlink with type='file' — treat as type mismatch"""
         type: str = "file"
         target: Path = tmp_path.joinpath("target.txt")
         target.write_text("content")
@@ -111,14 +111,14 @@ class TestDeletePath:
         result: str = delete_path(type, str(symlink))
         assert (
             result
-            == f'<path_deletion type="{type}" path="{str(symlink)}">\n<result>Symlink deleted successfully</result>\n</path_deletion>'
+            == f'<path_deletion type="{type}" path="{str(symlink)}">\n<error>Expected a file but found a different type</error>\n</path_deletion>'
         )
-        assert not symlink.exists()
-        assert symlink.is_symlink() is False
+        assert symlink.exists()
+        assert symlink.is_symlink()
         assert target.exists()
 
-    def test_delete_symlink_to_directory(self, tmp_path: Path) -> None:
-        """Delete a symlink pointing to a directory (which previously failed)"""
+    def test_symlink_as_directory_is_type_mismatch(self, tmp_path: Path) -> None:
+        """Do not delete a symlink with type='directory' — treat as type mismatch"""
         type: str = "directory"
         target: Path = tmp_path.joinpath("target_dir")
         target.mkdir()
@@ -127,10 +127,10 @@ class TestDeletePath:
         result: str = delete_path(type, str(symlink))
         assert (
             result
-            == f'<path_deletion type="{type}" path="{str(symlink)}">\n<result>Symlink deleted successfully</result>\n</path_deletion>'
+            == f'<path_deletion type="{type}" path="{str(symlink)}">\n<error>Expected a directory but found a different type</error>\n</path_deletion>'
         )
-        assert not symlink.exists()
-        assert symlink.is_symlink() is False
+        assert symlink.exists()
+        assert symlink.is_symlink()
         assert target.exists()
 
     def test_delete_symlink_with_explicit_type(self, tmp_path: Path) -> None:
@@ -172,9 +172,26 @@ class TestDeletePath:
         )
         assert target.exists()
 
-    def test_delete_broken_symlink(self, tmp_path: Path) -> None:
-        """Delete a symlink whose target no longer exists"""
+    def test_broken_symlink_as_file_is_type_mismatch(self, tmp_path: Path) -> None:
+        """Do not delete a broken symlink with type='file' — treat as type mismatch"""
         type: str = "file"
+        target: Path = tmp_path.joinpath("target.txt")
+        target.write_text("content")
+        symlink: Path = tmp_path.joinpath("broken_link")
+        symlink.symlink_to(target)
+        target.unlink()
+        assert not target.exists()
+        assert symlink.is_symlink()
+        result: str = delete_path(type, str(symlink))
+        assert (
+            result
+            == f'<path_deletion type="{type}" path="{str(symlink)}">\n<error>Expected a file but found a different type</error>\n</path_deletion>'
+        )
+        assert symlink.is_symlink()
+
+    def test_delete_broken_symlink_with_explicit_type(self, tmp_path: Path) -> None:
+        """Delete a broken symlink with type='symlink' explicitly"""
+        type: str = "symlink"
         target: Path = tmp_path.joinpath("target.txt")
         target.write_text("content")
         symlink: Path = tmp_path.joinpath("broken_link")
