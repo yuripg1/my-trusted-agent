@@ -22,7 +22,7 @@ def init_db(conn: Connection) -> None:
             CREATE TABLE sessions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 ai_provider TEXT NOT NULL,
-                is_raw INTEGER NOT NULL,
+                agent_name TEXT NOT NULL,
                 context_length INTEGER NOT NULL,
                 tools TEXT NOT NULL,
                 messages TEXT NOT NULL,

@@ -1,8 +1,8 @@
 from tool.invalid import (
     InvalidToolCall,
-    execute_invalid,
     get_invalid_message,
     get_invalid_permission,
+    invalid,
 )
 
 
@@ -43,7 +43,7 @@ class TestExecuteInvalid:
             "arguments": {"tool_name": tool_name, "error_message": error_message},
         }
         expected: str = f'<skipped_invalid_tool_call tool_name="{tool_name}">\n<error>{error_message}</error>\n</skipped_invalid_tool_call>'
-        assert execute_invalid(tool_call) == expected
+        assert invalid(tool_call) == expected
 
     def test_json_parse_failure(self) -> None:
         """Handle the JSON parsing error scenario"""
@@ -54,7 +54,7 @@ class TestExecuteInvalid:
             "arguments": {"tool_name": tool_name, "error_message": error_message},
         }
         expected: str = f'<skipped_invalid_tool_call tool_name="{tool_name}">\n<error>{error_message}</error>\n</skipped_invalid_tool_call>'
-        assert execute_invalid(tool_call) == expected
+        assert invalid(tool_call) == expected
 
     def test_unknown_tool_name(self) -> None:
         """Handle the unknown tool name scenario"""
@@ -65,4 +65,4 @@ class TestExecuteInvalid:
             "arguments": {"tool_name": tool_name, "error_message": error_message},
         }
         expected: str = f'<skipped_invalid_tool_call tool_name="{tool_name}">\n<error>{error_message}</error>\n</skipped_invalid_tool_call>'
-        assert execute_invalid(tool_call) == expected
+        assert invalid(tool_call) == expected

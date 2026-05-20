@@ -21,12 +21,7 @@ from tool.generate_random_integer import (
     get_generate_random_integer_message,
     get_generate_random_integer_permission,
 )
-from tool.invalid import (
-    InvalidToolCall,
-    execute_invalid,
-    get_invalid_message,
-    get_invalid_permission,
-)
+from tool.invalid import InvalidToolCall, get_invalid_message, get_invalid_permission, invalid
 from tool.list_directory import (
     ListDirectoryToolCall,
     get_list_directory_message,
@@ -67,8 +62,12 @@ ToolCall: TypeAlias = (
 )
 
 
-def get_tool_system_instruction() -> str:
-    return "You should strongly prefer batching independent tool calls (they will be executed sequentially and in order) instead of issuing them one by one"
+def get_tool_system_instructions() -> list[str]:
+    system_instructions: list[str] = [
+        "You have access to tools",
+        "You should strongly prefer batching independent tool calls (the tool calls will be executed sequentially and in order) instead of issuing them one by one",
+    ]
+    return system_instructions
 
 
 def get_individual_tool_call_message(tool_call: ToolCall) -> str:
@@ -177,7 +176,7 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
             max: int = tool_call["arguments"]["max"]
             return generate_random_integer(min, max)
         elif tool_call["tool_name"] == "invalid":
-            return execute_invalid(tool_call)
+            return invalid(tool_call)
         elif tool_call["tool_name"] == "list_directory":
             directory_path: str = tool_call["arguments"]["path"]
             return list_directory(directory_path)

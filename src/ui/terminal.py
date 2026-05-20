@@ -14,8 +14,9 @@ class TerminalUi:
     def __init__(self, show_reasoning: bool) -> None:
         self.show_reasoning = show_reasoning
 
-    def get_system_instruction(self) -> str:
-        return "You are running in a text-only terminal interface"
+    def get_system_instructions(self) -> list[str]:
+        system_instructions: list[str] = ["You are running in a text-only terminal interface"]
+        return system_instructions
 
     def startup(self) -> None:
         print("\n", end="")

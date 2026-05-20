@@ -8,42 +8,41 @@ from tool.core import ToolCall
 class Session:
     id: int | None
     ai_provider: AiProviderType
-    is_raw: bool
+    agent_name: str
     context_length: int
     __tools: AiTools
     __messages: AiMessages
 
-    def __init__(self, ai: Ai, is_raw: bool = False) -> None:
+    def __init__(self, ai: Ai, agent_name: str) -> None:
         self.id = None
         self.ai_provider = ai.provider
-        self.is_raw = is_raw
+        self.agent_name = agent_name
         self.context_length = 0
         self.__tools = ai.create_tools()
         self.__messages = ai.create_messages()
 
     def load(self, ai: Ai, id: int, db_connection: Connection) -> Self:
         cursor: Cursor = db_connection.execute(
-            "SELECT is_raw, context_length, tools, messages FROM sessions WHERE id = ? and ai_provider = ?",
+            "SELECT agent_name, context_length, tools, messages FROM sessions WHERE id = ? and ai_provider = ?",
             (id, str(ai.provider)),
         )
         fetched_data = cursor.fetchone()
         if fetched_data is not None:
             self.id = id
             self.ai_provider = ai.provider
-            self.is_raw = True if int(fetched_data["is_raw"]) == 1 else False
+            self.agent_name = str(fetched_data["agent_name"])
             self.context_length = int(fetched_data["context_length"])
             self.__tools = ai.decode_tools_json(str(fetched_data["tools"]))
             self.__messages = ai.decode_messages_json(str(fetched_data["messages"]))
         return self
 
     def auto_save(self, ai: Ai, db_connection: Connection) -> None:
-        is_raw: int = 1 if self.is_raw else 0
         tools: str = ai.encode_tools_json(self.__tools)
         messages_json: str = ai.encode_messages_json(self.__messages)
         if self.id is None:
             cursor: Cursor = db_connection.execute(
-                "INSERT INTO sessions (ai_provider, is_raw, context_length, tools, messages) VALUES (?, ?, ?, ?, ?)",
-                (str(self.ai_provider), is_raw, self.context_length, tools, messages_json),
+                "INSERT INTO sessions (ai_provider, agent_name, context_length, tools, messages) VALUES (?, ?, ?, ?, ?)",
+                (str(self.ai_provider), self.agent_name, self.context_length, tools, messages_json),
             )
             self.id = cursor.lastrowid
         else:

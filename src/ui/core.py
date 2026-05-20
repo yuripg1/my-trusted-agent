@@ -15,11 +15,12 @@ class Ui:
         if self.channel == "terminal":
             self.terminal_ui = TerminalUi(show_reasoning=environment.show_reasoning)
 
-    def get_system_instruction(self) -> str:
+    def get_system_instructions(self) -> list[str]:
         if self.channel == "terminal" and self.terminal_ui is not None:
-            return self.terminal_ui.get_system_instruction()
+            return self.terminal_ui.get_system_instructions()
         else:
-            return ""
+            system_instructions: list[str] = []
+            return system_instructions
 
     def startup(self) -> None:
         if self.channel == "terminal" and self.terminal_ui is not None:

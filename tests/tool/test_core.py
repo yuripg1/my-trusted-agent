@@ -4,7 +4,7 @@ from tool.core import (
     get_individual_tool_call_message,
     get_individual_tool_call_permission,
     get_number_of_required_permissions,
-    get_tool_system_instruction,
+    get_tool_system_instructions,
 )
 
 
@@ -13,10 +13,10 @@ class TestGetToolSystemInstruction:
 
     def test_return_value(self) -> None:
         """Return the expected system instruction"""
-        assert (
-            get_tool_system_instruction()
-            == "You should strongly prefer batching independent tool calls (they will be executed sequentially and in order) instead of issuing them one by one"
-        )
+        assert get_tool_system_instructions() == [
+            "You have access to tools",
+            "You should strongly prefer batching independent tool calls (the tool calls will be executed sequentially and in order) instead of issuing them one by one",
+        ]
 
 
 class TestGetIndividualToolCallMessage:

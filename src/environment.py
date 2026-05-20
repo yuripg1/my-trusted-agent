@@ -8,6 +8,7 @@ class Environment:
     show_reasoning: bool
     ui_channel: str
     ai_provider: str
+    default_agent_name: str
     db_path: str
     export_path: str
     deepseek_api_key: str
@@ -23,6 +24,7 @@ class Environment:
         self.show_reasoning = getenv("SHOW_REASONING", "").lower() == "true"
         self.ui_channel = getenv("UI_CHANNEL", "")
         self.ai_provider = getenv("AI_PROVIDER", "")
+        self.default_agent_name = getenv("DEFAULT_AGENT_NAME", "")
         self.db_path = getenv("DB_PATH", "")
         self.export_path = getenv("EXPORT_PATH", "")
         self.deepseek_api_key = getenv("DEEPSEEK_API_KEY", "")
