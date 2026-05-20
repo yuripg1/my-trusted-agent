@@ -81,3 +81,32 @@ class Session:
 
     def get_tool_calls_from_nth_message(self, ai: Ai, message_index: int) -> list[ToolCall]:
         return ai.get_tool_calls_from_nth_message(self.__messages, message_index)
+
+    def render_to_markdown(self, ai: Ai) -> str:
+        lines: list[str] = []
+        session_id: int = self.id if self.id is not None else 0
+        lines.append(f"# Session {session_id}")
+        lines.append("")
+        message_index: int = 0
+        while True:
+            message: AiMessage | None = self.get_nth_message(ai, message_index)
+            if message is None:
+                break
+            message_content: str = message["message"]
+            if len(message_content) == 0:
+                message_index += 1
+                continue
+            if message["role"] == "user":
+                lines.append("---")
+                lines.append("")
+                lines.append("## User")
+                lines.append("")
+                lines.append(message_content)
+                lines.append("")
+            elif message["role"] == "assistant":
+                lines.append("## Assistant")
+                lines.append("")
+                lines.append(message_content)
+                lines.append("")
+            message_index += 1
+        return "\n".join(lines).strip() + "\n"

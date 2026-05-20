@@ -84,6 +84,17 @@ def _handle_load_command(ai: Ai, db_connection: Connection, user_input: str, ui:
     return session
 
 
+def _handle_export_command(environment: Environment, ai: Ai, session: Session) -> None:
+    if session.id is None:
+        return
+    if session.get_messages_count(ai) == 0:
+        return
+    markdown_content: str = session.render_to_markdown(ai)
+    export_file_path: str = f"{environment.export_path}_{session.id}.md"
+    with open(export_file_path, "w") as file:
+        file.write(markdown_content)
+
+
 def _handle_rewind_command(session: Session, ai: Ai, ui: Ui) -> None:
     session.rewind_message(ai)
     last_message_index: int = session.get_messages_count(ai) - 1
@@ -94,7 +105,7 @@ def _handle_rewind_command(session: Session, ai: Ai, ui: Ui) -> None:
         )
 
 
-def _process_user_input(
+def _handle_user_input(
     environment: Environment, db_connection: Connection, ai: Ai, ui: Ui, session: Session, user_input: str
 ) -> None:
     if not session.is_raw and session.get_messages_count(ai) == 0:
@@ -157,10 +168,12 @@ def _ai_chat_loop(environment: Environment, db_connection: Connection, ai: Ai, u
                 session = _handle_load_command(ai, db_connection, user_input, ui)
             elif user_input == "/rewind":
                 _handle_rewind_command(session, ai, ui)
+            elif user_input == "/export":
+                _handle_export_command(environment, ai, session)
             elif user_input == "/exit":
                 break
             else:
-                _process_user_input(environment, db_connection, ai, ui, session, user_input)
+                _handle_user_input(environment, db_connection, ai, ui, session, user_input)
         except KeyboardInterrupt:
             graceful_exit = False
             break

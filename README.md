@@ -27,6 +27,7 @@ This project takes a different approach: it deliberately brings you along for th
 | `/raw` | Starts a new **raw** session (no system prompts injected) |
 | `/load n [replay]` | Loads a previous session with ID `n`; optionally replays the entire conversation |
 | `/rewind` | Rewinds to right before the latest user message |
+| `/export` | Exports the session conversation to a Markdown file |
 | `/exit` | Closes the application |
 
 ---
