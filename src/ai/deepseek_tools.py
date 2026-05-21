@@ -75,7 +75,7 @@ DEEPSEEK_TOOLS: dict[str, DeepSeekTool] = {
         "type": "function",
         "function": {
             "name": "execute_shell_command",
-            "description": "Execute any shell command and return the resulting stdout, stderr, and exit code (stdout and stderr are returned without the need for redirection; you should strongly prefer using the other available tools instead of executing shell commands; treat shell command execution as a powerful last resort to be used when the other available tools do not suffice)",
+            "description": "Execute any shell command and return the resulting stdout, stderr, and exit code (stdout and stderr are returned without the need for redirection; you should strongly prioritize using the other available tools instead of executing shell commands; treat shell command execution as a powerful last resort to be used only when the other available tools do not suffice)",
             "parameters": {
                 "type": "object",
                 "properties": {"command": {"type": "string", "description": "The command to be executed"}},

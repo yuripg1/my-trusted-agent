@@ -177,37 +177,40 @@ class DeepSeekAi:
             response = post(
                 f"{self.base_url}/chat/completions", headers=headers, json=payload, timeout=_API_REQUEST_TIMEOUT
             )
-        if response is None or response.status_code != 200:
-            if (
-                response is None
-                or response.status_code == 429
-                or (response.status_code >= 500 and response.status_code <= 599)
-            ):
-                sleep(_API_WAIT_AFTER_ERROR)
-                return self.request_assistant_reply(messages, tools)
+        if response is not None and response.status_code >= 200 and response.status_code <= 299:
+            data = response.json()
+            total_tokens: int = int(data["usage"]["total_tokens"])
+            message = data["choices"][0]["message"]
+            content: str = message.get("content", "").strip()
+            reasoning_content: str = message.get("reasoning_content", "").strip()
+            tool_calls: list[DeepSeekToolCall] = []
+            message_tool_calls = message.get("tool_calls", [])
+            for message_tool_call in message_tool_calls:
+                tool_calls.append(
+                    DeepSeekToolCall(
+                        id=message_tool_call["id"],
+                        type=message_tool_call["type"],
+                        function=DeepSeekToolCallFunction(
+                            name=message_tool_call["function"]["name"],
+                            arguments=message_tool_call["function"]["arguments"],
+                        ),
+                    )
+                )
+            self._add_to_messages(messages, "assistant", content, reasoning_content, tool_calls)
+            return total_tokens
+        elif (
+            response is None
+            or response.status_code == 429
+            or (response.status_code >= 500 and response.status_code <= 599)
+        ):
+            sleep(_API_WAIT_AFTER_ERROR)
+            return self.request_assistant_reply(messages, tools)
+        else:
             print(dumps(payload, indent=2))
             print(response.status_code)
-            print(dumps(response.json(), indent=2))
+            with suppress(Exception):
+                print(dumps(response.json(), indent=2))
             sys_exit(1)
-        data = response.json()
-        total_tokens: int = int(data["usage"]["total_tokens"])
-        message = data["choices"][0]["message"]
-        content: str = message.get("content", "").strip()
-        reasoning_content: str = message.get("reasoning_content", "").strip()
-        tool_calls: list[DeepSeekToolCall] = []
-        message_tool_calls = message.get("tool_calls", [])
-        for message_tool_call in message_tool_calls:
-            tool_calls.append(
-                DeepSeekToolCall(
-                    id=message_tool_call["id"],
-                    type=message_tool_call["type"],
-                    function=DeepSeekToolCallFunction(
-                        name=message_tool_call["function"]["name"], arguments=message_tool_call["function"]["arguments"]
-                    ),
-                )
-            )
-        self._add_to_messages(messages, "assistant", content, reasoning_content, tool_calls)
-        return total_tokens
 
     def get_messages_count(self, messages: list[DeepSeekMessage]) -> int:
         return len(messages)

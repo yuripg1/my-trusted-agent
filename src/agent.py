@@ -41,12 +41,14 @@ def _get_default_agent_config(environment: Environment, ui: Ui) -> AgentConfig:
         f"By default, you must always reply using {environment.language} with proper grammar (unless you see the need to reply in a different language)",
         "By default, you must always reply using strict Markdown syntax with proper formatting (unless you see the need to reply in a different format)",
         "You are a general-purpose AI agent",
+        "Whenever you encounter README files of any kind, you should strongly prioritize reading them",
     ]
     system_messages.extend(instruction_messages)
     system_messages.extend(get_tool_system_instructions())
     system_messages.extend(ui.get_system_instructions())
     system_commands: list[str] = [
-        "python -V",
+        "python --version",
+        "git --version",
         "getent passwd ${USER}",
         "cat /etc/os-release",
         "uname -a",

@@ -65,7 +65,8 @@ ToolCall: TypeAlias = (
 def get_tool_system_instructions() -> list[str]:
     system_instructions: list[str] = [
         "You have access to tools",
-        "You should strongly prefer batching independent tool calls (the tool calls will be executed sequentially and in order) instead of issuing them one by one",
+        "When you issue many tool calls in one go, they are executed sequentially and in order",
+        "Whenever possible, you should strongly prioritize issuing as many tool calls as possible in one go instead of issuing them one by one",
     ]
     return system_instructions
 

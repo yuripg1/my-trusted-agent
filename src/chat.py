@@ -16,7 +16,7 @@ from ui.core import Ui
 
 
 def _handle_new_command(environment: Environment, ai: Ai, user_input: str) -> Session:
-    new_input_parts: list[str] = user_input.split(" ")
+    new_input_parts: list[str] = user_input.split(" ", 1)
     agent_name_input: str = ""
     if len(new_input_parts) >= 2:
         agent_name_input = new_input_parts[1]
@@ -27,7 +27,7 @@ def _handle_new_command(environment: Environment, ai: Ai, user_input: str) -> Se
 def _handle_load_command(
     environment: Environment, ai: Ai, db_connection: Connection, user_input: str, ui: Ui
 ) -> Session:
-    load_input_parts: list[str] = user_input.split(" ")
+    load_input_parts: list[str] = user_input.split(" ", 2)
     session_id: int = 0
     if len(load_input_parts) >= 2:
         session_id = int(load_input_parts[1])

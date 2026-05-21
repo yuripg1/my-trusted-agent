@@ -16,6 +16,9 @@ class ReadWebPageToolCall(BaseToolCall):
     arguments: Required[ReadWebPageArguments]
 
 
+_EXTRACT_FORMAT: str = "html"
+_IMPERSONATE_BROWSER: str = "random"
+_IMPERSONATE_OS: str = "random"
 _REQUEST_TIMEOUT: int = 300
 
 
@@ -34,15 +37,15 @@ def read_web_page(url: str) -> str:
     content_type: str = ""
     raw_web_page_content: str = ""
     try:
-        client = Client(impersonate="random", impersonate_os="random", timeout=_REQUEST_TIMEOUT)
+        client = Client(impersonate=_IMPERSONATE_BROWSER, impersonate_os=_IMPERSONATE_OS, timeout=_REQUEST_TIMEOUT)
         response: Response = client.get(url)
         status_code = response.status_code
-        if status_code < 200 or status_code > 299:
-            output_entries.append("<error>Could not fetch the web page</error>")
-            errored = True
-        else:
+        if status_code >= 200 and status_code <= 299:
             raw_web_page_content = response.text
             content_type = response.headers.get("content-type", "").strip()
+        else:
+            output_entries.append("<error>Could not fetch the web page</error>")
+            errored = True
     except Exception:
         output_entries.append("<error>Could not fetch the web page</error>")
         errored = True
@@ -50,7 +53,9 @@ def read_web_page(url: str) -> str:
         return read_pdf_document("web", url, note='Redirected from "read_web_page"')
     if not errored:
         try:
-            extracted_content: str | None = extract(raw_web_page_content, output_format="markdown", include_links=True)
+            extracted_content: str | None = extract(
+                raw_web_page_content, output_format=_EXTRACT_FORMAT, include_links=True
+            )
             if extracted_content is not None:
                 trimmed_extracted_content: str = extracted_content.strip()
                 if len(trimmed_extracted_content) != 0:

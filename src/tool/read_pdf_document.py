@@ -17,6 +17,9 @@ class ReadPdfDocumentToolCall(BaseToolCall):
     arguments: Required[ReadPdfDocumentArguments]
 
 
+_EXTRACT_MODE: Literal["plain", "layout"] = "layout"
+_IMPERSONATE_BROWSER: str = "random"
+_IMPERSONATE_OS: str = "random"
 _REQUEST_TIMEOUT: int = 300
 
 
@@ -39,15 +42,17 @@ def read_pdf_document(location_type: str, location: str, tool_call_permission: b
         raw_pdf_document_content: Any = None
         try:
             if location_type == "web" or location.startswith(("http", "https")):
-                client: Client = Client(impersonate="random", impersonate_os="random", timeout=_REQUEST_TIMEOUT)
+                client: Client = Client(
+                    impersonate=_IMPERSONATE_BROWSER, impersonate_os=_IMPERSONATE_OS, timeout=_REQUEST_TIMEOUT
+                )
                 response: Response = client.get(location)
                 status_code = response.status_code
-                if status_code < 200 or status_code > 299:
-                    output_entries.append("<error>Could not fetch the PDF document</error>")
-                    errored = True
-                else:
+                if status_code >= 200 and status_code <= 299:
                     raw_pdf_document_content = response.content
                     content_type = response.headers.get("content-type", "").strip()
+                else:
+                    output_entries.append("<error>Could not fetch the PDF document</error>")
+                    errored = True
             elif location_type == "local":
                 with open(location, "rb") as pdf_document_file:
                     raw_pdf_document_content = pdf_document_file.read()
@@ -66,7 +71,9 @@ def read_pdf_document(location_type: str, location: str, tool_call_permission: b
                     pdf_document_reader = PdfReader(BytesIO(raw_pdf_document_content))
                     output_pages_entries: list[str] = []
                     for page_number, raw_pdf_document_page in enumerate(pdf_document_reader.pages, 1):
-                        pdf_document_page_text = raw_pdf_document_page.extract_text().strip()
+                        pdf_document_page_text = raw_pdf_document_page.extract_text(
+                            extraction_mode=_EXTRACT_MODE
+                        ).strip()
                         if len(pdf_document_page_text) != 0:
                             output_pages_entries.append(
                                 f'<page number="{page_number}">\n{pdf_document_page_text}\n</page>'

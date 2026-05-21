@@ -1,3 +1,5 @@
+from sqlite3 import Connection
+
 from ai.core import Ai
 from chat import chat_loop
 from database import close_db_connection, init_db, open_db_connection
@@ -6,11 +8,11 @@ from ui.core import Ui
 
 
 def main() -> None:
-    environment = Environment()
-    db_connection = open_db_connection(environment.db_path)
+    environment: Environment = Environment()
+    db_connection: Connection = open_db_connection(environment.db_path)
     init_db(db_connection)
-    ai = Ai(environment)
-    ui = Ui(environment)
+    ai: Ai = Ai(environment)
+    ui: Ui = Ui(environment)
     chat_loop(environment, db_connection, ai, ui)
     close_db_connection(db_connection)
 
