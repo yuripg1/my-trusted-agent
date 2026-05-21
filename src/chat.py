@@ -50,6 +50,13 @@ def _handle_load_command(
     return session
 
 
+def _handle_system_command(ai: Ai, session: Session, user_input: str) -> None:
+    system_input_parts: list[str] = user_input.split(" ", 1)
+    if len(system_input_parts) >= 2:
+        system_prompt: str = system_input_parts[1]
+        session.add_system_messages(ai, [system_prompt])
+
+
 def _handle_export_command(environment: Environment, ai: Ai, session: Session) -> None:
     if session.id is None:
         return
@@ -134,6 +141,8 @@ def chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui: U
                 session = _handle_load_command(environment, ai, db_connection, user_input, ui)
             elif user_input == "/rewind":
                 _handle_rewind_command(session, ai, ui)
+            elif user_input.startswith("/system"):
+                _handle_system_command(ai, session, user_input)
             elif user_input == "/export":
                 _handle_export_command(environment, ai, session)
             elif user_input == "/exit":
