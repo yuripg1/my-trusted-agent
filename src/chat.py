@@ -1,3 +1,4 @@
+from contextlib import suppress
 from sqlite3 import Connection
 
 from agent import get_agent_config, get_agent_name
@@ -30,7 +31,8 @@ def _handle_load_command(
     load_input_parts: list[str] = user_input.split(" ", 2)
     session_id: int = 0
     if len(load_input_parts) >= 2:
-        session_id = int(load_input_parts[1])
+        with suppress(Exception):
+            session_id = int(load_input_parts[1])
     replay: bool = False
     if len(load_input_parts) >= 3:
         replay = load_input_parts[2] == "replay"

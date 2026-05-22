@@ -14,7 +14,7 @@ class AgentConfig(TypedDict):
 
 
 def get_agent_name(environment: Environment, agent_name_input: str = "") -> str:
-    if agent_name_input in ["default", "raw"]:
+    if agent_name_input in ["default", "raw", "researcher"]:
         return agent_name_input
     else:
         return environment.default_agent_name
@@ -38,9 +38,9 @@ def _get_default_agent_config(environment: Environment, ui: Ui) -> AgentConfig:
         "write_file",
     ]
     instruction_messages: list[str] = [
+        "You are a general-purpose AI agent",
         f"By default, you must always reply using {environment.language} with proper grammar (unless you see the need to reply in a different language)",
         "By default, you must always reply using strict Markdown syntax with proper formatting (unless you see the need to reply in a different format)",
-        "You are a general-purpose AI agent",
         "Whenever you encounter README files of any kind, you should strongly prioritize reading them",
     ]
     system_messages.extend(instruction_messages)
@@ -67,11 +67,35 @@ def _get_raw_agent_config(environment: Environment, ui: Ui) -> AgentConfig:
     return AgentConfig(name=agent_name, system_prompts=system_messages, tool_names=tool_names)
 
 
+def _get_researcher_agent_config(environment: Environment, ui: Ui) -> AgentConfig:
+    agent_name: str = "researcher"
+    system_messages: list[str] = []
+    tool_names: list[str] = [
+        "read_pdf_document",
+        "read_web_page",
+        "search_web",
+    ]
+    instruction_messages: list[str] = [
+        "You are an AI agent focused on research",
+        f"By default, you must always reply using {environment.language} with proper grammar (unless you see the need to reply in a different language)",
+        "By default, you must always reply using strict Markdown syntax with proper formatting (unless you see the need to reply in a different format)",
+    ]
+    system_messages.extend(instruction_messages)
+    system_messages.extend(get_tool_system_instructions())
+    system_messages.extend(ui.get_system_instructions())
+    system_commands: list[str] = ["date"]
+    for system_command in system_commands:
+        system_messages.append(execute_shell_command(system_command))
+    return AgentConfig(name=agent_name, system_prompts=system_messages, tool_names=tool_names)
+
+
 def get_agent_config(name: str, environment: Environment, ui: Ui, defaulting: bool = False) -> AgentConfig:
     if name == "default":
         return _get_default_agent_config(environment, ui)
     elif name == "raw":
         return _get_raw_agent_config(environment, ui)
+    elif name == "researcher":
+        return _get_researcher_agent_config(environment, ui)
     else:
         if not defaulting:
             return get_agent_config(environment.default_agent_name, environment, ui, defaulting=True)

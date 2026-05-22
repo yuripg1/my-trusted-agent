@@ -41,6 +41,7 @@ Agent presets define which tools and system instructions the AI receives.
 |---|---|
 | `default` | Full access to all tools (create, delete, edit, search, etc.) with complete system instructions (language, Markdown, environment info) |
 | `raw` | No tools, no system prompts - a blank slate for unrestricted conversation |
+| `researcher` | Access to a few tools and system prompts tailored for research |
 
 ---
 

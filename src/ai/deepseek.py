@@ -2,6 +2,7 @@ from collections.abc import Mapping
 from contextlib import suppress
 from json import dumps, loads
 from sys import exit as sys_exit
+from sys import stderr
 from time import sleep
 from typing import Any, Literal, NotRequired, Required, TypedDict
 
@@ -69,6 +70,7 @@ _API_STREAM: bool = False
 _API_TOOL_CHOICE: DeepSeekToolChoiceType = "auto"
 _API_WAIT_AFTER_ERROR: int = 2
 _API_REQUEST_TIMEOUT: int = 600
+_API_MAX_ATTEMPTS: int = 10
 
 
 class DeepSeekAi:
@@ -104,7 +106,7 @@ class DeepSeekAi:
         role: DeepSeekRoleType,
         content: str,
         reasoning_content: str = "",
-        tool_calls: list[DeepSeekToolCall] = [],
+        tool_calls: list[DeepSeekToolCall] | None = None,
         tool_call_id: str = "",
     ) -> None:
         trimmed_content: str = content.strip()
@@ -113,7 +115,7 @@ class DeepSeekAi:
             new_generic_message: DeepSeekMessage = {"role": role, "content": trimmed_content}
             if len(trimmed_reasoning_content) != 0:
                 new_generic_message["reasoning_content"] = trimmed_reasoning_content
-            if len(tool_calls) != 0:
+            if tool_calls is not None:
                 new_generic_message["tool_calls"] = tool_calls
             messages.append(new_generic_message)
         elif role == "tool":
@@ -158,7 +160,9 @@ class DeepSeekAi:
         if len(trimmed_tool_call_output) != 0:
             self._add_to_messages(messages, "tool", trimmed_tool_call_output, "", [], tool_call["id"])
 
-    def request_assistant_reply(self, messages: list[DeepSeekMessage], tools: list[DeepSeekTool]) -> int:
+    def request_assistant_reply(
+        self, messages: list[DeepSeekMessage], tools: list[DeepSeekTool], attempt_number: int = 1
+    ) -> int:
         headers: Mapping[str, str] = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
         payload_thinking: DeepSeekRequestThinking = {"type": self.thinking}
         payload: DeepSeekRequest = {
@@ -198,18 +202,19 @@ class DeepSeekAi:
                 )
             self._add_to_messages(messages, "assistant", content, reasoning_content, tool_calls)
             return total_tokens
-        elif (
+        elif attempt_number < _API_MAX_ATTEMPTS and (
             response is None
             or response.status_code == 429
             or (response.status_code >= 500 and response.status_code <= 599)
         ):
             sleep(_API_WAIT_AFTER_ERROR)
-            return self.request_assistant_reply(messages, tools)
+            return self.request_assistant_reply(messages, tools, attempt_number + 1)
         else:
-            print(dumps(payload, indent=2))
-            print(response.status_code)
-            with suppress(Exception):
-                print(dumps(response.json(), indent=2))
+            print(dumps(payload, indent=2), file=stderr)
+            if response is not None:
+                print(response.status_code, file=stderr)
+                with suppress(Exception):
+                    print(dumps(response.json(), indent=2), file=stderr)
             sys_exit(1)
 
     def get_messages_count(self, messages: list[DeepSeekMessage]) -> int:
