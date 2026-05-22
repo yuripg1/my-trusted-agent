@@ -2,6 +2,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from tool.list_directory import (
+    ListDirectoryArguments,
     ListDirectoryToolCall,
     get_list_directory_message,
     get_list_directory_permission,
@@ -40,7 +41,7 @@ class TestListDirectory:
         symlink.symlink_to(readme_file)
         src_directory: Path = target.joinpath("src")
         src_directory.mkdir()
-        result: str = list_directory(str(target))
+        result: str = list_directory(ListDirectoryArguments(path=str(target)))
         read_file_entry: str = f'<entry type="file" size="5">{readme_file.name}</entry>'
         symlink_entry: str = f'<entry type="symlink" target="{str(readme_file)}" target_type="file" target_size="5">{symlink.name}</entry>'
         sec_directory_entry: str = f'<entry type="directory" entries="0">{src_directory.name}</entry>'
@@ -57,7 +58,7 @@ class TestListDirectory:
         target.joinpath("notes.txt").write_text("hello")
         symlink: Path = tmp_path.joinpath("link_to_docs")
         symlink.symlink_to(target)
-        result: str = list_directory(str(tmp_path))
+        result: str = list_directory(ListDirectoryArguments(path=str(tmp_path)))
         expected_symlink_entry: str = f'<entry type="symlink" target="{str(target)}" target_type="directory" target_entries="1">{symlink.name}</entry>'
         assert expected_symlink_entry in result
 
@@ -68,7 +69,7 @@ class TestListDirectory:
         symlink: Path = tmp_path.joinpath("broken_link")
         symlink.symlink_to(target)
         target.unlink()
-        result: str = list_directory(str(tmp_path))
+        result: str = list_directory(ListDirectoryArguments(path=str(tmp_path)))
         resolved_target: str = str(symlink.resolve(strict=False))
         expected_symlink_entry: str = f'<entry type="symlink" target="{resolved_target}">{symlink.name}</entry>'
         assert expected_symlink_entry in result
@@ -80,7 +81,7 @@ class TestListDirectory:
         symlink: Path = target.joinpath("link")
         symlink.symlink_to("/nonexistent")
         with patch.object(Path, "resolve", side_effect=Exception("Resolve error")):
-            result: str = list_directory(str(target))
+            result: str = list_directory(ListDirectoryArguments(path=str(target)))
             expected_symlink_entry: str = f'<entry type="symlink">{symlink.name}</entry>'
             assert expected_symlink_entry in result
 
@@ -92,7 +93,7 @@ class TestListDirectory:
         inner.mkdir()
         inner.joinpath("file1.txt").write_text("one")
         inner.joinpath("file2.txt").write_text("two")
-        result: str = list_directory(str(tmp_path))
+        result: str = list_directory(ListDirectoryArguments(path=str(tmp_path)))
         assert result.startswith(f'<directory_listing path="{str(tmp_path)}">')
         assert result.endswith("</directory_listing>")
         assert '<entry type="file" size="3">outer/inner/file1.txt</entry>' in result
@@ -107,7 +108,7 @@ class TestListDirectory:
         c: Path = b.joinpath("c")
         c.mkdir()
         c.joinpath("data.txt").write_text("content")
-        result: str = list_directory(str(tmp_path))
+        result: str = list_directory(ListDirectoryArguments(path=str(tmp_path)))
         assert (
             result
             == f'<directory_listing path="{str(tmp_path)}">\n<entry type="file" size="7">a/b/c/data.txt</entry>\n</directory_listing>'
@@ -120,7 +121,7 @@ class TestListDirectory:
         target.joinpath("file.txt").write_text("content")
         link: Path = tmp_path.joinpath("link_to_dir")
         link.symlink_to(target)
-        result: str = list_directory(str(tmp_path))
+        result: str = list_directory(ListDirectoryArguments(path=str(tmp_path)))
         resolved_target: str = str(target.resolve())
         expected_symlink_entry: str = f'<entry type="symlink" target="{resolved_target}" target_type="directory" target_entries="1">{link.name}</entry>'
         assert expected_symlink_entry in result
@@ -132,7 +133,7 @@ class TestListDirectory:
         subdir: Path = inner.joinpath("subdir")
         subdir.mkdir()
         inner.joinpath("readme.txt").write_text("hello")
-        result: str = list_directory(str(tmp_path))
+        result: str = list_directory(ListDirectoryArguments(path=str(tmp_path)))
         assert result.startswith(f'<directory_listing path="{str(tmp_path)}">')
         assert result.endswith("</directory_listing>")
         assert '<entry type="directory" entries="0">inner/subdir</entry>' in result
@@ -144,7 +145,7 @@ class TestListDirectory:
         target.mkdir()
         b: Path = target.joinpath("b")
         b.mkdir()
-        result: str = list_directory(str(tmp_path))
+        result: str = list_directory(ListDirectoryArguments(path=str(tmp_path)))
         assert (
             result
             == f'<directory_listing path="{str(tmp_path)}">\n<note>The directory is empty</note>\n</directory_listing>'
@@ -158,7 +159,7 @@ class TestListDirectory:
             next_dir.mkdir()
             current = next_dir
         current.joinpath("file.txt").write_text("deep")
-        result: str = list_directory(str(tmp_path))
+        result: str = list_directory(ListDirectoryArguments(path=str(tmp_path)))
         expected_prefix: str = "/".join([f"level_{i}" for i in range(10)]) + "/"
         assert f'<entry type="directory" entries="1">{expected_prefix}level_10</entry>' in result
 
@@ -166,7 +167,7 @@ class TestListDirectory:
         """List an empty directory"""
         target: Path = tmp_path.joinpath("empty_dir")
         target.mkdir()
-        result: str = list_directory(str(target))
+        result: str = list_directory(ListDirectoryArguments(path=str(target)))
         assert (
             result
             == f'<directory_listing path="{str(target)}">\n<note>The directory is empty</note>\n</directory_listing>'
@@ -174,7 +175,7 @@ class TestListDirectory:
 
     def test_directory_not_found(self) -> None:
         """DO not list a directory that does not exist"""
-        result: str = list_directory("/nonexistent/path")
+        result: str = list_directory(ListDirectoryArguments(path="/nonexistent/path"))
         assert (
             result
             == '<directory_listing path="/nonexistent/path">\n<error>Directory not found</error>\n</directory_listing>'
@@ -184,7 +185,7 @@ class TestListDirectory:
         """Do not list a path that is a file, not a directory"""
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("content")
-        result: str = list_directory(str(target))
+        result: str = list_directory(ListDirectoryArguments(path=str(target)))
         assert (
             result
             == f'<directory_listing path="{str(target)}">\n<error>Path is not a directory</error>\n</directory_listing>'
@@ -195,7 +196,7 @@ class TestListDirectory:
         target: Path = tmp_path.joinpath("secret")
         target.mkdir()
         with patch.object(Path, "iterdir", side_effect=PermissionError("Permission error")):
-            result: str = list_directory(str(target))
+            result: str = list_directory(ListDirectoryArguments(path=str(target)))
             assert (
                 result
                 == f'<directory_listing path="{str(target)}">\n<error>Permission denied by the system</error>\n</directory_listing>'
@@ -206,7 +207,7 @@ class TestListDirectory:
         target: Path = tmp_path.joinpath("broken")
         target.mkdir()
         with patch.object(Path, "iterdir", side_effect=Exception("Exception")):
-            result: str = list_directory(str(target))
+            result: str = list_directory(ListDirectoryArguments(path=str(target)))
             assert (
                 result
                 == f'<directory_listing path="{str(target)}">\n<error>Could not list directory</error>\n</directory_listing>'
@@ -219,7 +220,7 @@ class TestListDirectory:
         mystery_file: Path = target.joinpath("unknown")
         mystery_file.write_text("content")
         with patch.object(Path, "is_file", side_effect=Exception("Exception")):
-            result: str = list_directory(str(target))
+            result: str = list_directory(ListDirectoryArguments(path=str(target)))
             mystery_file_entry: str = f"<entry>{mystery_file.name}</entry>"
             assert result == f'<directory_listing path="{str(target)}">\n{mystery_file_entry}\n</directory_listing>'
 
@@ -234,6 +235,6 @@ class TestListDirectory:
             patch.object(Path, "is_dir", return_value=False),
             patch.object(Path, "is_file", return_value=False),
         ):
-            result: str = list_directory(str(target))
+            result: str = list_directory(ListDirectoryArguments(path=str(target)))
             mystery_file_entry: str = f"<entry>{mystery_file.name}</entry>"
             assert result == f'<directory_listing path="{str(target)}">\n{mystery_file_entry}\n</directory_listing>'

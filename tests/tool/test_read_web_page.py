@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 from tool.read_web_page import (
+    ReadWebPageArguments,
     ReadWebPageToolCall,
     get_read_web_page_message,
     get_read_web_page_permission,
@@ -45,7 +46,7 @@ class TestReadWebPage:
             patch("tool.read_web_page.Client", return_value=mock_client_instance),
             patch("tool.read_web_page.extract", return_value=extracted_text),
         ):
-            result: str = read_web_page(url)
+            result: str = read_web_page(ReadWebPageArguments(url=url))
         expected_result: str = f'<web_page_read url="{url}">\n<content>\n{extracted_text}\n</content>\n</web_page_read>'
         assert result == expected_result
 
@@ -59,7 +60,7 @@ class TestReadWebPage:
         mock_client_instance: MagicMock = MagicMock()
         mock_client_instance.get.return_value = mock_response
         with patch("tool.read_web_page.Client", return_value=mock_client_instance):
-            result: str = read_web_page(url)
+            result: str = read_web_page(ReadWebPageArguments(url=url))
         expected_result: str = f'<web_page_read url="{url}">\n<error>Could not fetch the web page</error>\n<status_code>{status_code}</status_code>\n</web_page_read>'
         assert result == expected_result
 
@@ -69,7 +70,7 @@ class TestReadWebPage:
         mock_client_instance: MagicMock = MagicMock()
         mock_client_instance.get.side_effect = Exception("Exception")
         with patch("tool.read_web_page.Client", return_value=mock_client_instance):
-            result: str = read_web_page(url)
+            result: str = read_web_page(ReadWebPageArguments(url=url))
         expected_result: str = (
             f'<web_page_read url="{url}">\n<error>Could not fetch the web page</error>\n</web_page_read>'
         )
@@ -92,7 +93,7 @@ class TestReadWebPage:
             patch("tool.read_web_page.Client", return_value=mock_client_instance),
             patch("tool.read_web_page.read_pdf_document", return_value=mock_pdf_result),
         ):
-            result: str = read_web_page(url)
+            result: str = read_web_page(ReadWebPageArguments(url=url))
         assert result == mock_pdf_result
 
     def test_extraction_exception(self) -> None:
@@ -110,7 +111,7 @@ class TestReadWebPage:
             patch("tool.read_web_page.Client", return_value=mock_client_instance),
             patch("tool.read_web_page.extract", side_effect=Exception("Exception")),
         ):
-            result: str = read_web_page(url)
+            result: str = read_web_page(ReadWebPageArguments(url=url))
         expected_result: str = f'<web_page_read url="{url}">\n<error>Could not read the web page</error>\n<status_code>{status_code}</status_code>\n<content_type>{content_type}</content_type>\n</web_page_read>'
         assert result == expected_result
 
@@ -129,7 +130,7 @@ class TestReadWebPage:
             patch("tool.read_web_page.Client", return_value=mock_client_instance),
             patch("tool.read_web_page.extract", return_value=None),
         ):
-            result: str = read_web_page(url)
+            result: str = read_web_page(ReadWebPageArguments(url=url))
         expected_result: str = f'<web_page_read url="{url}">\n<error>Could not read the web page</error>\n<status_code>{status_code}</status_code>\n<content_type>{content_type}</content_type>\n</web_page_read>'
         assert result == expected_result
 
@@ -148,6 +149,6 @@ class TestReadWebPage:
             patch("tool.read_web_page.Client", return_value=mock_client_instance),
             patch("tool.read_web_page.extract", return_value="   "),
         ):
-            result: str = read_web_page(url)
+            result: str = read_web_page(ReadWebPageArguments(url=url))
         expected_result: str = f'<web_page_read url="{url}">\n<error>Could not read the web page</error>\n<status_code>{status_code}</status_code>\n<content_type>{content_type}</content_type>\n</web_page_read>'
         assert result == expected_result

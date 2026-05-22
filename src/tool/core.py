@@ -157,57 +157,31 @@ def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:
     with suppress(Exception):
         tool_name = tool_call["tool_name"]
         if tool_call["tool_name"] == "create_directory":
-            create_directory_path: str = tool_call["arguments"]["path"]
-            return create_directory(create_directory_path)
+            return create_directory(tool_call["arguments"])
         elif tool_call["tool_name"] == "delete_path":
-            type: str = tool_call["arguments"]["type"]
-            delete_path_path: str = tool_call["arguments"]["path"]
-            return delete_path(type, delete_path_path, tool_call_permission)
+            return delete_path(tool_call["arguments"], tool_call_permission)
         elif tool_call["tool_name"] == "edit_file":
-            path: str = tool_call["arguments"]["path"]
-            search_for: str = tool_call["arguments"]["search_for"]
-            replace_with: str = tool_call["arguments"]["replace_with"]
-            number_of_substitutions: int = tool_call["arguments"]["number_of_substitutions"]
-            return edit_file(path, search_for, replace_with, number_of_substitutions, tool_call_permission)
+            return edit_file(tool_call["arguments"], tool_call_permission)
         elif tool_call["tool_name"] == "execute_shell_command":
-            command: str = tool_call["arguments"]["command"]
-            return execute_shell_command(command, tool_call_permission)
+            return execute_shell_command(tool_call["arguments"], tool_call_permission)
         elif tool_call["tool_name"] == "generate_random_integer":
-            min: int = tool_call["arguments"]["min"]
-            max: int = tool_call["arguments"]["max"]
-            return generate_random_integer(min, max)
+            return generate_random_integer(tool_call["arguments"])
         elif tool_call["tool_name"] == "invalid":
-            return invalid(tool_call)
+            return invalid(tool_call["arguments"])
         elif tool_call["tool_name"] == "list_directory":
-            directory_path: str = tool_call["arguments"]["path"]
-            return list_directory(directory_path)
+            return list_directory(tool_call["arguments"])
         elif tool_call["tool_name"] == "move_path":
-            move_type: str = tool_call["arguments"]["type"]
-            move_source: str = tool_call["arguments"]["source"]
-            move_destination: str = tool_call["arguments"]["destination"]
-            return move_path(move_type, move_source, move_destination, tool_call_permission)
+            return move_path(tool_call["arguments"], tool_call_permission)
         elif tool_call["tool_name"] == "read_file":
-            file_path: str = tool_call["arguments"]["path"]
-            start_line: int | None = tool_call["arguments"].get("start_line", None)
-            end_line: int | None = tool_call["arguments"].get("end_line", None)
-            return read_file(file_path, tool_call_permission, start_line=start_line, end_line=end_line)
+            return read_file(tool_call["arguments"], tool_call_permission)
         elif tool_call["tool_name"] == "read_pdf_document":
-            location_type: str = tool_call["arguments"]["location_type"]
-            location: str = tool_call["arguments"]["location"]
-            return read_pdf_document(location_type, location, tool_call_permission=tool_call_permission)
+            return read_pdf_document(tool_call["arguments"], tool_call_permission)
         elif tool_call["tool_name"] == "read_web_page":
-            url: str = tool_call["arguments"]["url"]
-            return read_web_page(url)
+            return read_web_page(tool_call["arguments"])
         elif tool_call["tool_name"] == "search_web":
-            query: str = tool_call["arguments"]["query"]
-            max_results_per_page: int = tool_call["arguments"]["max_results_per_page"]
-            results_page_number: int = tool_call["arguments"].get("results_page_number", 1)
-            return search_web(query, max_results_per_page, results_page_number)
+            return search_web(tool_call["arguments"])
         elif tool_call["tool_name"] == "write_file":
-            write_file_path: str = tool_call["arguments"]["path"]
-            write_file_mode: str = tool_call["arguments"]["mode"]
-            write_file_content: str = tool_call["arguments"]["content"]
-            return write_file(write_file_path, write_file_mode, write_file_content, tool_call_permission)
+            return write_file(tool_call["arguments"], tool_call_permission)
     if len(tool_name) != 0:
         return f'Error on "{tool_name}"'
     return "Error"

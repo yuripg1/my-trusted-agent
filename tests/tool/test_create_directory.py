@@ -2,6 +2,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from tool.create_directory import (
+    CreateDirectoryArguments,
     CreateDirectoryToolCall,
     create_directory,
     get_create_directory_message,
@@ -33,7 +34,7 @@ class TestCreateDirectory:
     def test_success_new_directory(self, tmp_path: Path) -> None:
         """Create a new directory that does not exist"""
         target: Path = tmp_path.joinpath("new_dir")
-        result: str = create_directory(str(target))
+        result: str = create_directory(CreateDirectoryArguments(path=str(target)))
         assert (
             result
             == f'<directory_creation path="{str(target)}">\n<result>Directory created successfully</result>\n</directory_creation>'
@@ -44,7 +45,7 @@ class TestCreateDirectory:
         """Create a directory that already exists (exist_ok=True)"""
         target: Path = tmp_path.joinpath("existing")
         target.mkdir()
-        result: str = create_directory(str(target))
+        result: str = create_directory(CreateDirectoryArguments(path=str(target)))
         assert (
             result
             == f'<directory_creation path="{str(target)}">\n<result>Directory created successfully</result>\n</directory_creation>'
@@ -54,7 +55,7 @@ class TestCreateDirectory:
     def test_nested_directories(self, tmp_path: Path) -> None:
         """Create nested directories (parents=True)"""
         target: Path = tmp_path.joinpath("a", "b", "c")
-        result: str = create_directory(str(target))
+        result: str = create_directory(CreateDirectoryArguments(path=str(target)))
         assert (
             result
             == f'<directory_creation path="{str(target)}">\n<result>Directory created successfully</result>\n</directory_creation>'
@@ -65,7 +66,7 @@ class TestCreateDirectory:
         """Do not create directory due to permission error"""
         target: Path = tmp_path.joinpath("protected")
         with patch.object(Path, "mkdir", side_effect=PermissionError("Permission error")):
-            result: str = create_directory(str(target))
+            result: str = create_directory(CreateDirectoryArguments(path=str(target)))
             assert (
                 result
                 == f'<directory_creation path="{str(target)}">\n<error>Permission denied by the system</error>\n</directory_creation>'
@@ -76,7 +77,7 @@ class TestCreateDirectory:
         """Do not create directory due to an exception"""
         target: Path = tmp_path.joinpath("protected")
         with patch.object(Path, "mkdir", side_effect=Exception("Exception")):
-            result: str = create_directory(str(target))
+            result: str = create_directory(CreateDirectoryArguments(path=str(target)))
             assert (
                 result
                 == f'<directory_creation path="{str(target)}">\n<error>Could not create directory</error>\n</directory_creation>'

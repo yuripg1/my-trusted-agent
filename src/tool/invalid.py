@@ -21,5 +21,5 @@ def get_invalid_permission(tool_call: InvalidToolCall) -> bool:
     return True
 
 
-def invalid(tool_call: InvalidToolCall, tool_call_permission: bool = True) -> str:
-    return f'<skipped_invalid_tool_call tool_name="{tool_call["arguments"]["tool_name"]}">\n<error>{tool_call["arguments"]["error_message"]}</error>\n</skipped_invalid_tool_call>'
+def invalid(arguments: InvalidArguments) -> str:
+    return f'<skipped_invalid_tool_call tool_name="{arguments["tool_name"]}">\n<error>{arguments["error_message"]}</error>\n</skipped_invalid_tool_call>'

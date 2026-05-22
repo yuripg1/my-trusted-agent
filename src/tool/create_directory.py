@@ -21,14 +21,14 @@ def get_create_directory_permission(tool_call: CreateDirectoryToolCall) -> bool:
     return True
 
 
-def create_directory(path: str) -> str:
+def create_directory(arguments: CreateDirectoryArguments) -> str:
     output_entries: list[str] = []
     try:
-        Path(path).mkdir(parents=True, exist_ok=True)
+        Path(arguments["path"]).mkdir(parents=True, exist_ok=True)
         output_entries.append("<result>Directory created successfully</result>")
     except PermissionError:
         output_entries.append("<error>Permission denied by the system</error>")
     except Exception:
         output_entries.append("<error>Could not create directory</error>")
     joined_output_entries: str = "\n".join(output_entries)
-    return f'<directory_creation path="{path}">\n{joined_output_entries}\n</directory_creation>'
+    return f'<directory_creation path="{arguments["path"]}">\n{joined_output_entries}\n</directory_creation>'

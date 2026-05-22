@@ -35,10 +35,10 @@ def _resolve_compressed_path(path: Path, depth: int = 0) -> Path:
     return path
 
 
-def list_directory(path: str) -> str:
+def list_directory(arguments: ListDirectoryArguments) -> str:
     output_entries: list[str] = []
     try:
-        directory_path: Path = Path(path)
+        directory_path: Path = Path(arguments["path"])
         compressed_path: Path = _resolve_compressed_path(directory_path)
         prefix_relative: str = ""
         if compressed_path != directory_path:
@@ -75,4 +75,4 @@ def list_directory(path: str) -> str:
     if len(output_entries) == 0:
         output_entries.append("<note>The directory is empty</note>")
     joined_output_entries: str = "\n".join(output_entries)
-    return f'<directory_listing path="{path}">\n{joined_output_entries}\n</directory_listing>'
+    return f'<directory_listing path="{arguments["path"]}">\n{joined_output_entries}\n</directory_listing>'

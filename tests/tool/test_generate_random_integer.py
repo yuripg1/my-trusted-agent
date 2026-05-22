@@ -1,6 +1,7 @@
 from random import randint
 
 from tool.generate_random_integer import (
+    GenerateRandomIntegerArguments,
     GenerateRandomIntegerToolCall,
     generate_random_integer,
     get_generate_random_integer_message,
@@ -39,7 +40,7 @@ class TestGenerateRandomInteger:
         """Generate a random integer"""
         min: int = randint(11, 19)
         max: int = randint(31, 39)
-        result: str = generate_random_integer(min, max)
+        result: str = generate_random_integer(GenerateRandomIntegerArguments(min=min, max=max))
         assert result.startswith(f'<random_integer_generation min="{min}" max="{max}">\n<result>')
         assert result.endswith("</result>\n</random_integer_generation>")
         generated_integer: int = int(result.split("<result>")[1].split("</result>")[0])
@@ -49,7 +50,7 @@ class TestGenerateRandomInteger:
     def test_is_inclusive(self) -> None:
         """Assert that the range is inclusive with equal values for 'min' and 'max'"""
         min_and_max: int = randint(11, 19)
-        result: str = generate_random_integer(min_and_max, min_and_max)
+        result: str = generate_random_integer(GenerateRandomIntegerArguments(min=min_and_max, max=min_and_max))
         assert (
             result
             == f'<random_integer_generation min="{min_and_max}" max="{min_and_max}">\n<result>{min_and_max}</result>\n</random_integer_generation>'
@@ -59,7 +60,7 @@ class TestGenerateRandomInteger:
         """Do not generate a random integer when 'min' is greater than 'max'"""
         min: int = randint(31, 39)
         max: int = randint(11, 19)
-        result: str = generate_random_integer(min, max)
+        result: str = generate_random_integer(GenerateRandomIntegerArguments(min=min, max=max))
         assert (
             result
             == f'<random_integer_generation min="{min}" max="{max}">\n<error>"max" must be greater than or equal to "min"</error>\n</random_integer_generation>'

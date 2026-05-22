@@ -1,7 +1,13 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from tool.read_file import ReadFileToolCall, get_read_file_message, get_read_file_permission, read_file
+from tool.read_file import (
+    ReadFileArguments,
+    ReadFileToolCall,
+    get_read_file_message,
+    get_read_file_permission,
+    read_file,
+)
 
 
 class TestGetReadFileMessage:
@@ -53,7 +59,7 @@ class TestReadFile:
         """Read a file that exists"""
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("hello world")
-        result: str = read_file(str(target))
+        result: str = read_file(ReadFileArguments(path=str(target)))
         assert (
             result
             == f'<file_read path="{str(target)}">\n<number_of_read_lines>1</number_of_read_lines>\n<number_of_file_lines>1</number_of_file_lines>\n<content>\nhello world\n</content>\n</file_read>'
@@ -62,7 +68,7 @@ class TestReadFile:
     def test_read_file_not_found(self, tmp_path: Path) -> None:
         """Do not read a file that does not exist"""
         target: Path = tmp_path.joinpath("nonexistent")
-        result: str = read_file(str(target))
+        result: str = read_file(ReadFileArguments(path=str(target)))
         assert result == f'<file_read path="{str(target)}">\n<error>File not found</error>\n</file_read>'
 
     def test_permission_denied(self, tmp_path: Path) -> None:
@@ -70,7 +76,7 @@ class TestReadFile:
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("content")
         with patch("builtins.open", side_effect=PermissionError("Permission error")):
-            result: str = read_file(str(target))
+            result: str = read_file(ReadFileArguments(path=str(target)))
             assert (
                 result
                 == f'<file_read path="{str(target)}">\n<error>Permission denied by the system</error>\n</file_read>'
@@ -81,14 +87,14 @@ class TestReadFile:
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("content")
         with patch("builtins.open", side_effect=Exception("Exception")):
-            result: str = read_file(str(target))
+            result: str = read_file(ReadFileArguments(path=str(target)))
             assert result == f'<file_read path="{str(target)}">\n<error>Could not read file</error>\n</file_read>'
 
     def test_reading_denied_by_user(self, tmp_path: Path) -> None:
         """Do not read a file due to being denied by the user"""
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("content")
-        result: str = read_file(str(target), tool_call_permission=False)
+        result: str = read_file(ReadFileArguments(path=str(target)), tool_call_permission=False)
         assert (
             result
             == f'<file_read path="{str(target)}">\n<error>File reading manually denied by the user</error>\n</file_read>'
@@ -100,7 +106,7 @@ class TestReadFile:
         target.write_text("line1\nline2\nline3\nline4\nline5\n")
         start_line: int = 2
         end_line: int = 4
-        result: str = read_file(str(target), start_line=start_line, end_line=end_line)
+        result: str = read_file(ReadFileArguments(path=str(target), start_line=start_line, end_line=end_line))
         assert (
             result
             == f'<file_read path="{str(target)}" start_line="{start_line}" end_line="{end_line}">\n<number_of_read_lines>3</number_of_read_lines>\n<number_of_file_lines>5</number_of_file_lines>\n<content>\nline2\nline3\nline4\n</content>\n</file_read>'
@@ -111,7 +117,7 @@ class TestReadFile:
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("line1\nline2\nline3\n")
         start_line: int = 2
-        result: str = read_file(str(target), start_line=start_line)
+        result: str = read_file(ReadFileArguments(path=str(target), start_line=start_line))
         assert (
             result
             == f'<file_read path="{str(target)}" start_line="{start_line}">\n<number_of_read_lines>2</number_of_read_lines>\n<number_of_file_lines>3</number_of_file_lines>\n<content>\nline2\nline3\n</content>\n</file_read>'
@@ -122,7 +128,7 @@ class TestReadFile:
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("line1\nline2\nline3\n")
         end_line: int = 2
-        result: str = read_file(str(target), end_line=end_line)
+        result: str = read_file(ReadFileArguments(path=str(target), end_line=end_line))
         assert (
             result
             == f'<file_read path="{str(target)}" end_line="{end_line}">\n<number_of_read_lines>2</number_of_read_lines>\n<number_of_file_lines>3</number_of_file_lines>\n<content>\nline1\nline2\n</content>\n</file_read>'
@@ -134,7 +140,7 @@ class TestReadFile:
         target.write_text("line1\nline2\nline3\n")
         start_line: int = 2
         end_line: int = 2
-        result: str = read_file(str(target), start_line=start_line, end_line=end_line)
+        result: str = read_file(ReadFileArguments(path=str(target), start_line=start_line, end_line=end_line))
         assert (
             result
             == f'<file_read path="{str(target)}" start_line="{start_line}" end_line="{end_line}">\n<number_of_read_lines>1</number_of_read_lines>\n<number_of_file_lines>3</number_of_file_lines>\n<content>\nline2\n</content>\n</file_read>'
@@ -146,7 +152,7 @@ class TestReadFile:
         target.write_text("line1\r\nline2\r\nline3\r\n")
         start_line: int = 2
         end_line: int = 2
-        result: str = read_file(str(target), start_line=start_line, end_line=end_line)
+        result: str = read_file(ReadFileArguments(path=str(target), start_line=start_line, end_line=end_line))
         assert (
             result
             == f'<file_read path="{str(target)}" start_line="{start_line}" end_line="{end_line}">\n<number_of_read_lines>1</number_of_read_lines>\n<number_of_file_lines>3</number_of_file_lines>\n<content>\nline2\n</content>\n</file_read>'
@@ -157,7 +163,7 @@ class TestReadFile:
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("line1\nline2\nline3\n")
         start_line: int = 5
-        result: str = read_file(str(target), start_line=start_line)
+        result: str = read_file(ReadFileArguments(path=str(target), start_line=start_line))
         assert (
             result
             == f'<file_read path="{str(target)}" start_line="{start_line}">\n<number_of_read_lines>0</number_of_read_lines>\n<number_of_file_lines>3</number_of_file_lines>\n<content>\n\n</content>\n</file_read>'
@@ -168,7 +174,7 @@ class TestReadFile:
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("line1\nline2\nline3\n")
         end_line: int = 10
-        result: str = read_file(str(target), end_line=end_line)
+        result: str = read_file(ReadFileArguments(path=str(target), end_line=end_line))
         assert (
             result
             == f'<file_read path="{str(target)}" end_line="{end_line}">\n<number_of_read_lines>3</number_of_read_lines>\n<number_of_file_lines>3</number_of_file_lines>\n<content>\nline1\nline2\nline3\n</content>\n</file_read>'
@@ -179,7 +185,7 @@ class TestReadFile:
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("content")
         start_line: int = 0
-        result: str = read_file(str(target), start_line=start_line)
+        result: str = read_file(ReadFileArguments(path=str(target), start_line=start_line))
         assert (
             result
             == f'<file_read path="{str(target)}" start_line="{start_line}">\n<error>"start_line" must be greater than or equal to 1</error>\n</file_read>'
@@ -190,7 +196,7 @@ class TestReadFile:
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("content")
         end_line: int = 0
-        result: str = read_file(str(target), end_line=end_line)
+        result: str = read_file(ReadFileArguments(path=str(target), end_line=end_line))
         assert (
             result
             == f'<file_read path="{str(target)}" end_line="{end_line}">\n<error>"end_line" must be greater than or equal to 1</error>\n</file_read>'
@@ -202,7 +208,7 @@ class TestReadFile:
         target.write_text("content")
         start_line: int = 5
         end_line: int = 3
-        result: str = read_file(str(target), start_line=start_line, end_line=end_line)
+        result: str = read_file(ReadFileArguments(path=str(target), start_line=start_line, end_line=end_line))
         assert (
             result
             == f'<file_read path="{str(target)}" start_line="{start_line}" end_line="{end_line}">\n<error>"start_line" must be less than or equal to "end_line"</error>\n</file_read>'

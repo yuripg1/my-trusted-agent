@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 from reportlab.pdfgen import canvas as pdf_canvas
 
 from tool.read_pdf_document import (
+    ReadPdfDocumentArguments,
     ReadPdfDocumentToolCall,
     get_read_pdf_document_message,
     get_read_pdf_document_permission,
@@ -66,7 +67,7 @@ class TestReadPdfDocument:
         create_test_pdf(target, ["First page content", "Second page content"])
         location_type: str = "local"
         location: str = str(target)
-        result: str = read_pdf_document(location_type, location)
+        result: str = read_pdf_document(ReadPdfDocumentArguments(location_type=location_type, location=location))
         expected_result: str = f'<pdf_document_read location_type="{location_type}" location="{location}">\n<pages>\n<page number="1">\nFirst page content\n</page>\n<page number="2">\nSecond page content\n</page>\n</pages>\n</pdf_document_read>'
         assert result == expected_result
 
@@ -75,7 +76,7 @@ class TestReadPdfDocument:
         target: Path = tmp_path.joinpath("nonexistent.pdf")
         location_type: str = "local"
         location: str = str(target)
-        result: str = read_pdf_document(location_type, location)
+        result: str = read_pdf_document(ReadPdfDocumentArguments(location_type=location_type, location=location))
         expected_result: str = f'<pdf_document_read location_type="{location_type}" location="{location}">\n<error>Could not fetch the PDF document</error>\n</pdf_document_read>'
         assert result == expected_result
 
@@ -83,7 +84,7 @@ class TestReadPdfDocument:
         """Use an invalid location type"""
         location_type: str = "invalid"
         location: str = "/path/to/doc.pdf"
-        result: str = read_pdf_document(location_type, location)
+        result: str = read_pdf_document(ReadPdfDocumentArguments(location_type=location_type, location=location))
         expected_result: str = f'<pdf_document_read location_type="{location_type}" location="{location}">\n<error>Invalid location_type "{location_type}"</error>\n</pdf_document_read>'
         assert result == expected_result
 
@@ -93,7 +94,9 @@ class TestReadPdfDocument:
         create_test_pdf(target)
         location_type: str = "local"
         location: str = str(target)
-        result: str = read_pdf_document(location_type, location, tool_call_permission=False)
+        result: str = read_pdf_document(
+            ReadPdfDocumentArguments(location_type=location_type, location=location), tool_call_permission=False
+        )
         expected_result: str = f'<pdf_document_read location_type="{location_type}" location="{location}">\n<error>PDF document reading manually denied by the user</error>\n</pdf_document_read>'
         assert result == expected_result
 
@@ -104,7 +107,9 @@ class TestReadPdfDocument:
         location_type: str = "local"
         location: str = str(target)
         note: str = "Test note"
-        result: str = read_pdf_document(location_type, location, note=note)
+        result: str = read_pdf_document(
+            ReadPdfDocumentArguments(location_type=location_type, location=location), note=note
+        )
         expected_result: str = f'<pdf_document_read location_type="{location_type}" location="{location}">\n<note>{note}</note>\n<pages>\n<page number="1">\nFirst page content\n</page>\n</pages>\n</pdf_document_read>'
         assert result == expected_result
 
@@ -123,7 +128,7 @@ class TestReadPdfDocument:
         mock_client_instance: MagicMock = MagicMock()
         mock_client_instance.get.return_value = mock_response
         with patch("tool.read_pdf_document.Client", return_value=mock_client_instance):
-            result: str = read_pdf_document("web", url)
+            result: str = read_pdf_document(ReadPdfDocumentArguments(location_type="web", location=url))
         expected_result: str = f'<pdf_document_read location_type="web" location="{url}">\n<pages>\n<page number="1">\nWeb page 1 content\n</page>\n<page number="2">\nWeb page 2 content\n</page>\n</pages>\n</pdf_document_read>'
         assert result == expected_result
 
@@ -139,7 +144,7 @@ class TestReadPdfDocument:
         mock_client_instance: MagicMock = MagicMock()
         mock_client_instance.get.return_value = mock_response
         with patch("tool.read_pdf_document.Client", return_value=mock_client_instance):
-            result: str = read_pdf_document("web", url)
+            result: str = read_pdf_document(ReadPdfDocumentArguments(location_type="web", location=url))
         expected_result: str = f'<pdf_document_read location_type="web" location="{url}">\n<error>The fetched file does not seem to be a valid PDF document</error>\n<status_code>{status_code}</status_code>\n<content_type>{content_type}</content_type>\n</pdf_document_read>'
         assert result == expected_result
 
@@ -155,7 +160,7 @@ class TestReadPdfDocument:
         mock_client_instance: MagicMock = MagicMock()
         mock_client_instance.get.return_value = mock_response
         with patch("tool.read_pdf_document.Client", return_value=mock_client_instance):
-            result: str = read_pdf_document("web", url)
+            result: str = read_pdf_document(ReadPdfDocumentArguments(location_type="web", location=url))
         expected_result: str = f'<pdf_document_read location_type="web" location="{url}">\n<error>Could not read the PDF document</error>\n<status_code>{status_code}</status_code>\n<content_type>{content_type}</content_type>\n</pdf_document_read>'
         assert result == expected_result
 
@@ -179,7 +184,7 @@ class TestReadPdfDocument:
             mock_reader_instance: MagicMock = MagicMock()
             mock_reader_instance.pages = [mock_page]
             mock_reader_class.return_value = mock_reader_instance
-            result: str = read_pdf_document("web", url)
+            result: str = read_pdf_document(ReadPdfDocumentArguments(location_type="web", location=url))
         expected_result: str = f'<pdf_document_read location_type="web" location="{url}">\n<error>Could not read the PDF document</error>\n<status_code>{status_code}</status_code>\n<content_type>{content_type}</content_type>\n</pdf_document_read>'
         assert result == expected_result
 
@@ -194,6 +199,6 @@ class TestReadPdfDocument:
         mock_client_instance: MagicMock = MagicMock()
         mock_client_instance.get.return_value = mock_response
         with patch("tool.read_pdf_document.Client", return_value=mock_client_instance):
-            result: str = read_pdf_document("web", url)
+            result: str = read_pdf_document(ReadPdfDocumentArguments(location_type="web", location=url))
         expected_result: str = f'<pdf_document_read location_type="web" location="{url}">\n<error>Could not fetch the PDF document</error>\n<status_code>{status_code}</status_code>\n</pdf_document_read>'
         assert result == expected_result

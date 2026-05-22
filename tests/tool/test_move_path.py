@@ -1,7 +1,13 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from tool.move_path import MovePathToolCall, get_move_path_message, get_move_path_permission, move_path
+from tool.move_path import (
+    MovePathArguments,
+    MovePathToolCall,
+    get_move_path_message,
+    get_move_path_permission,
+    move_path,
+)
 
 
 class TestGetMovePathMessage:
@@ -37,7 +43,7 @@ class TestMovePath:
         source: Path = tmp_path.joinpath("source.txt")
         source.write_text("content")
         destination: Path = tmp_path.joinpath("dest", "moved.txt")
-        result: str = move_path(type, str(source), str(destination))
+        result: str = move_path(MovePathArguments(type=type, source=str(source), destination=str(destination)))
         assert (
             result
             == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>File moved successfully</result>\n</path_move>'
@@ -51,7 +57,7 @@ class TestMovePath:
         source: Path = tmp_path.joinpath("old_name.txt")
         source.write_text("content")
         destination: Path = tmp_path.joinpath("new_name.txt")
-        result: str = move_path(type, str(source), str(destination))
+        result: str = move_path(MovePathArguments(type=type, source=str(source), destination=str(destination)))
         assert (
             result
             == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>File moved successfully</result>\n</path_move>'
@@ -66,7 +72,7 @@ class TestMovePath:
         source.mkdir()
         source.joinpath("file.txt").write_text("hello")
         destination: Path = tmp_path.joinpath("newdir")
-        result: str = move_path(type, str(source), str(destination))
+        result: str = move_path(MovePathArguments(type=type, source=str(source), destination=str(destination)))
         assert (
             result
             == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>Directory moved successfully</result>\n</path_move>'
@@ -83,7 +89,7 @@ class TestMovePath:
         source: Path = tmp_path.joinpath("link")
         source.symlink_to(target)
         destination: Path = tmp_path.joinpath("moved_link")
-        result: str = move_path(type, str(source), str(destination))
+        result: str = move_path(MovePathArguments(type=type, source=str(source), destination=str(destination)))
         assert (
             result
             == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>Symlink moved successfully</result>\n</path_move>'
@@ -101,7 +107,7 @@ class TestMovePath:
         source: Path = tmp_path.joinpath("link_to_dir")
         source.symlink_to(target)
         destination: Path = tmp_path.joinpath("moved_link_to_dir")
-        result: str = move_path(type, str(source), str(destination))
+        result: str = move_path(MovePathArguments(type=type, source=str(source), destination=str(destination)))
         assert (
             result
             == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>Symlink moved successfully</result>\n</path_move>'
@@ -120,7 +126,7 @@ class TestMovePath:
         target.unlink()
         assert not target.exists()
         destination: Path = tmp_path.joinpath("moved_broken_link")
-        result: str = move_path(type, str(source), str(destination))
+        result: str = move_path(MovePathArguments(type=type, source=str(source), destination=str(destination)))
         assert (
             result
             == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<result>Symlink moved successfully</result>\n</path_move>'
@@ -134,7 +140,7 @@ class TestMovePath:
         type: str = "file"
         source: Path = tmp_path.joinpath("nonexistent")
         destination: Path = tmp_path.joinpath("nowhere")
-        result: str = move_path(type, str(source), str(destination))
+        result: str = move_path(MovePathArguments(type=type, source=str(source), destination=str(destination)))
         assert (
             result
             == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<error>Source path not found</error>\n</path_move>'
@@ -146,7 +152,7 @@ class TestMovePath:
         source: Path = tmp_path.joinpath("file.txt")
         source.write_text("content")
         destination: Path = tmp_path.joinpath("dest")
-        result: str = move_path(type, str(source), str(destination))
+        result: str = move_path(MovePathArguments(type=type, source=str(source), destination=str(destination)))
         assert (
             result
             == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<error>Expected a directory but found a different type</error>\n</path_move>'
@@ -159,7 +165,7 @@ class TestMovePath:
         source: Path = tmp_path.joinpath("mydir")
         source.mkdir()
         destination: Path = tmp_path.joinpath("dest")
-        result: str = move_path(type, str(source), str(destination))
+        result: str = move_path(MovePathArguments(type=type, source=str(source), destination=str(destination)))
         assert (
             result
             == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<error>Expected a file but found a different type</error>\n</path_move>'
@@ -174,7 +180,7 @@ class TestMovePath:
         source: Path = tmp_path.joinpath("link")
         source.symlink_to(target)
         destination: Path = tmp_path.joinpath("dest")
-        result: str = move_path(type, str(source), str(destination))
+        result: str = move_path(MovePathArguments(type=type, source=str(source), destination=str(destination)))
         assert (
             result
             == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<error>Expected a file but found a different type</error>\n</path_move>'
@@ -187,7 +193,7 @@ class TestMovePath:
         source: Path = tmp_path.joinpath("mydir")
         source.mkdir()
         destination: Path = tmp_path.joinpath("dest")
-        result: str = move_path(type, str(source), str(destination))
+        result: str = move_path(MovePathArguments(type=type, source=str(source), destination=str(destination)))
         assert (
             result
             == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<error>Expected a symlink but found a different type</error>\n</path_move>'
@@ -200,7 +206,7 @@ class TestMovePath:
         source: Path = tmp_path.joinpath("file.txt")
         source.write_text("content")
         destination: Path = tmp_path.joinpath("dest")
-        result: str = move_path(type, str(source), str(destination))
+        result: str = move_path(MovePathArguments(type=type, source=str(source), destination=str(destination)))
         assert (
             result
             == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<error>Invalid type "{type}"</error>\n</path_move>'
@@ -214,7 +220,7 @@ class TestMovePath:
         source.write_text("content")
         destination: Path = tmp_path.joinpath("dest.txt")
         with patch("tool.move_path.move", side_effect=PermissionError("Permission error")):
-            result: str = move_path(type, str(source), str(destination))
+            result: str = move_path(MovePathArguments(type=type, source=str(source), destination=str(destination)))
             assert (
                 result
                 == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<error>Permission denied by the system</error>\n</path_move>'
@@ -228,7 +234,7 @@ class TestMovePath:
         source.write_text("content")
         destination: Path = tmp_path.joinpath("dest.txt")
         with patch("tool.move_path.move", side_effect=Exception("Exception")):
-            result: str = move_path(type, str(source), str(destination))
+            result: str = move_path(MovePathArguments(type=type, source=str(source), destination=str(destination)))
             assert (
                 result
                 == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<error>Could not move path</error>\n</path_move>'
@@ -241,7 +247,9 @@ class TestMovePath:
         source: Path = tmp_path.joinpath("file.txt")
         source.write_text("content")
         destination: Path = tmp_path.joinpath("dest.txt")
-        result: str = move_path(type, str(source), str(destination), tool_call_permission=False)
+        result: str = move_path(
+            MovePathArguments(type=type, source=str(source), destination=str(destination)), tool_call_permission=False
+        )
         assert (
             result
             == f'<path_move type="{type}" source="{str(source)}" destination="{str(destination)}">\n<error>Path moving manually denied by the user. The path was not moved</error>\n</path_move>'

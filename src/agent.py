@@ -3,7 +3,7 @@ from typing import Required, TypedDict
 
 from environment import Environment
 from tool.core import get_tool_system_instructions
-from tool.execute_shell_command import execute_shell_command
+from tool.execute_shell_command import ExecuteShellCommandArguments, execute_shell_command
 from ui.core import Ui
 
 
@@ -56,7 +56,7 @@ def _get_default_agent_config(environment: Environment, ui: Ui) -> AgentConfig:
         "date",
     ]
     for system_command in system_commands:
-        system_messages.append(execute_shell_command(system_command))
+        system_messages.append(execute_shell_command(ExecuteShellCommandArguments(command=system_command)))
     return AgentConfig(name=agent_name, system_prompts=system_messages, tool_names=tool_names)
 
 
@@ -85,7 +85,7 @@ def _get_researcher_agent_config(environment: Environment, ui: Ui) -> AgentConfi
     system_messages.extend(ui.get_system_instructions())
     system_commands: list[str] = ["date"]
     for system_command in system_commands:
-        system_messages.append(execute_shell_command(system_command))
+        system_messages.append(execute_shell_command(ExecuteShellCommandArguments(command=system_command)))
     return AgentConfig(name=agent_name, system_prompts=system_messages, tool_names=tool_names)
 
 

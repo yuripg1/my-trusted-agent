@@ -1,7 +1,13 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from tool.write_file import WriteFileToolCall, get_write_file_message, get_write_file_permission, write_file
+from tool.write_file import (
+    WriteFileArguments,
+    WriteFileToolCall,
+    get_write_file_message,
+    get_write_file_permission,
+    write_file,
+)
 
 
 class TestGetWriteFileMessage:
@@ -64,7 +70,7 @@ class TestWriteFile:
         target: Path = tmp_path.joinpath("new_file.txt")
         mode: str = "create_or_overwrite"
         content: str = "hello"
-        result: str = write_file(str(target), mode, content)
+        result: str = write_file(WriteFileArguments(path=str(target), mode=mode, content=content))
         assert (
             result
             == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n<new_number_of_file_lines>1</new_number_of_file_lines>\n</file_write>'
@@ -77,7 +83,7 @@ class TestWriteFile:
         target.write_text("old content")
         mode: str = "create_or_overwrite"
         content: str = "new content"
-        result: str = write_file(str(target), mode, content)
+        result: str = write_file(WriteFileArguments(path=str(target), mode=mode, content=content))
         assert (
             result
             == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n<old_number_of_file_lines>1</old_number_of_file_lines>\n<new_number_of_file_lines>1</new_number_of_file_lines>\n</file_write>'
@@ -89,7 +95,7 @@ class TestWriteFile:
         target: Path = tmp_path.joinpath("new_file.txt")
         mode: str = "create_if_not_exists"
         content: str = "hello"
-        result: str = write_file(str(target), mode, content)
+        result: str = write_file(WriteFileArguments(path=str(target), mode=mode, content=content))
         assert (
             result
             == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n<new_number_of_file_lines>1</new_number_of_file_lines>\n</file_write>'
@@ -103,7 +109,7 @@ class TestWriteFile:
         target.write_text(original_content)
         mode: str = "create_if_not_exists"
         content: str = "new content"
-        result: str = write_file(str(target), mode, content)
+        result: str = write_file(WriteFileArguments(path=str(target), mode=mode, content=content))
         assert (
             result
             == f'<file_write path="{str(target)}" mode="{mode}">\n<error>File already exists</error>\n</file_write>'
@@ -117,7 +123,7 @@ class TestWriteFile:
         target.write_text(original_content)
         mode: str = "append"
         content: str = "line2\n"
-        result: str = write_file(str(target), mode, content)
+        result: str = write_file(WriteFileArguments(path=str(target), mode=mode, content=content))
         assert (
             result
             == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n<old_number_of_file_lines>1</old_number_of_file_lines>\n<new_number_of_file_lines>2</new_number_of_file_lines>\n</file_write>'
@@ -129,7 +135,7 @@ class TestWriteFile:
         target: Path = tmp_path.joinpath("new_log.txt")
         mode: str = "append"
         content: str = "line1\n"
-        result: str = write_file(str(target), mode, content)
+        result: str = write_file(WriteFileArguments(path=str(target), mode=mode, content=content))
         assert (
             result
             == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n<new_number_of_file_lines>1</new_number_of_file_lines>\n</file_write>'
@@ -142,7 +148,7 @@ class TestWriteFile:
         target.write_text("line1")
         mode: str = "append"
         content: str = "\nline2\n"
-        result: str = write_file(str(target), mode, content)
+        result: str = write_file(WriteFileArguments(path=str(target), mode=mode, content=content))
         assert (
             result
             == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n<old_number_of_file_lines>1</old_number_of_file_lines>\n<new_number_of_file_lines>2</new_number_of_file_lines>\n</file_write>'
@@ -155,7 +161,7 @@ class TestWriteFile:
         target.write_text("line1")
         mode: str = "append"
         content: str = " appended"
-        result: str = write_file(str(target), mode, content)
+        result: str = write_file(WriteFileArguments(path=str(target), mode=mode, content=content))
         assert (
             result
             == f'<file_write path="{str(target)}" mode="{mode}">\n<result>File written successfully</result>\n<old_number_of_file_lines>1</old_number_of_file_lines>\n<new_number_of_file_lines>1</new_number_of_file_lines>\n</file_write>'
@@ -167,7 +173,7 @@ class TestWriteFile:
         target: Path = tmp_path.joinpath("file.txt")
         mode: str = "invalid"
         content: str = "content"
-        result: str = write_file(str(target), mode, content)
+        result: str = write_file(WriteFileArguments(path=str(target), mode=mode, content=content))
         assert (
             result
             == f'<file_write path="{str(target)}" mode="{mode}">\n<error>Invalid mode "{mode}"</error>\n</file_write>'
@@ -179,7 +185,7 @@ class TestWriteFile:
         mode: str = "create_or_overwrite"
         content: str = "content"
         with patch("builtins.open", side_effect=PermissionError("Permission error")):
-            result: str = write_file(str(target), mode, content)
+            result: str = write_file(WriteFileArguments(path=str(target), mode=mode, content=content))
             assert (
                 result
                 == f'<file_write path="{str(target)}" mode="{mode}">\n<error>Permission denied by the system</error>\n</file_write>'
@@ -192,7 +198,7 @@ class TestWriteFile:
         mode: str = "create_or_overwrite"
         content: str = "content"
         with patch("builtins.open", side_effect=Exception("Exception")):
-            result: str = write_file(str(target), mode, content)
+            result: str = write_file(WriteFileArguments(path=str(target), mode=mode, content=content))
             assert (
                 result
                 == f'<file_write path="{str(target)}" mode="{mode}">\n<error>Could not write file</error>\n</file_write>'
@@ -204,7 +210,9 @@ class TestWriteFile:
         target: Path = tmp_path.joinpath("file.txt")
         mode: str = "create_or_overwrite"
         content: str = "content"
-        result: str = write_file(str(target), mode, content, tool_call_permission=False)
+        result: str = write_file(
+            WriteFileArguments(path=str(target), mode=mode, content=content), tool_call_permission=False
+        )
         assert not target.exists()
         assert (
             result

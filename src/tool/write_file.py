@@ -29,8 +29,9 @@ def get_write_file_message(tool_call: WriteFileToolCall) -> str:
     return f"Writing file at **{write_path}** (**{write_mode}** mode)\n\n{write_formatted_content}"
 
 
-def write_file(path: str, mode: str, content: str, tool_call_permission: bool = True) -> str:
+def write_file(arguments: WriteFileArguments, tool_call_permission: bool = True) -> str:
     output_entries: list[str] = []
+    content: str = arguments["content"]
     if not tool_call_permission:
         output_entries.append(
             "<error>File writing manually denied by the user. No content was written to the file</error>"
@@ -40,9 +41,9 @@ def write_file(path: str, mode: str, content: str, tool_call_permission: bool = 
         old_number_of_file_lines: int | None = None
         new_number_of_file_lines: int = 0
         try:
-            Path(path).parent.mkdir(parents=True, exist_ok=True)
-            file_path: Path = Path(path)
-            if mode == "create_or_overwrite":
+            file_path: Path = Path(arguments["path"])
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            if arguments["mode"] == "create_or_overwrite":
                 if file_path.exists():
                     with open(file_path) as file:
                         old_number_of_file_lines = len(file.read().splitlines())
@@ -50,7 +51,7 @@ def write_file(path: str, mode: str, content: str, tool_call_permission: bool = 
                 with open(file_path, "w") as file:
                     file.write(content)
                 wrote_successfully = True
-            elif mode == "create_if_not_exists":
+            elif arguments["mode"] == "create_if_not_exists":
                 if file_path.exists():
                     output_entries.append("<error>File already exists</error>")
                 else:
@@ -58,7 +59,7 @@ def write_file(path: str, mode: str, content: str, tool_call_permission: bool = 
                     with open(file_path, "x") as file:
                         file.write(content)
                     wrote_successfully = True
-            elif mode == "append":
+            elif arguments["mode"] == "append":
                 if file_path.exists():
                     with open(file_path) as file:
                         old_content: str = file.read()
@@ -70,7 +71,7 @@ def write_file(path: str, mode: str, content: str, tool_call_permission: bool = 
                     file.write(content)
                 wrote_successfully = True
             else:
-                output_entries.append(f'<error>Invalid mode "{mode}"</error>')
+                output_entries.append(f'<error>Invalid mode "{arguments["mode"]}"</error>')
             if wrote_successfully:
                 output_entries.append("<result>File written successfully</result>")
                 if old_number_of_file_lines is not None:
@@ -85,4 +86,4 @@ def write_file(path: str, mode: str, content: str, tool_call_permission: bool = 
         except Exception:
             output_entries.append("<error>Could not write file</error>")
     joined_output_entries: str = "\n".join(output_entries)
-    return f'<file_write path="{path}" mode="{mode}">\n{joined_output_entries}\n</file_write>'
+    return f'<file_write path="{arguments["path"]}" mode="{arguments["mode"]}">\n{joined_output_entries}\n</file_write>'

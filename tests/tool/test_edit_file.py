@@ -2,7 +2,13 @@ from pathlib import Path
 from random import randint
 from unittest.mock import patch
 
-from tool.edit_file import EditFileToolCall, edit_file, get_edit_file_message, get_edit_file_permission
+from tool.edit_file import (
+    EditFileArguments,
+    EditFileToolCall,
+    edit_file,
+    get_edit_file_message,
+    get_edit_file_permission,
+)
 
 
 class TestGetEditFileMessage:
@@ -53,7 +59,14 @@ class TestEditFile:
         target.write_text(original_file_content)
         replaced_with_text: str = "goodbye"
         number_of_substitutions: int = number_of_occurrences
-        result: str = edit_file(str(target), searched_for_text, replaced_with_text, number_of_substitutions)
+        result: str = edit_file(
+            EditFileArguments(
+                path=str(target),
+                search_for=searched_for_text,
+                replace_with=replaced_with_text,
+                number_of_substitutions=number_of_substitutions,
+            )
+        )
         assert (
             result
             == f'<file_edit path="{str(target)}" number_of_substitutions="{number_of_substitutions}">\n<result>File edited successfully</result>\n<old_number_of_file_lines>1</old_number_of_file_lines>\n<new_number_of_file_lines>1</new_number_of_file_lines>\n<number_of_occurrences>{number_of_occurrences}</number_of_occurrences>\n</file_edit>'
@@ -69,7 +82,14 @@ class TestEditFile:
         searched_for_text: str = "hello"
         replaced_with_text: str = "goodbye"
         number_of_substitutions: int = 1
-        result: str = edit_file(str(target), searched_for_text, replaced_with_text, number_of_substitutions)
+        result: str = edit_file(
+            EditFileArguments(
+                path=str(target),
+                search_for=searched_for_text,
+                replace_with=replaced_with_text,
+                number_of_substitutions=number_of_substitutions,
+            )
+        )
         number_of_occurrences: int = 0
         assert (
             result
@@ -86,7 +106,14 @@ class TestEditFile:
         target.write_text(original_file_content)
         replaced_with_text: str = "goodbye"
         number_of_substitutions: int = number_of_occurrences + 1
-        result: str = edit_file(str(target), searched_for_text, replaced_with_text, number_of_substitutions)
+        result: str = edit_file(
+            EditFileArguments(
+                path=str(target),
+                search_for=searched_for_text,
+                replace_with=replaced_with_text,
+                number_of_substitutions=number_of_substitutions,
+            )
+        )
         assert (
             result
             == f'<file_edit path="{str(target)}" number_of_substitutions="{number_of_substitutions}">\n<error>The number of occurrences of the searched text does not match the expected number of substitutions</error>\n<number_of_occurrences>{number_of_occurrences}</number_of_occurrences>\n</file_edit>'
@@ -99,7 +126,14 @@ class TestEditFile:
         searched_for_text: str = "hello"
         replaced_with_text: str = "goodbye"
         number_of_substitutions: int = 1
-        result: str = edit_file(str(target), searched_for_text, replaced_with_text, number_of_substitutions)
+        result: str = edit_file(
+            EditFileArguments(
+                path=str(target),
+                search_for=searched_for_text,
+                replace_with=replaced_with_text,
+                number_of_substitutions=number_of_substitutions,
+            )
+        )
         assert (
             result
             == f'<file_edit path="{str(target)}" number_of_substitutions="{number_of_substitutions}">\n<error>File not found</error>\n</file_edit>'
@@ -115,7 +149,14 @@ class TestEditFile:
         replaced_with_text: str = "goodbye"
         number_of_substitutions: int = number_of_occurrences
         with patch("builtins.open", side_effect=PermissionError("Permission error")):
-            result: str = edit_file(str(target), searched_for_text, replaced_with_text, number_of_substitutions)
+            result: str = edit_file(
+                EditFileArguments(
+                    path=str(target),
+                    search_for=searched_for_text,
+                    replace_with=replaced_with_text,
+                    number_of_substitutions=number_of_substitutions,
+                )
+            )
             assert (
                 result
                 == f'<file_edit path="{str(target)}" number_of_substitutions="{number_of_substitutions}">\n<error>Permission denied by the system</error>\n</file_edit>'
@@ -132,7 +173,14 @@ class TestEditFile:
         replaced_with_text: str = "goodbye"
         number_of_substitutions: int = number_of_occurrences
         with patch("builtins.open", side_effect=Exception("Exception")):
-            result: str = edit_file(str(target), searched_for_text, replaced_with_text, number_of_substitutions)
+            result: str = edit_file(
+                EditFileArguments(
+                    path=str(target),
+                    search_for=searched_for_text,
+                    replace_with=replaced_with_text,
+                    number_of_substitutions=number_of_substitutions,
+                )
+            )
             assert (
                 result
                 == f'<file_edit path="{str(target)}" number_of_substitutions="{number_of_substitutions}">\n<error>Could not edit file</error>\n</file_edit>'
@@ -149,7 +197,13 @@ class TestEditFile:
         replaced_with_text: str = "goodbye"
         number_of_substitutions: int = number_of_occurrences
         result: str = edit_file(
-            str(target), searched_for_text, replaced_with_text, number_of_substitutions, tool_call_permission=False
+            EditFileArguments(
+                path=str(target),
+                search_for=searched_for_text,
+                replace_with=replaced_with_text,
+                number_of_substitutions=number_of_substitutions,
+            ),
+            tool_call_permission=False,
         )
         assert (
             result
@@ -161,7 +215,9 @@ class TestEditFile:
         """Do not edit a file when search_for and replace_with are equal"""
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("hello world")
-        result: str = edit_file(str(target), "hello", "hello", 1)
+        result: str = edit_file(
+            EditFileArguments(path=str(target), search_for="hello", replace_with="hello", number_of_substitutions=1)
+        )
         assert (
             result
             == f'<file_edit path="{str(target)}" number_of_substitutions="1">\n<error>"search_for" and "replace_with" must be different</error>\n</file_edit>'
@@ -172,7 +228,9 @@ class TestEditFile:
         """Do not edit a file when both search_for and replace_with are empty"""
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("hello")
-        result: str = edit_file(str(target), "", "", 1)
+        result: str = edit_file(
+            EditFileArguments(path=str(target), search_for="", replace_with="", number_of_substitutions=1)
+        )
         assert (
             result
             == f'<file_edit path="{str(target)}" number_of_substitutions="1">\n<error>"search_for" and "replace_with" must be different</error>\n</file_edit>'
@@ -183,7 +241,11 @@ class TestEditFile:
         """Edit a file and see that the line count changes"""
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("item1\nitem2\nitem3\n")
-        result: str = edit_file(str(target), "item2", "replacement\nitem2_new", 1)
+        result: str = edit_file(
+            EditFileArguments(
+                path=str(target), search_for="item2", replace_with="replacement\nitem2_new", number_of_substitutions=1
+            )
+        )
         assert (
             result
             == f'<file_edit path="{str(target)}" number_of_substitutions="1">\n<result>File edited successfully</result>\n<old_number_of_file_lines>3</old_number_of_file_lines>\n<new_number_of_file_lines>4</new_number_of_file_lines>\n<number_of_occurrences>1</number_of_occurrences>\n</file_edit>'

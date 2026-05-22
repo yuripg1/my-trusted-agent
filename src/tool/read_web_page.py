@@ -4,7 +4,7 @@ from primp import Client, Response
 from trafilatura import extract
 
 from tool.common import BaseToolCall
-from tool.read_pdf_document import read_pdf_document
+from tool.read_pdf_document import ReadPdfDocumentArguments, read_pdf_document
 
 
 class ReadWebPageArguments(TypedDict):
@@ -30,7 +30,7 @@ def get_read_web_page_permission(tool_call: ReadWebPageToolCall) -> bool:
     return True
 
 
-def read_web_page(url: str) -> str:
+def read_web_page(arguments: ReadWebPageArguments) -> str:
     output_entries: list[str] = []
     errored: bool = False
     status_code: int | None = None
@@ -38,7 +38,7 @@ def read_web_page(url: str) -> str:
     raw_web_page_content: str = ""
     try:
         client = Client(impersonate=_IMPERSONATE_BROWSER, impersonate_os=_IMPERSONATE_OS, timeout=_REQUEST_TIMEOUT)
-        response: Response = client.get(url)
+        response: Response = client.get(arguments["url"])
         status_code = response.status_code
         if status_code >= 200 and status_code <= 299:
             raw_web_page_content = response.text
@@ -50,7 +50,10 @@ def read_web_page(url: str) -> str:
         output_entries.append("<error>Could not fetch the web page</error>")
         errored = True
     if "application/pdf" in content_type.lower():
-        return read_pdf_document("web", url, note='Redirected from "read_web_page"')
+        return read_pdf_document(
+            ReadPdfDocumentArguments(location_type="web", location=arguments["url"]),
+            note='Redirected from "read_web_page"',
+        )
     if not errored:
         try:
             extracted_content: str | None = extract(
@@ -72,4 +75,4 @@ def read_web_page(url: str) -> str:
         if len(content_type) != 0:
             output_entries.append(f"<content_type>{content_type}</content_type>")
     joined_output_entries: str = "\n".join(output_entries)
-    return f'<web_page_read url="{url}">\n{joined_output_entries}\n</web_page_read>'
+    return f'<web_page_read url="{arguments["url"]}">\n{joined_output_entries}\n</web_page_read>'

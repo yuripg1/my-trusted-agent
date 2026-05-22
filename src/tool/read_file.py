@@ -31,10 +31,10 @@ def get_read_file_permission(tool_call: ReadFileToolCall) -> bool:
     return False
 
 
-def read_file(
-    path: str, tool_call_permission: bool = True, *, start_line: int | None = None, end_line: int | None = None
-) -> str:
+def read_file(arguments: ReadFileArguments, tool_call_permission: bool = True) -> str:
     output_entries: list[str] = []
+    start_line: int | None = arguments.get("start_line", None)
+    end_line: int | None = arguments.get("end_line", None)
     if not tool_call_permission:
         output_entries.append("<error>File reading manually denied by the user</error>")
     else:
@@ -49,7 +49,7 @@ def read_file(
                 number_of_read_lines: int = 0
                 number_of_file_lines: int = 0
                 file_content: str = ""
-                with open(path) as file:
+                with open(arguments["path"]) as file:
                     file_content = file.read()
                 file_lines: list[str] = file_content.splitlines()
                 number_of_file_lines = len(file_lines)
@@ -70,7 +70,7 @@ def read_file(
             output_entries.append("<error>Permission denied by the system</error>")
         except Exception:
             output_entries.append("<error>Could not read file</error>")
-    tag_attributes: str = f'path="{path}"'
+    tag_attributes: str = f'path="{arguments["path"]}"'
     if start_line is not None:
         tag_attributes += f' start_line="{start_line}"'
     if end_line is not None:

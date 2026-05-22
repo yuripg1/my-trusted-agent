@@ -1,7 +1,13 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from tool.delete_path import DeletePathToolCall, delete_path, get_delete_path_message, get_delete_path_permission
+from tool.delete_path import (
+    DeletePathArguments,
+    DeletePathToolCall,
+    delete_path,
+    get_delete_path_message,
+    get_delete_path_permission,
+)
 
 
 class TestGetDeletePathMessage:
@@ -36,7 +42,7 @@ class TestDeletePath:
         type: str = "file"
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("content")
-        result: str = delete_path(type, str(target))
+        result: str = delete_path(DeletePathArguments(type=type, path=str(target)))
         assert (
             result
             == f'<path_deletion type="{type}" path="{str(target)}">\n<result>File deleted successfully</result>\n</path_deletion>'
@@ -48,7 +54,7 @@ class TestDeletePath:
         type: str = "directory"
         target: Path = tmp_path.joinpath("dir")
         target.mkdir()
-        result: str = delete_path(type, str(target))
+        result: str = delete_path(DeletePathArguments(type=type, path=str(target)))
         assert (
             result
             == f'<path_deletion type="{type}" path="{str(target)}">\n<result>Directory deleted successfully</result>\n</path_deletion>'
@@ -59,7 +65,7 @@ class TestDeletePath:
         """Do not delete a path that does not exist"""
         type: str = "file"
         target: Path = tmp_path.joinpath("nonexistent")
-        result: str = delete_path(type, str(target))
+        result: str = delete_path(DeletePathArguments(type=type, path=str(target)))
         assert (
             result
             == f'<path_deletion type="{type}" path="{str(target)}">\n<error>Path not found</error>\n</path_deletion>'
@@ -70,7 +76,7 @@ class TestDeletePath:
         type: str = "file"
         target: Path = tmp_path.joinpath("dir")
         target.mkdir()
-        result: str = delete_path(type, str(target))
+        result: str = delete_path(DeletePathArguments(type=type, path=str(target)))
         assert (
             result
             == f'<path_deletion type="{type}" path="{str(target)}">\n<error>Expected a file but found a different type</error>\n</path_deletion>'
@@ -82,7 +88,7 @@ class TestDeletePath:
         type: str = "directory"
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("content")
-        result: str = delete_path(type, str(target))
+        result: str = delete_path(DeletePathArguments(type=type, path=str(target)))
         assert (
             result
             == f'<path_deletion type="{type}" path="{str(target)}">\n<error>Expected a directory but found a different type</error>\n</path_deletion>'
@@ -94,7 +100,7 @@ class TestDeletePath:
         type: str = "socket"
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("content")
-        result: str = delete_path(type, str(target))
+        result: str = delete_path(DeletePathArguments(type=type, path=str(target)))
         assert (
             result
             == f'<path_deletion type="{type}" path="{str(target)}">\n<error>Invalid type "{type}"</error>\n</path_deletion>'
@@ -108,7 +114,7 @@ class TestDeletePath:
         target.write_text("content")
         symlink: Path = tmp_path.joinpath("link_to_file")
         symlink.symlink_to(target)
-        result: str = delete_path(type, str(symlink))
+        result: str = delete_path(DeletePathArguments(type=type, path=str(symlink)))
         assert (
             result
             == f'<path_deletion type="{type}" path="{str(symlink)}">\n<error>Expected a file but found a different type</error>\n</path_deletion>'
@@ -124,7 +130,7 @@ class TestDeletePath:
         target.mkdir()
         symlink: Path = tmp_path.joinpath("link_to_dir")
         symlink.symlink_to(target)
-        result: str = delete_path(type, str(symlink))
+        result: str = delete_path(DeletePathArguments(type=type, path=str(symlink)))
         assert (
             result
             == f'<path_deletion type="{type}" path="{str(symlink)}">\n<error>Expected a directory but found a different type</error>\n</path_deletion>'
@@ -140,7 +146,7 @@ class TestDeletePath:
         target.write_text("content")
         symlink: Path = tmp_path.joinpath("my_link")
         symlink.symlink_to(target)
-        result: str = delete_path(type, str(symlink))
+        result: str = delete_path(DeletePathArguments(type=type, path=str(symlink)))
         assert (
             result
             == f'<path_deletion type="{type}" path="{str(symlink)}">\n<result>Symlink deleted successfully</result>\n</path_deletion>'
@@ -153,7 +159,7 @@ class TestDeletePath:
         type: str = "symlink"
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("content")
-        result: str = delete_path(type, str(target))
+        result: str = delete_path(DeletePathArguments(type=type, path=str(target)))
         assert (
             result
             == f'<path_deletion type="{type}" path="{str(target)}">\n<error>Expected a symlink but found a different type</error>\n</path_deletion>'
@@ -165,7 +171,7 @@ class TestDeletePath:
         type: str = "symlink"
         target: Path = tmp_path.joinpath("dir")
         target.mkdir()
-        result: str = delete_path(type, str(target))
+        result: str = delete_path(DeletePathArguments(type=type, path=str(target)))
         assert (
             result
             == f'<path_deletion type="{type}" path="{str(target)}">\n<error>Expected a symlink but found a different type</error>\n</path_deletion>'
@@ -182,7 +188,7 @@ class TestDeletePath:
         target.unlink()
         assert not target.exists()
         assert symlink.is_symlink()
-        result: str = delete_path(type, str(symlink))
+        result: str = delete_path(DeletePathArguments(type=type, path=str(symlink)))
         assert (
             result
             == f'<path_deletion type="{type}" path="{str(symlink)}">\n<error>Expected a file but found a different type</error>\n</path_deletion>'
@@ -199,7 +205,7 @@ class TestDeletePath:
         target.unlink()
         assert not target.exists()
         assert symlink.is_symlink()
-        result: str = delete_path(type, str(symlink))
+        result: str = delete_path(DeletePathArguments(type=type, path=str(symlink)))
         assert (
             result
             == f'<path_deletion type="{type}" path="{str(symlink)}">\n<result>Symlink deleted successfully</result>\n</path_deletion>'
@@ -212,7 +218,7 @@ class TestDeletePath:
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("content")
         with patch.object(Path, "unlink", side_effect=PermissionError("Permission error")):
-            result: str = delete_path(type, str(target))
+            result: str = delete_path(DeletePathArguments(type=type, path=str(target)))
             assert (
                 result
                 == f'<path_deletion type="{type}" path="{str(target)}">\n<error>Permission denied by the system</error>\n</path_deletion>'
@@ -225,7 +231,7 @@ class TestDeletePath:
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("content")
         with patch.object(Path, "unlink", side_effect=Exception("Exception")):
-            result: str = delete_path(type, str(target))
+            result: str = delete_path(DeletePathArguments(type=type, path=str(target)))
             assert (
                 result
                 == f'<path_deletion type="{type}" path="{str(target)}">\n<error>Could not delete path</error>\n</path_deletion>'
@@ -237,7 +243,7 @@ class TestDeletePath:
         type: str = "file"
         target: Path = tmp_path.joinpath("file.txt")
         target.write_text("content")
-        result: str = delete_path(type, str(target), tool_call_permission=False)
+        result: str = delete_path(DeletePathArguments(type=type, path=str(target)), tool_call_permission=False)
         assert (
             result
             == f'<path_deletion type="{type}" path="{str(target)}">\n<error>Path deletion manually denied by the user. The path was not deleted</error>\n</path_deletion>'

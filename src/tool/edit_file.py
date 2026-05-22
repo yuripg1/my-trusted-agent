@@ -37,31 +37,31 @@ def get_edit_file_message(tool_call: EditFileToolCall) -> str:
     return f"Editing file at **{tool_call['arguments']['path']}** (**{tool_call['arguments']['number_of_substitutions']}** substitutions)\n\n{edit_content}"
 
 
-def edit_file(
-    path: str, search_for: str, replace_with: str, number_of_substitutions: int, tool_call_permission: bool = True
-) -> str:
+def edit_file(arguments: EditFileArguments, tool_call_permission: bool = True) -> str:
     output_entries: list[str] = []
     if not tool_call_permission:
         output_entries.append("<error>File editing manually denied by the user. The file was not modified</error>")
-    elif search_for == replace_with:
+    elif arguments["search_for"] == arguments["replace_with"]:
         output_entries.append('<error>"search_for" and "replace_with" must be different</error>')
     else:
         number_of_occurrences: int | None = None
         try:
-            with open(path) as file:
+            with open(arguments["path"]) as file:
                 file_content: str = file.read()
-            number_of_occurrences = file_content.count(search_for)
+            number_of_occurrences = file_content.count(arguments["search_for"])
             if number_of_occurrences == 0:
                 output_entries.append("<error>No occurrences of the searched text were found</error>")
-            elif number_of_occurrences != number_of_substitutions:
+            elif number_of_occurrences != arguments["number_of_substitutions"]:
                 output_entries.append(
                     "<error>The number of occurrences of the searched text does not match the expected number of substitutions</error>"
                 )
             else:
                 old_number_of_file_lines: int = len(file_content.splitlines())
-                new_content: str = file_content.replace(search_for, replace_with, number_of_substitutions)
+                new_content: str = file_content.replace(
+                    arguments["search_for"], arguments["replace_with"], arguments["number_of_substitutions"]
+                )
                 new_number_of_file_lines: int = len(new_content.splitlines())
-                with open(path, "w") as file:
+                with open(arguments["path"], "w") as file:
                     file.write(new_content)
                 output_entries.append("<result>File edited successfully</result>")
                 output_entries.append(
@@ -79,4 +79,4 @@ def edit_file(
         if number_of_occurrences is not None:
             output_entries.append(f"<number_of_occurrences>{number_of_occurrences}</number_of_occurrences>")
     joined_output_entries: str = "\n".join(output_entries)
-    return f'<file_edit path="{path}" number_of_substitutions="{number_of_substitutions}">\n{joined_output_entries}\n</file_edit>'
+    return f'<file_edit path="{arguments["path"]}" number_of_substitutions="{arguments["number_of_substitutions"]}">\n{joined_output_entries}\n</file_edit>'

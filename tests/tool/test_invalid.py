@@ -1,4 +1,5 @@
 from tool.invalid import (
+    InvalidArguments,
     InvalidToolCall,
     get_invalid_message,
     get_invalid_permission,
@@ -38,31 +39,22 @@ class TestExecuteInvalid:
         """Return the error in a structured XML format"""
         tool_name: str = "write_file"
         error_message: str = "Missing required argument: 'path'"
-        tool_call: InvalidToolCall = {
-            "tool_name": "invalid",
-            "arguments": {"tool_name": tool_name, "error_message": error_message},
-        }
+        arguments: InvalidArguments = InvalidArguments(tool_name=tool_name, error_message=error_message)
         expected: str = f'<skipped_invalid_tool_call tool_name="{tool_name}">\n<error>{error_message}</error>\n</skipped_invalid_tool_call>'
-        assert invalid(tool_call) == expected
+        assert invalid(arguments) == expected
 
     def test_json_parse_failure(self) -> None:
         """Handle the JSON parsing error scenario"""
         tool_name: str = "read_file"
         error_message: str = "There was a problem parsing the arguments JSON"
-        tool_call: InvalidToolCall = {
-            "tool_name": "invalid",
-            "arguments": {"tool_name": tool_name, "error_message": error_message},
-        }
+        arguments: InvalidArguments = InvalidArguments(tool_name=tool_name, error_message=error_message)
         expected: str = f'<skipped_invalid_tool_call tool_name="{tool_name}">\n<error>{error_message}</error>\n</skipped_invalid_tool_call>'
-        assert invalid(tool_call) == expected
+        assert invalid(arguments) == expected
 
     def test_unknown_tool_name(self) -> None:
         """Handle the unknown tool name scenario"""
         tool_name: str = "send_email"
         error_message: str = "Invalid tool call"
-        tool_call: InvalidToolCall = {
-            "tool_name": "invalid",
-            "arguments": {"tool_name": tool_name, "error_message": error_message},
-        }
+        arguments: InvalidArguments = InvalidArguments(tool_name=tool_name, error_message=error_message)
         expected: str = f'<skipped_invalid_tool_call tool_name="{tool_name}">\n<error>{error_message}</error>\n</skipped_invalid_tool_call>'
-        assert invalid(tool_call) == expected
+        assert invalid(arguments) == expected

@@ -31,7 +31,7 @@ def get_read_pdf_document_message(tool_call: ReadPdfDocumentToolCall) -> str:
     return f"Reading PDF document at **{tool_call['arguments']['location']}** (**{tool_call['arguments']['location_type']}**)"
 
 
-def read_pdf_document(location_type: str, location: str, tool_call_permission: bool = True, note: str = "") -> str:
+def read_pdf_document(arguments: ReadPdfDocumentArguments, tool_call_permission: bool = True, note: str = "") -> str:
     output_entries: list[str] = []
     if not tool_call_permission:
         output_entries.append("<error>PDF document reading manually denied by the user</error>")
@@ -41,11 +41,11 @@ def read_pdf_document(location_type: str, location: str, tool_call_permission: b
         content_type: str = ""
         raw_pdf_document_content: Any = None
         try:
-            if location_type == "web" or location.startswith(("http", "https")):
+            if arguments["location_type"] == "web" or arguments["location"].startswith(("http", "https")):
                 client: Client = Client(
                     impersonate=_IMPERSONATE_BROWSER, impersonate_os=_IMPERSONATE_OS, timeout=_REQUEST_TIMEOUT
                 )
-                response: Response = client.get(location)
+                response: Response = client.get(arguments["location"])
                 status_code = response.status_code
                 if status_code >= 200 and status_code <= 299:
                     raw_pdf_document_content = response.content
@@ -53,11 +53,11 @@ def read_pdf_document(location_type: str, location: str, tool_call_permission: b
                 else:
                     output_entries.append("<error>Could not fetch the PDF document</error>")
                     errored = True
-            elif location_type == "local":
-                with open(location, "rb") as pdf_document_file:
+            elif arguments["location_type"] == "local":
+                with open(arguments["location"], "rb") as pdf_document_file:
                     raw_pdf_document_content = pdf_document_file.read()
             else:
-                output_entries.append(f'<error>Invalid location_type "{location_type}"</error>')
+                output_entries.append(f'<error>Invalid location_type "{arguments["location_type"]}"</error>')
                 errored = True
         except Exception:
             output_entries.append("<error>Could not fetch the PDF document</error>")
@@ -95,4 +95,4 @@ def read_pdf_document(location_type: str, location: str, tool_call_permission: b
         if len(note) != 0:
             output_entries.insert(0, f"<note>{note}</note>")
     joined_output_entries: str = "\n".join(output_entries)
-    return f'<pdf_document_read location_type="{location_type}" location="{location}">\n{joined_output_entries}\n</pdf_document_read>'
+    return f'<pdf_document_read location_type="{arguments["location_type"]}" location="{arguments["location"]}">\n{joined_output_entries}\n</pdf_document_read>'

@@ -22,15 +22,15 @@ def get_execute_shell_command_message(tool_call: ExecuteShellCommandToolCall) ->
     return f"Executing shell command\n\n{command_content}"
 
 
-def execute_shell_command(command: str, tool_call_permission: bool = True) -> str:
+def execute_shell_command(arguments: ExecuteShellCommandArguments, tool_call_permission: bool = True) -> str:
     output_entries: list[str] = []
-    output_entries.append(f"<command>\n{command.strip()}\n</command>")
+    output_entries.append(f"<command>\n{arguments["command"].strip()}\n</command>")
     if not tool_call_permission:
         output_entries.append(
             "<error>Shell command execution manually denied by the user. The command was not executed</error>"
         )
     else:
-        command_execution_result: CompletedProcess[str] = run(command, shell=True, capture_output=True, text=True)
+        command_execution_result: CompletedProcess[str] = run(arguments["command"], shell=True, capture_output=True, text=True)
         trimmed_stdout = command_execution_result.stdout.strip()
         if len(trimmed_stdout) != 0:
             output_entries.append(f"<stdout>\n{trimmed_stdout}\n</stdout>")
