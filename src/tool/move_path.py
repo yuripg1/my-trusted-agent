@@ -16,11 +16,11 @@ class MovePathToolCall(BaseToolCall):
     arguments: Required[MovePathArguments]
 
 
-def get_move_path_message(tool_call: MovePathToolCall) -> str:
-    return f"Moving **{tool_call['arguments']['type']}** at **{tool_call['arguments']['source']}** to **{tool_call['arguments']['destination']}**"
+def get_move_path_message(arguments: MovePathArguments) -> str:
+    return f"Moving **{arguments['type']}** at **{arguments['source']}** to **{arguments['destination']}**"
 
 
-def get_move_path_permission(tool_call: MovePathToolCall) -> bool:
+def get_move_path_permission(arguments: MovePathArguments) -> bool:
     return False
 
 

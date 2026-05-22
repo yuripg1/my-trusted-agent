@@ -13,11 +13,11 @@ class InvalidToolCall(BaseToolCall):
     arguments: Required[InvalidArguments]
 
 
-def get_invalid_message(tool_call: InvalidToolCall) -> str:
-    return f"Skipping invalid tool call **{tool_call['arguments']['tool_name']}**"
+def get_invalid_message(arguments: InvalidArguments) -> str:
+    return f"Skipping invalid tool call **{arguments['tool_name']}**"
 
 
-def get_invalid_permission(tool_call: InvalidToolCall) -> bool:
+def get_invalid_permission(arguments: InvalidArguments) -> bool:
     return True
 
 

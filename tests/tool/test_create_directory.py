@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from tool.create_directory import (
     CreateDirectoryArguments,
-    CreateDirectoryToolCall,
     create_directory,
     get_create_directory_message,
     get_create_directory_permission,
@@ -15,8 +14,8 @@ class TestGetCreateDirectoryMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-        tool_call: CreateDirectoryToolCall = {"tool_name": "create_directory", "arguments": {"path": "/some/path"}}
-        assert get_create_directory_message(tool_call) == "Creating directory at **/some/path**"
+        arguments: CreateDirectoryArguments = {"path": "/some/path"}
+        assert get_create_directory_message(arguments) == "Creating directory at **/some/path**"
 
 
 class TestGetCreateDirectoryPermission:
@@ -24,8 +23,8 @@ class TestGetCreateDirectoryPermission:
 
     def test_auto_approved(self) -> None:
         """Permission should be automatically granted"""
-        tool_call: CreateDirectoryToolCall = {"tool_name": "create_directory", "arguments": {"path": "/some/path"}}
-        assert get_create_directory_permission(tool_call) is True
+        arguments: CreateDirectoryArguments = {"path": "/some/path"}
+        assert get_create_directory_permission(arguments) is True
 
 
 class TestCreateDirectory:

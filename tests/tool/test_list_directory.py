@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from tool.list_directory import (
     ListDirectoryArguments,
-    ListDirectoryToolCall,
     get_list_directory_message,
     get_list_directory_permission,
     list_directory,
@@ -15,8 +14,8 @@ class TestGetListDirectoryMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-        tool_call: ListDirectoryToolCall = {"tool_name": "list_directory", "arguments": {"path": "/some/dir"}}
-        assert get_list_directory_message(tool_call) == "Listing directory at **/some/dir**"
+        arguments: ListDirectoryArguments = {"path": "/some/dir"}
+        assert get_list_directory_message(arguments) == "Listing directory at **/some/dir**"
 
 
 class TestGetListDirectoryPermission:
@@ -24,8 +23,8 @@ class TestGetListDirectoryPermission:
 
     def test_auto_approved(self) -> None:
         """Permission should be automatically granted"""
-        tool_call: ListDirectoryToolCall = {"tool_name": "list_directory", "arguments": {"path": "/some/dir"}}
-        assert get_list_directory_permission(tool_call) is True
+        arguments: ListDirectoryArguments = {"path": "/some/dir"}
+        assert get_list_directory_permission(arguments) is True
 
 
 class TestListDirectory:

@@ -1,6 +1,5 @@
 from tool.invalid import (
     InvalidArguments,
-    InvalidToolCall,
     get_invalid_message,
     get_invalid_permission,
     invalid,
@@ -13,11 +12,8 @@ class TestGetInvalidMessage:
     def test_format(self) -> None:
         """Format the message correctly"""
         tool_name: str = "write_file"
-        tool_call: InvalidToolCall = {
-            "tool_name": "invalid",
-            "arguments": {"tool_name": tool_name, "error_message": "irrelevant"},
-        }
-        assert get_invalid_message(tool_call) == f"Skipping invalid tool call **{tool_name}**"
+        arguments: InvalidArguments = {"tool_name": tool_name, "error_message": "irrelevant"}
+        assert get_invalid_message(arguments) == f"Skipping invalid tool call **{tool_name}**"
 
 
 class TestGetInvalidPermission:
@@ -25,11 +21,8 @@ class TestGetInvalidPermission:
 
     def test_auto_approved(self) -> None:
         """Permission should be automatically granted since this is just an error report"""
-        tool_call: InvalidToolCall = {
-            "tool_name": "invalid",
-            "arguments": {"tool_name": "irrelevant", "error_message": "irrelevant"},
-        }
-        assert get_invalid_permission(tool_call) is True
+        arguments: InvalidArguments = {"tool_name": "irrelevant", "error_message": "irrelevant"}
+        assert get_invalid_permission(arguments) is True
 
 
 class TestExecuteInvalid:

@@ -15,17 +15,17 @@ class WriteFileToolCall(BaseToolCall):
     arguments: Required[WriteFileArguments]
 
 
-def get_write_file_permission(tool_call: WriteFileToolCall) -> bool:
+def get_write_file_permission(arguments: WriteFileArguments) -> bool:
     return False
 
 
-def get_write_file_message(tool_call: WriteFileToolCall) -> str:
-    write_path: str = tool_call["arguments"]["path"]
-    write_mode: str = tool_call["arguments"]["mode"]
+def get_write_file_message(arguments: WriteFileArguments) -> str:
+    write_path: str = arguments["path"]
+    write_mode: str = arguments["mode"]
     write_info_string: str = ""
     if write_mode in ["create_or_overwrite", "create_if_not_exists"]:
         write_info_string = get_language_from_filename(write_path)
-    write_formatted_content: str = make_safe_code_fence(tool_call["arguments"]["content"], write_info_string)
+    write_formatted_content: str = make_safe_code_fence(arguments["content"], write_info_string)
     return f"Writing file at **{write_path}** (**{write_mode}** mode)\n\n{write_formatted_content}"
 
 

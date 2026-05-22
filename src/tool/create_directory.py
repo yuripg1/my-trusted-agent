@@ -13,11 +13,11 @@ class CreateDirectoryToolCall(BaseToolCall):
     arguments: Required[CreateDirectoryArguments]
 
 
-def get_create_directory_message(tool_call: CreateDirectoryToolCall) -> str:
-    return f"Creating directory at **{tool_call['arguments']['path']}**"
+def get_create_directory_message(arguments: CreateDirectoryArguments) -> str:
+    return f"Creating directory at **{arguments['path']}**"
 
 
-def get_create_directory_permission(tool_call: CreateDirectoryToolCall) -> bool:
+def get_create_directory_permission(arguments: CreateDirectoryArguments) -> bool:
     return True
 
 

@@ -2,7 +2,6 @@ from unittest.mock import MagicMock, patch
 
 from tool.search_web import (
     SearchWebArguments,
-    SearchWebToolCall,
     get_search_web_message,
     get_search_web_permission,
     search_web,
@@ -14,11 +13,8 @@ class TestGetSearchWebMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-        tool_call: SearchWebToolCall = {
-            "tool_name": "search_web",
-            "arguments": {"query": "python", "max_results_per_page": 10, "results_page_number": 2},
-        }
-        assert get_search_web_message(tool_call) == "Searching the web for **python** (**10** results - page **2**)"
+        arguments: SearchWebArguments = {"query": "python", "max_results_per_page": 10, "results_page_number": 2}
+        assert get_search_web_message(arguments) == "Searching the web for **python** (**10** results - page **2**)"
 
 
 class TestGetSearchWebPermission:
@@ -26,11 +22,8 @@ class TestGetSearchWebPermission:
 
     def test_auto_approved(self) -> None:
         """Permission should be automatically granted"""
-        tool_call: SearchWebToolCall = {
-            "tool_name": "search_web",
-            "arguments": {"query": "python", "max_results_per_page": 10, "results_page_number": 2},
-        }
-        assert get_search_web_permission(tool_call) is True
+        arguments: SearchWebArguments = {"query": "python", "max_results_per_page": 10, "results_page_number": 2}
+        assert get_search_web_permission(arguments) is True
 
 
 class TestSearchWeb:

@@ -22,11 +22,11 @@ _IMPERSONATE_OS: str = "random"
 _REQUEST_TIMEOUT: int = 300
 
 
-def get_read_web_page_message(tool_call: ReadWebPageToolCall) -> str:
-    return f"Reading web site at **{tool_call['arguments']['url']}**"
+def get_read_web_page_message(arguments: ReadWebPageArguments) -> str:
+    return f"Reading web site at **{arguments['url']}**"
 
 
-def get_read_web_page_permission(tool_call: ReadWebPageToolCall) -> bool:
+def get_read_web_page_permission(arguments: ReadWebPageArguments) -> bool:
     return True
 
 

@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from tool.delete_path import (
     DeletePathArguments,
-    DeletePathToolCall,
     delete_path,
     get_delete_path_message,
     get_delete_path_permission,
@@ -15,11 +14,8 @@ class TestGetDeletePathMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-        tool_call: DeletePathToolCall = {
-            "tool_name": "delete_path",
-            "arguments": {"type": "file", "path": "/some/file.txt"},
-        }
-        assert get_delete_path_message(tool_call) == "Deleting **/some/file.txt** (**file**)"
+        arguments: DeletePathArguments = {"type": "file", "path": "/some/file.txt"}
+        assert get_delete_path_message(arguments) == "Deleting **/some/file.txt** (**file**)"
 
 
 class TestGetDeletePathPermission:
@@ -27,11 +23,8 @@ class TestGetDeletePathPermission:
 
     def test_requires_approval(self) -> None:
         """Permission should require user approval"""
-        tool_call: DeletePathToolCall = {
-            "tool_name": "delete_path",
-            "arguments": {"type": "file", "path": "/some/file.txt"},
-        }
-        assert get_delete_path_permission(tool_call) is False
+        arguments: DeletePathArguments = {"type": "file", "path": "/some/file.txt"}
+        assert get_delete_path_permission(arguments) is False
 
 
 class TestDeletePath:

@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from tool.read_file import (
     ReadFileArguments,
-    ReadFileToolCall,
     get_read_file_message,
     get_read_file_permission,
     read_file,
@@ -15,32 +14,23 @@ class TestGetReadFileMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-        tool_call: ReadFileToolCall = {"tool_name": "read_file", "arguments": {"path": "/some/file.txt"}}
-        assert get_read_file_message(tool_call) == "Reading file at **/some/file.txt**"
+        arguments: ReadFileArguments = {"path": "/some/file.txt"}
+        assert get_read_file_message(arguments) == "Reading file at **/some/file.txt**"
 
     def test_format_with_start_line(self) -> None:
         """Format the message with a start line"""
-        tool_call: ReadFileToolCall = {
-            "tool_name": "read_file",
-            "arguments": {"path": "/some/file.txt", "start_line": 5},
-        }
-        assert get_read_file_message(tool_call) == "Reading file at **/some/file.txt** (from line **5**)"
+        arguments: ReadFileArguments = {"path": "/some/file.txt", "start_line": 5}
+        assert get_read_file_message(arguments) == "Reading file at **/some/file.txt** (from line **5**)"
 
     def test_format_with_end_line(self) -> None:
         """Format the message with an end line"""
-        tool_call: ReadFileToolCall = {
-            "tool_name": "read_file",
-            "arguments": {"path": "/some/file.txt", "end_line": 10},
-        }
-        assert get_read_file_message(tool_call) == "Reading file at **/some/file.txt** (up to line **10**)"
+        arguments: ReadFileArguments = {"path": "/some/file.txt", "end_line": 10}
+        assert get_read_file_message(arguments) == "Reading file at **/some/file.txt** (up to line **10**)"
 
     def test_format_with_both(self) -> None:
         """Format the message with both start and end lines"""
-        tool_call: ReadFileToolCall = {
-            "tool_name": "read_file",
-            "arguments": {"path": "/some/file.txt", "start_line": 5, "end_line": 10},
-        }
-        assert get_read_file_message(tool_call) == "Reading file at **/some/file.txt** (lines **5** to **10**)"
+        arguments: ReadFileArguments = {"path": "/some/file.txt", "start_line": 5, "end_line": 10}
+        assert get_read_file_message(arguments) == "Reading file at **/some/file.txt** (lines **5** to **10**)"
 
 
 class TestGetReadFilePermission:
@@ -48,8 +38,8 @@ class TestGetReadFilePermission:
 
     def test_requires_approval(self) -> None:
         """Permission should require user approval"""
-        tool_call: ReadFileToolCall = {"tool_name": "read_file", "arguments": {"path": "/some/file.txt"}}
-        assert get_read_file_permission(tool_call) is False
+        arguments: ReadFileArguments = {"path": "/some/file.txt"}
+        assert get_read_file_permission(arguments) is False
 
 
 class TestReadFile:

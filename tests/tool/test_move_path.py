@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from tool.move_path import (
     MovePathArguments,
-    MovePathToolCall,
     get_move_path_message,
     get_move_path_permission,
     move_path,
@@ -15,11 +14,8 @@ class TestGetMovePathMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-        tool_call: MovePathToolCall = {
-            "tool_name": "move_path",
-            "arguments": {"type": "file", "source": "/old/path.txt", "destination": "/new/path.txt"},
-        }
-        assert get_move_path_message(tool_call) == "Moving **file** at **/old/path.txt** to **/new/path.txt**"
+        arguments: MovePathArguments = {"type": "file", "source": "/old/path.txt", "destination": "/new/path.txt"}
+        assert get_move_path_message(arguments) == "Moving **file** at **/old/path.txt** to **/new/path.txt**"
 
 
 class TestGetMovePathPermission:
@@ -27,11 +23,8 @@ class TestGetMovePathPermission:
 
     def test_requires_approval(self) -> None:
         """Permission should require user approval"""
-        tool_call: MovePathToolCall = {
-            "tool_name": "move_path",
-            "arguments": {"type": "file", "source": "/old/path.txt", "destination": "/new/path.txt"},
-        }
-        assert get_move_path_permission(tool_call) is False
+        arguments: MovePathArguments = {"type": "file", "source": "/old/path.txt", "destination": "/new/path.txt"}
+        assert get_move_path_permission(arguments) is False
 
 
 class TestMovePath:

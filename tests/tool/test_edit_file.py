@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 from tool.edit_file import (
     EditFileArguments,
-    EditFileToolCall,
     edit_file,
     get_edit_file_message,
     get_edit_file_permission,
@@ -16,16 +15,13 @@ class TestGetEditFileMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-        tool_call: EditFileToolCall = {
-            "tool_name": "edit_file",
-            "arguments": {
-                "path": "/path/file.txt",
-                "search_for": "hello",
-                "replace_with": "goodbye",
-                "number_of_substitutions": 1,
-            },
+        arguments: EditFileArguments = {
+            "path": "/path/file.txt",
+            "search_for": "hello",
+            "replace_with": "goodbye",
+            "number_of_substitutions": 1,
         }
-        result: str = get_edit_file_message(tool_call)
+        result: str = get_edit_file_message(arguments)
         assert result.startswith("Editing file at **/path/file.txt** (**1** substitutions)\n\n```diff")
         assert result.endswith("```")
 
@@ -35,16 +31,13 @@ class TestGetEditFilePermission:
 
     def test_requires_approval(self) -> None:
         """Permission should require user approval"""
-        tool_call: EditFileToolCall = {
-            "tool_name": "edit_file",
-            "arguments": {
-                "path": "/path/file.txt",
-                "search_for": "hello",
-                "replace_with": "goodbye",
-                "number_of_substitutions": 1,
-            },
+        arguments: EditFileArguments = {
+            "path": "/path/file.txt",
+            "search_for": "hello",
+            "replace_with": "goodbye",
+            "number_of_substitutions": 1,
         }
-        assert get_edit_file_permission(tool_call) is False
+        assert get_edit_file_permission(arguments) is False
 
 
 class TestEditFile:

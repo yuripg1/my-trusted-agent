@@ -23,12 +23,12 @@ _IMPERSONATE_OS: str = "random"
 _REQUEST_TIMEOUT: int = 300
 
 
-def get_read_pdf_document_permission(tool_call: ReadPdfDocumentToolCall) -> bool:
-    return tool_call["arguments"]["location_type"] == "web"
+def get_read_pdf_document_permission(arguments: ReadPdfDocumentArguments) -> bool:
+    return arguments["location_type"] == "web"
 
 
-def get_read_pdf_document_message(tool_call: ReadPdfDocumentToolCall) -> str:
-    return f"Reading PDF document at **{tool_call['arguments']['location']}** (**{tool_call['arguments']['location_type']}**)"
+def get_read_pdf_document_message(arguments: ReadPdfDocumentArguments) -> str:
+    return f"Reading PDF document at **{arguments['location']}** (**{arguments['location_type']}**)"
 
 
 def read_pdf_document(arguments: ReadPdfDocumentArguments, tool_call_permission: bool = True, note: str = "") -> str:

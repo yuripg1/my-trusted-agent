@@ -14,20 +14,20 @@ class ReadFileToolCall(BaseToolCall):
     arguments: Required[ReadFileArguments]
 
 
-def get_read_file_message(tool_call: ReadFileToolCall) -> str:
-    start_line = tool_call["arguments"].get("start_line")
-    end_line = tool_call["arguments"].get("end_line")
+def get_read_file_message(arguments: ReadFileArguments) -> str:
+    start_line = arguments.get("start_line")
+    end_line = arguments.get("end_line")
     if start_line is not None and end_line is not None:
-        return f"Reading file at **{tool_call['arguments']['path']}** (lines **{start_line}** to **{end_line}**)"
+        return f"Reading file at **{arguments['path']}** (lines **{start_line}** to **{end_line}**)"
     elif start_line is not None:
-        return f"Reading file at **{tool_call['arguments']['path']}** (from line **{start_line}**)"
+        return f"Reading file at **{arguments['path']}** (from line **{start_line}**)"
     elif end_line is not None:
-        return f"Reading file at **{tool_call['arguments']['path']}** (up to line **{end_line}**)"
+        return f"Reading file at **{arguments['path']}** (up to line **{end_line}**)"
     else:
-        return f"Reading file at **{tool_call['arguments']['path']}**"
+        return f"Reading file at **{arguments['path']}**"
 
 
-def get_read_file_permission(tool_call: ReadFileToolCall) -> bool:
+def get_read_file_permission(arguments: ReadFileArguments) -> bool:
     return False
 
 

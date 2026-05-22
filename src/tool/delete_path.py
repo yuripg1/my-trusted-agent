@@ -14,11 +14,11 @@ class DeletePathToolCall(BaseToolCall):
     arguments: Required[DeletePathArguments]
 
 
-def get_delete_path_message(tool_call: DeletePathToolCall) -> str:
-    return f"Deleting **{tool_call['arguments']['path']}** (**{tool_call['arguments']['type']}**)"
+def get_delete_path_message(arguments: DeletePathArguments) -> str:
+    return f"Deleting **{arguments['path']}** (**{arguments['type']}**)"
 
 
-def get_delete_path_permission(tool_call: DeletePathToolCall) -> bool:
+def get_delete_path_permission(arguments: DeletePathArguments) -> bool:
     return False
 
 

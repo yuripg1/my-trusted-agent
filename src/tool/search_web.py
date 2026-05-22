@@ -21,18 +21,18 @@ _TIMEOUT: int = 300
 _SAFESEARCH: str = "off"
 
 
-def get_search_web_message(tool_call: SearchWebToolCall) -> str:
-    return f"Searching the web for **{tool_call['arguments']['query']}** (**{tool_call['arguments']['max_results_per_page']}** results - page **{tool_call['arguments'].get('results_page_number', 1)}**)"
+def get_search_web_message(arguments: SearchWebArguments) -> str:
+    return f"Searching the web for **{arguments['query']}** (**{arguments['max_results_per_page']}** results - page **{arguments.get('results_page_number', 1)}**)"
 
 
-def get_search_web_permission(tool_call: SearchWebToolCall) -> bool:
+def get_search_web_permission(arguments: SearchWebArguments) -> bool:
     return True
 
 
 def search_web(arguments: SearchWebArguments) -> str:
     output_entries: list[str] = []
     results_page_number: int = arguments.get("results_page_number", 1)
-    output_entries.append(f"<query>{arguments["query"]}</query>")
+    output_entries.append(f"<query>{arguments['query']}</query>")
     if arguments["max_results_per_page"] < 1:
         output_entries.append('<error>"max_results_per_page" must be greater than or equal to 1</error>')
     elif arguments["max_results_per_page"] > 10:
@@ -44,14 +44,19 @@ def search_web(arguments: SearchWebArguments) -> str:
         with suppress(Exception):
             raw_search_results = list(
                 DDGS(timeout=_TIMEOUT).text(
-                    query=arguments["query"], safesearch=_SAFESEARCH, max_results=arguments["max_results_per_page"], page=results_page_number
+                    query=arguments["query"],
+                    safesearch=_SAFESEARCH,
+                    max_results=arguments["max_results_per_page"],
+                    page=results_page_number,
                 )
             )
         if len(raw_search_results) == 0:
             output_entries.append("<error>No search results found</error>")
         else:
             for page_result_number, search_result_data in enumerate(raw_search_results, 1):
-                search_result_number: int = ((results_page_number - 1) * arguments["max_results_per_page"]) + page_result_number
+                search_result_number: int = (
+                    (results_page_number - 1) * arguments["max_results_per_page"]
+                ) + page_result_number
                 output_entries.append(
                     f'<search_result result_number="{search_result_number}">\n<title>{str(search_result_data["title"]).strip()}</title>\n<href>{str(search_result_data["href"]).strip()}</href>\n<snippet>\n{str(search_result_data["body"]).strip()}\n</snippet>\n</search_result>'
                 )

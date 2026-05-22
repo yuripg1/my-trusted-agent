@@ -5,7 +5,6 @@ from reportlab.pdfgen import canvas as pdf_canvas
 
 from tool.read_pdf_document import (
     ReadPdfDocumentArguments,
-    ReadPdfDocumentToolCall,
     get_read_pdf_document_message,
     get_read_pdf_document_permission,
     read_pdf_document,
@@ -28,12 +27,9 @@ class TestGetReadPdfDocumentMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-        tool_call: ReadPdfDocumentToolCall = {
-            "tool_name": "read_pdf_document",
-            "arguments": {"location_type": "web", "location": "https://example.com/doc.pdf"},
-        }
+        arguments: ReadPdfDocumentArguments = {"location_type": "web", "location": "https://example.com/doc.pdf"}
         assert (
-            get_read_pdf_document_message(tool_call)
+            get_read_pdf_document_message(arguments)
             == "Reading PDF document at **https://example.com/doc.pdf** (**web**)"
         )
 
@@ -43,19 +39,13 @@ class TestGetReadPdfDocumentPermission:
 
     def test_web_auto_approved(self) -> None:
         """Permission should be granted for web PDFs"""
-        tool_call: ReadPdfDocumentToolCall = {
-            "tool_name": "read_pdf_document",
-            "arguments": {"location_type": "web", "location": "https://example.com/doc.pdf"},
-        }
-        assert get_read_pdf_document_permission(tool_call) is True
+        arguments: ReadPdfDocumentArguments = {"location_type": "web", "location": "https://example.com/doc.pdf"}
+        assert get_read_pdf_document_permission(arguments) is True
 
     def test_local_requires_approval(self) -> None:
         """Permission should require user approval for local PDFs"""
-        tool_call: ReadPdfDocumentToolCall = {
-            "tool_name": "read_pdf_document",
-            "arguments": {"location_type": "local", "location": "/path/to/doc.pdf"},
-        }
-        assert get_read_pdf_document_permission(tool_call) is False
+        arguments: ReadPdfDocumentArguments = {"location_type": "local", "location": "/path/to/doc.pdf"}
+        assert get_read_pdf_document_permission(arguments) is False
 
 
 class TestReadPdfDocument:

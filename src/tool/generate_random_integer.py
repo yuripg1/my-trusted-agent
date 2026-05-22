@@ -14,11 +14,11 @@ class GenerateRandomIntegerToolCall(BaseToolCall):
     arguments: Required[GenerateRandomIntegerArguments]
 
 
-def get_generate_random_integer_message(tool_call: GenerateRandomIntegerToolCall) -> str:
-    return f"Generating a random integer between **{tool_call['arguments']['min']}** and **{tool_call['arguments']['max']}**"
+def get_generate_random_integer_message(arguments: GenerateRandomIntegerArguments) -> str:
+    return f"Generating a random integer between **{arguments['min']}** and **{arguments['max']}**"
 
 
-def get_generate_random_integer_permission(tool_call: GenerateRandomIntegerToolCall) -> bool:
+def get_generate_random_integer_permission(arguments: GenerateRandomIntegerArguments) -> bool:
     return True
 
 

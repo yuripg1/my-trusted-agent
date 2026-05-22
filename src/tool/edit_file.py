@@ -16,14 +16,14 @@ class EditFileToolCall(BaseToolCall):
     arguments: Required[EditFileArguments]
 
 
-def get_edit_file_permission(tool_call: EditFileToolCall) -> bool:
+def get_edit_file_permission(arguments: EditFileArguments) -> bool:
     return False
 
 
-def get_edit_file_message(tool_call: EditFileToolCall) -> str:
-    search_for_text: str = tool_call["arguments"]["search_for"]
-    replace_with_text: str = tool_call["arguments"]["replace_with"]
-    file_path: str = tool_call["arguments"]["path"]
+def get_edit_file_message(arguments: EditFileArguments) -> str:
+    search_for_text: str = arguments["search_for"]
+    replace_with_text: str = arguments["replace_with"]
+    file_path: str = arguments["path"]
     diff_lines: list[str] = list(
         unified_diff(
             search_for_text.splitlines(),
@@ -34,7 +34,7 @@ def get_edit_file_message(tool_call: EditFileToolCall) -> str:
         )
     )
     edit_content: str = make_safe_code_fence("\n".join(diff_lines), "diff")
-    return f"Editing file at **{tool_call['arguments']['path']}** (**{tool_call['arguments']['number_of_substitutions']}** substitutions)\n\n{edit_content}"
+    return f"Editing file at **{arguments['path']}** (**{arguments['number_of_substitutions']}** substitutions)\n\n{edit_content}"
 
 
 def edit_file(arguments: EditFileArguments, tool_call_permission: bool = True) -> str:

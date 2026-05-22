@@ -115,7 +115,7 @@ class DeepSeekAi:
             new_generic_message: DeepSeekMessage = {"role": role, "content": trimmed_content}
             if len(trimmed_reasoning_content) != 0:
                 new_generic_message["reasoning_content"] = trimmed_reasoning_content
-            if tool_calls is not None:
+            if tool_calls is not None and len(tool_calls) != 0:
                 new_generic_message["tool_calls"] = tool_calls
             messages.append(new_generic_message)
         elif role == "tool":
@@ -158,7 +158,7 @@ class DeepSeekAi:
     def add_tool_call(self, messages: list[DeepSeekMessage], tool_call: ToolCall, tool_call_output: str) -> None:
         trimmed_tool_call_output: str = tool_call_output.strip()
         if len(trimmed_tool_call_output) != 0:
-            self._add_to_messages(messages, "tool", trimmed_tool_call_output, "", [], tool_call["id"])
+            self._add_to_messages(messages, "tool", trimmed_tool_call_output, tool_call_id=tool_call["id"])
 
     def request_assistant_reply(
         self, messages: list[DeepSeekMessage], tools: list[DeepSeekTool], attempt_number: int = 1
@@ -200,7 +200,7 @@ class DeepSeekAi:
                         ),
                     )
                 )
-            self._add_to_messages(messages, "assistant", content, reasoning_content, tool_calls)
+            self._add_to_messages(messages, "assistant", content, reasoning_content, tool_calls=tool_calls)
             return total_tokens
         elif attempt_number < _API_MAX_ATTEMPTS and (
             response is None

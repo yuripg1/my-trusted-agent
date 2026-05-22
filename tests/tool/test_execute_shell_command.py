@@ -1,6 +1,5 @@
 from tool.execute_shell_command import (
     ExecuteShellCommandArguments,
-    ExecuteShellCommandToolCall,
     execute_shell_command,
     get_execute_shell_command_message,
     get_execute_shell_command_permission,
@@ -12,11 +11,8 @@ class TestGetExecuteShellCommandMessage:
 
     def test_format(self) -> None:
         """Format the message correctly"""
-        tool_call: ExecuteShellCommandToolCall = {
-            "tool_name": "execute_shell_command",
-            "arguments": {"command": "echo hello"},
-        }
-        result: str = get_execute_shell_command_message(tool_call)
+        arguments: ExecuteShellCommandArguments = {"command": "echo hello"}
+        result: str = get_execute_shell_command_message(arguments)
         assert result == "Executing shell command\n\n```shell\n$ echo hello\n```"
 
 
@@ -25,11 +21,8 @@ class TestGetExecuteShellCommandPermission:
 
     def test_requires_approval(self) -> None:
         """Permission should require user approval"""
-        tool_call: ExecuteShellCommandToolCall = {
-            "tool_name": "execute_shell_command",
-            "arguments": {"command": "echo hello"},
-        }
-        assert get_execute_shell_command_permission(tool_call) is False
+        arguments: ExecuteShellCommandArguments = {"command": "echo hello"}
+        assert get_execute_shell_command_permission(arguments) is False
 
 
 class TestExecuteShellCommand:

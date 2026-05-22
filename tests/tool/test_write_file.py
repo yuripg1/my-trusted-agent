@@ -3,7 +3,6 @@ from unittest.mock import patch
 
 from tool.write_file import (
     WriteFileArguments,
-    WriteFileToolCall,
     get_write_file_message,
     get_write_file_permission,
     write_file,
@@ -18,11 +17,8 @@ class TestGetWriteFileMessage:
         path: str = "/path/main.py"
         mode: str = "create_or_overwrite"
         content: str = "print('hello')"
-        tool_call: WriteFileToolCall = {
-            "tool_name": "write_file",
-            "arguments": {"path": path, "mode": mode, "content": content},
-        }
-        result: str = get_write_file_message(tool_call)
+        arguments: WriteFileArguments = {"path": path, "mode": mode, "content": content}
+        result: str = get_write_file_message(arguments)
         assert result == f"Writing file at **{path}** (**{mode}** mode)\n\n```python\n{content}\n```"
 
     def test_format_append(self) -> None:
@@ -30,11 +26,8 @@ class TestGetWriteFileMessage:
         path: str = "/path/data.txt"
         mode: str = "append"
         content: str = "new line"
-        tool_call: WriteFileToolCall = {
-            "tool_name": "write_file",
-            "arguments": {"path": "/path/data.txt", "mode": "append", "content": "new line"},
-        }
-        result: str = get_write_file_message(tool_call)
+        arguments: WriteFileArguments = {"path": path, "mode": mode, "content": content}
+        result: str = get_write_file_message(arguments)
         assert result == f"Writing file at **{path}** (**{mode}** mode)\n\n```\n{content}\n```"
 
     def test_format_create_if_not_exists(self) -> None:
@@ -42,11 +35,8 @@ class TestGetWriteFileMessage:
         path: str = "/path/script.js"
         mode: str = "create_if_not_exists"
         content: str = "console.log('hello')"
-        tool_call: WriteFileToolCall = {
-            "tool_name": "write_file",
-            "arguments": {"path": path, "mode": mode, "content": content},
-        }
-        result: str = get_write_file_message(tool_call)
+        arguments: WriteFileArguments = {"path": path, "mode": mode, "content": content}
+        result: str = get_write_file_message(arguments)
         assert result == f"Writing file at **{path}** (**{mode}** mode)\n\n```javascript\n{content}\n```"
 
 
@@ -55,11 +45,8 @@ class TestGetWriteFilePermission:
 
     def test_requires_approval(self) -> None:
         """Permission should require user approval"""
-        tool_call: WriteFileToolCall = {
-            "tool_name": "write_file",
-            "arguments": {"path": "/path/file.txt", "mode": "create_or_overwrite", "content": "content"},
-        }
-        assert get_write_file_permission(tool_call) is False
+        arguments: WriteFileArguments = {"path": "/path/file.txt", "mode": "create_or_overwrite", "content": "content"}
+        assert get_write_file_permission(arguments) is False
 
 
 class TestWriteFile:

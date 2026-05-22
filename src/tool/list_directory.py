@@ -17,11 +17,11 @@ class ListDirectoryToolCall(BaseToolCall):
 _MAX_COMPRESSION_DEPTH: int = 10
 
 
-def get_list_directory_message(tool_call: ListDirectoryToolCall) -> str:
-    return f"Listing directory at **{tool_call['arguments']['path']}**"
+def get_list_directory_message(arguments: ListDirectoryArguments) -> str:
+    return f"Listing directory at **{arguments['path']}**"
 
 
-def get_list_directory_permission(tool_call: ListDirectoryToolCall) -> bool:
+def get_list_directory_permission(arguments: ListDirectoryArguments) -> bool:
     return True
 
 

@@ -76,31 +76,31 @@ def get_individual_tool_call_message(tool_call: ToolCall) -> str:
     with suppress(Exception):
         tool_name = tool_call["tool_name"]
         if tool_call["tool_name"] == "create_directory":
-            return get_create_directory_message(tool_call)
+            return get_create_directory_message(tool_call["arguments"])
         elif tool_call["tool_name"] == "delete_path":
-            return get_delete_path_message(tool_call)
+            return get_delete_path_message(tool_call["arguments"])
         elif tool_call["tool_name"] == "edit_file":
-            return get_edit_file_message(tool_call)
+            return get_edit_file_message(tool_call["arguments"])
         elif tool_call["tool_name"] == "execute_shell_command":
-            return get_execute_shell_command_message(tool_call)
+            return get_execute_shell_command_message(tool_call["arguments"])
         elif tool_call["tool_name"] == "generate_random_integer":
-            return get_generate_random_integer_message(tool_call)
+            return get_generate_random_integer_message(tool_call["arguments"])
         elif tool_call["tool_name"] == "invalid":
-            return get_invalid_message(tool_call)
+            return get_invalid_message(tool_call["arguments"])
         elif tool_call["tool_name"] == "list_directory":
-            return get_list_directory_message(tool_call)
+            return get_list_directory_message(tool_call["arguments"])
         elif tool_call["tool_name"] == "move_path":
-            return get_move_path_message(tool_call)
+            return get_move_path_message(tool_call["arguments"])
         elif tool_call["tool_name"] == "read_file":
-            return get_read_file_message(tool_call)
+            return get_read_file_message(tool_call["arguments"])
         elif tool_call["tool_name"] == "read_pdf_document":
-            return get_read_pdf_document_message(tool_call)
+            return get_read_pdf_document_message(tool_call["arguments"])
         elif tool_call["tool_name"] == "read_web_page":
-            return get_read_web_page_message(tool_call)
+            return get_read_web_page_message(tool_call["arguments"])
         elif tool_call["tool_name"] == "search_web":
-            return get_search_web_message(tool_call)
+            return get_search_web_message(tool_call["arguments"])
         elif tool_call["tool_name"] == "write_file":
-            return get_write_file_message(tool_call)
+            return get_write_file_message(tool_call["arguments"])
     if len(tool_name) != 0:
         return f'Error on "{tool_name}"'
     return "Error"
@@ -116,31 +116,31 @@ def get_group_tool_call_messages(tool_calls: list[ToolCall]) -> list[str]:
 def get_individual_tool_call_permission(tool_call: ToolCall) -> bool:
     with suppress(Exception):
         if tool_call["tool_name"] == "create_directory":
-            return get_create_directory_permission(tool_call)
+            return get_create_directory_permission(tool_call["arguments"])
         elif tool_call["tool_name"] == "delete_path":
-            return get_delete_path_permission(tool_call)
+            return get_delete_path_permission(tool_call["arguments"])
         elif tool_call["tool_name"] == "edit_file":
-            return get_edit_file_permission(tool_call)
+            return get_edit_file_permission(tool_call["arguments"])
         elif tool_call["tool_name"] == "execute_shell_command":
-            return get_execute_shell_command_permission(tool_call)
+            return get_execute_shell_command_permission(tool_call["arguments"])
         elif tool_call["tool_name"] == "generate_random_integer":
-            return get_generate_random_integer_permission(tool_call)
+            return get_generate_random_integer_permission(tool_call["arguments"])
         elif tool_call["tool_name"] == "invalid":
-            return get_invalid_permission(tool_call)
+            return get_invalid_permission(tool_call["arguments"])
         elif tool_call["tool_name"] == "list_directory":
-            return get_list_directory_permission(tool_call)
+            return get_list_directory_permission(tool_call["arguments"])
         elif tool_call["tool_name"] == "move_path":
-            return get_move_path_permission(tool_call)
+            return get_move_path_permission(tool_call["arguments"])
         elif tool_call["tool_name"] == "read_file":
-            return get_read_file_permission(tool_call)
+            return get_read_file_permission(tool_call["arguments"])
         elif tool_call["tool_name"] == "read_pdf_document":
-            return get_read_pdf_document_permission(tool_call)
+            return get_read_pdf_document_permission(tool_call["arguments"])
         elif tool_call["tool_name"] == "read_web_page":
-            return get_read_web_page_permission(tool_call)
+            return get_read_web_page_permission(tool_call["arguments"])
         elif tool_call["tool_name"] == "search_web":
-            return get_search_web_permission(tool_call)
+            return get_search_web_permission(tool_call["arguments"])
         elif tool_call["tool_name"] == "write_file":
-            return get_write_file_permission(tool_call)
+            return get_write_file_permission(tool_call["arguments"])
     return False
 
 
