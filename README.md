@@ -72,7 +72,7 @@ The AI agent has access to tools, but not all are equally dangerous. The permiss
 - Reading local PDF documents
 - Writing files
 
-When a tool requires approval, the AI shows you the exact action it intends to take and waits for you to press **Enter** to confirm. You can interrupt at any time with `Ctrl+C` to deny the action.
+When a tool requires approval, the AI shows you the exact action it intends to take and waits for you to press `Enter` to confirm. You can interrupt at any time with `Ctrl+C` to deny the action.
 
 ---
 
@@ -118,3 +118,11 @@ bash ./run.sh
 | `format.sh` | Auto-format the source code |
 | `lint.sh` | Run type checking and linting |
 | `test.sh` | Run the test suite with coverage report |
+
+---
+
+## Demos
+
+![Code demo](img/code_demo.gif)
+
+![Research demo](img/research_demo.gif)
