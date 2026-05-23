@@ -7,6 +7,7 @@ from tool.read_pdf_document import (
     ReadPdfDocumentArguments,
     get_read_pdf_document_message,
     get_read_pdf_document_permission,
+    get_read_pdf_document_read_path,
     read_pdf_document,
 )
 
@@ -40,12 +41,64 @@ class TestGetReadPdfDocumentPermission:
     def test_web_auto_approved(self) -> None:
         """Permission should be granted for web PDFs"""
         arguments: ReadPdfDocumentArguments = {"location_type": "web", "location": "https://example.com/doc.pdf"}
-        assert get_read_pdf_document_permission(arguments) is True
+        assert get_read_pdf_document_permission(arguments, []) is True
 
     def test_local_requires_approval(self) -> None:
-        """Permission should require user approval for local PDFs"""
+        """Permission should require user approval for local PDFs when not in allowlist"""
         arguments: ReadPdfDocumentArguments = {"location_type": "local", "location": "/path/to/doc.pdf"}
-        assert get_read_pdf_document_permission(arguments) is False
+        assert get_read_pdf_document_permission(arguments, []) is False
+
+    def test_local_path_in_allowlist(self) -> None:
+        """Return True for a local PDF when the path is in the session allowlist"""
+        arguments: ReadPdfDocumentArguments = {"location_type": "local", "location": "/path/to/doc.pdf"}
+        session_read_allowlist: list[str] = ["/path/to/doc.pdf"]
+        assert get_read_pdf_document_permission(arguments, session_read_allowlist=session_read_allowlist) is True
+
+    def test_local_path_not_in_allowlist(self) -> None:
+        """Return False for a local PDF when the path is not in the session allowlist"""
+        arguments: ReadPdfDocumentArguments = {"location_type": "local", "location": "/path/to/doc.pdf"}
+        session_read_allowlist: list[str] = ["/other/doc.pdf"]
+        assert get_read_pdf_document_permission(arguments, session_read_allowlist=session_read_allowlist) is False
+
+    def test_web_auto_approved_regardless_of_allowlist(self) -> None:
+        """Return True for web PDFs even when the path is not in the allowlist"""
+        arguments: ReadPdfDocumentArguments = {"location_type": "web", "location": "https://example.com/doc.pdf"}
+        session_read_allowlist: list[str] = []
+        assert get_read_pdf_document_permission(arguments, session_read_allowlist=session_read_allowlist) is True
+
+    def test_empty_allowlist_for_local(self) -> None:
+        """Return False for a local PDF when the session allowlist is empty"""
+        arguments: ReadPdfDocumentArguments = {"location_type": "local", "location": "/path/to/doc.pdf"}
+        session_read_allowlist: list[str] = []
+        assert get_read_pdf_document_permission(arguments, session_read_allowlist=session_read_allowlist) is False
+
+
+class TestGetReadPdfDocumentReadPath:
+    """Tests for the `get_read_pdf_document_read_path` function"""
+
+    def test_permission_granted_local(self) -> None:
+        """Return the path for a local PDF when permission was granted"""
+        arguments: ReadPdfDocumentArguments = {"location_type": "local", "location": "/path/to/doc.pdf"}
+        result: str | None = get_read_pdf_document_read_path(arguments, tool_call_permission=True)
+        assert result == "/path/to/doc.pdf"
+
+    def test_permission_denied_local(self) -> None:
+        """Return None for a local PDF when permission was denied"""
+        arguments: ReadPdfDocumentArguments = {"location_type": "local", "location": "/path/to/doc.pdf"}
+        result: str | None = get_read_pdf_document_read_path(arguments, tool_call_permission=False)
+        assert result is None
+
+    def test_permission_granted_web(self) -> None:
+        """Return None for a web PDF (never allowlisted) even when permission was granted"""
+        arguments: ReadPdfDocumentArguments = {"location_type": "web", "location": "https://example.com/doc.pdf"}
+        result: str | None = get_read_pdf_document_read_path(arguments, tool_call_permission=True)
+        assert result is None
+
+    def test_permission_denied_web(self) -> None:
+        """Return None for a web PDF when permission was denied"""
+        arguments: ReadPdfDocumentArguments = {"location_type": "web", "location": "https://example.com/doc.pdf"}
+        result: str | None = get_read_pdf_document_read_path(arguments, tool_call_permission=False)
+        assert result is None
 
 
 class TestReadPdfDocument:

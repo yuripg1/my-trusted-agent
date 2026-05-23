@@ -29,11 +29,18 @@ from tool.list_directory import (
     list_directory,
 )
 from tool.move_path import MovePathToolCall, get_move_path_message, get_move_path_permission, move_path
-from tool.read_file import ReadFileToolCall, get_read_file_message, get_read_file_permission, read_file
+from tool.read_file import (
+    ReadFileToolCall,
+    get_read_file_message,
+    get_read_file_permission,
+    get_read_file_read_path,
+    read_file,
+)
 from tool.read_pdf_document import (
     ReadPdfDocumentToolCall,
     get_read_pdf_document_message,
     get_read_pdf_document_permission,
+    get_read_pdf_document_read_path,
     read_pdf_document,
 )
 from tool.read_web_page import (
@@ -113,7 +120,7 @@ def get_group_tool_call_messages(tool_calls: list[ToolCall]) -> list[str]:
     return messages
 
 
-def get_individual_tool_call_permission(tool_call: ToolCall) -> bool:
+def get_individual_tool_call_permission(tool_call: ToolCall, session_read_allowlist: list[str]) -> bool:
     with suppress(Exception):
         if tool_call["tool_name"] == "create_directory":
             return get_create_directory_permission(tool_call["arguments"])
@@ -132,9 +139,9 @@ def get_individual_tool_call_permission(tool_call: ToolCall) -> bool:
         elif tool_call["tool_name"] == "move_path":
             return get_move_path_permission(tool_call["arguments"])
         elif tool_call["tool_name"] == "read_file":
-            return get_read_file_permission(tool_call["arguments"])
+            return get_read_file_permission(tool_call["arguments"], session_read_allowlist)
         elif tool_call["tool_name"] == "read_pdf_document":
-            return get_read_pdf_document_permission(tool_call["arguments"])
+            return get_read_pdf_document_permission(tool_call["arguments"], session_read_allowlist)
         elif tool_call["tool_name"] == "read_web_page":
             return get_read_web_page_permission(tool_call["arguments"])
         elif tool_call["tool_name"] == "search_web":
@@ -144,12 +151,21 @@ def get_individual_tool_call_permission(tool_call: ToolCall) -> bool:
     return False
 
 
-def get_number_of_required_permissions(tool_calls: list[ToolCall]) -> int:
+def get_number_of_required_permissions(tool_calls: list[ToolCall], session_read_allowlist: list[str]) -> int:
     number_of_required_permissions: int = 0
     for tool_call in tool_calls:
-        if not get_individual_tool_call_permission(tool_call):
+        if not get_individual_tool_call_permission(tool_call, session_read_allowlist):
             number_of_required_permissions += 1
     return number_of_required_permissions
+
+
+def get_tool_read_path(tool_call: ToolCall, tool_call_permission: bool) -> str | None:
+    if tool_call["tool_name"] == "read_file":
+        return get_read_file_read_path(tool_call["arguments"], tool_call_permission)
+    elif tool_call["tool_name"] == "read_pdf_document":
+        return get_read_pdf_document_read_path(tool_call["arguments"], tool_call_permission)
+    else:
+        return None
 
 
 def execute_tool_call(tool_call: ToolCall, tool_call_permission: bool) -> str:

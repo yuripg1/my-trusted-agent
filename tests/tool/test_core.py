@@ -4,6 +4,7 @@ from tool.core import (
     get_individual_tool_call_message,
     get_individual_tool_call_permission,
     get_number_of_required_permissions,
+    get_tool_read_path,
     get_tool_system_instructions,
 )
 
@@ -176,45 +177,55 @@ class TestGetGroupToolCallMessages:
 class TestGetIndividualToolCallPermission:
     """Tests for the `get_individual_tool_call_permission` dispatching function"""
 
+    _empty_allowlist: list[str] = []
+
     def test_read_only_tools_are_auto_approved(self) -> None:
         """Read-only and low-risk tools should return True"""
         assert (
-            get_individual_tool_call_permission({"tool_name": "create_directory", "arguments": {"path": "/tmp/test"}})
-            is True
-        )
-        assert (
             get_individual_tool_call_permission(
-                {"tool_name": "generate_random_integer", "arguments": {"min": 1, "max": 10}}
+                {"tool_name": "create_directory", "arguments": {"path": "/tmp/test"}}, self._empty_allowlist
             )
             is True
         )
         assert (
             get_individual_tool_call_permission(
-                {"tool_name": "invalid", "arguments": {"tool_name": "write_file", "error_message": "error"}}
+                {"tool_name": "generate_random_integer", "arguments": {"min": 1, "max": 10}}, self._empty_allowlist
             )
             is True
         )
         assert (
-            get_individual_tool_call_permission({"tool_name": "list_directory", "arguments": {"path": "/tmp"}}) is True
+            get_individual_tool_call_permission(
+                {"tool_name": "invalid", "arguments": {"tool_name": "write_file", "error_message": "error"}},
+                self._empty_allowlist,
+            )
+            is True
+        )
+        assert (
+            get_individual_tool_call_permission(
+                {"tool_name": "list_directory", "arguments": {"path": "/tmp"}}, self._empty_allowlist
+            )
+            is True
         )
         assert (
             get_individual_tool_call_permission(
                 {
                     "tool_name": "read_pdf_document",
                     "arguments": {"location_type": "web", "location": "https://example.com/doc.pdf"},
-                }
+                },
+                self._empty_allowlist,
             )
             is True
         )
         assert (
             get_individual_tool_call_permission(
-                {"tool_name": "read_web_page", "arguments": {"url": "https://example.com"}}
+                {"tool_name": "read_web_page", "arguments": {"url": "https://example.com"}}, self._empty_allowlist
             )
             is True
         )
         assert (
             get_individual_tool_call_permission(
-                {"tool_name": "search_web", "arguments": {"query": "test", "max_results_per_page": 5}}
+                {"tool_name": "search_web", "arguments": {"query": "test", "max_results_per_page": 5}},
+                self._empty_allowlist,
             )
             is True
         )
@@ -223,7 +234,8 @@ class TestGetIndividualToolCallPermission:
         """Potentially destructive or sensitive tools should return False"""
         assert (
             get_individual_tool_call_permission(
-                {"tool_name": "delete_path", "arguments": {"type": "file", "path": "/tmp/test.txt"}}
+                {"tool_name": "delete_path", "arguments": {"type": "file", "path": "/tmp/test.txt"}},
+                self._empty_allowlist,
             )
             is False
         )
@@ -237,12 +249,15 @@ class TestGetIndividualToolCallPermission:
                         "replace_with": "b",
                         "number_of_substitutions": 1,
                     },
-                }
+                },
+                self._empty_allowlist,
             )
             is False
         )
         assert (
-            get_individual_tool_call_permission({"tool_name": "execute_shell_command", "arguments": {"command": "ls"}})
+            get_individual_tool_call_permission(
+                {"tool_name": "execute_shell_command", "arguments": {"command": "ls"}}, self._empty_allowlist
+            )
             is False
         )
         assert (
@@ -250,17 +265,21 @@ class TestGetIndividualToolCallPermission:
                 {
                     "tool_name": "move_path",
                     "arguments": {"type": "file", "source": "/tmp/a.txt", "destination": "/tmp/b.txt"},
-                }
+                },
+                self._empty_allowlist,
             )
             is False
         )
         assert (
-            get_individual_tool_call_permission({"tool_name": "read_file", "arguments": {"path": "/tmp/test.txt"}})
+            get_individual_tool_call_permission(
+                {"tool_name": "read_file", "arguments": {"path": "/tmp/test.txt"}}, self._empty_allowlist
+            )
             is False
         )
         assert (
             get_individual_tool_call_permission(
-                {"tool_name": "read_pdf_document", "arguments": {"location_type": "local", "location": "/tmp/doc.pdf"}}
+                {"tool_name": "read_pdf_document", "arguments": {"location_type": "local", "location": "/tmp/doc.pdf"}},
+                self._empty_allowlist,
             )
             is False
         )
@@ -269,18 +288,73 @@ class TestGetIndividualToolCallPermission:
                 {
                     "tool_name": "write_file",
                     "arguments": {"path": "/tmp/test.txt", "mode": "create_or_overwrite", "content": "hello"},
-                }
+                },
+                self._empty_allowlist,
             )
             is False
         )
 
     def test_unknown_tool_name(self) -> None:
         """Return False for unknown tool names"""
-        assert get_individual_tool_call_permission({"tool_name": "unknown_tool", "arguments": {}}) is False
+        assert (
+            get_individual_tool_call_permission({"tool_name": "unknown_tool", "arguments": {}}, self._empty_allowlist)
+            is False
+        )
+
+    def test_read_file_allowlisted_path(self) -> None:
+        """Return True for read_file when the path is in the session allowlist"""
+        result: bool = get_individual_tool_call_permission(
+            {"tool_name": "read_file", "arguments": {"path": "/tmp/test.txt"}},
+            session_read_allowlist=["/tmp/test.txt"],
+        )
+        assert result is True
+
+    def test_read_file_not_allowlisted(self) -> None:
+        """Return False for read_file when the path is not in the session allowlist"""
+        result: bool = get_individual_tool_call_permission(
+            {"tool_name": "read_file", "arguments": {"path": "/tmp/test.txt"}},
+            session_read_allowlist=["/other/file.txt"],
+        )
+        assert result is False
+
+    def test_read_pdf_document_allowlisted_local_path(self) -> None:
+        """Return True for read_pdf_document when the local path is in the session allowlist"""
+        result: bool = get_individual_tool_call_permission(
+            {
+                "tool_name": "read_pdf_document",
+                "arguments": {"location_type": "local", "location": "/tmp/doc.pdf"},
+            },
+            session_read_allowlist=["/tmp/doc.pdf"],
+        )
+        assert result is True
+
+    def test_read_pdf_document_not_allowlisted_local_path(self) -> None:
+        """Return False for read_pdf_document when the local path is not in the session allowlist"""
+        result: bool = get_individual_tool_call_permission(
+            {
+                "tool_name": "read_pdf_document",
+                "arguments": {"location_type": "local", "location": "/tmp/doc.pdf"},
+            },
+            session_read_allowlist=["/other/doc.pdf"],
+        )
+        assert result is False
+
+    def test_read_pdf_document_web_is_auto_approved_regardless_of_allowlist(self) -> None:
+        """Return True for read_pdf_document web even without allowlist match"""
+        result: bool = get_individual_tool_call_permission(
+            {
+                "tool_name": "read_pdf_document",
+                "arguments": {"location_type": "web", "location": "https://example.com/doc.pdf"},
+            },
+            session_read_allowlist=[],
+        )
+        assert result is True
 
 
 class TestGetNumberOfRequiredPermissions:
     """Tests for the `get_number_of_required_permissions` function"""
+
+    _empty_allowlist: list[str] = []
 
     def test_all_auto_approved(self) -> None:
         """Return 0 when all tools are auto-approved"""
@@ -288,7 +362,8 @@ class TestGetNumberOfRequiredPermissions:
             [
                 {"tool_name": "create_directory", "arguments": {"path": "/tmp/a"}},
                 {"tool_name": "generate_random_integer", "arguments": {"min": 1, "max": 10}},
-            ]
+            ],
+            self._empty_allowlist,
         )
         assert result == 0
 
@@ -301,7 +376,8 @@ class TestGetNumberOfRequiredPermissions:
                     "tool_name": "write_file",
                     "arguments": {"path": "/tmp/b.txt", "mode": "create_or_overwrite", "content": "hello"},
                 },
-            ]
+            ],
+            self._empty_allowlist,
         )
         assert result == 2
 
@@ -312,14 +388,119 @@ class TestGetNumberOfRequiredPermissions:
                 {"tool_name": "create_directory", "arguments": {"path": "/tmp/a"}},
                 {"tool_name": "delete_path", "arguments": {"type": "file", "path": "/tmp/a.txt"}},
                 {"tool_name": "generate_random_integer", "arguments": {"min": 1, "max": 10}},
-            ]
+            ],
+            self._empty_allowlist,
         )
         assert result == 1
 
     def test_empty_list(self) -> None:
         """Return 0 for an empty list"""
-        result: int = get_number_of_required_permissions([])
+        result: int = get_number_of_required_permissions([], self._empty_allowlist)
         assert result == 0
+
+    def test_all_allowlisted(self) -> None:
+        """Return 0 when all tools are allowlisted"""
+        result: int = get_number_of_required_permissions(
+            [
+                {"tool_name": "read_file", "arguments": {"path": "/tmp/a.txt"}},
+                {
+                    "tool_name": "read_pdf_document",
+                    "arguments": {"location_type": "local", "location": "/tmp/b.pdf"},
+                },
+            ],
+            session_read_allowlist=["/tmp/a.txt", "/tmp/b.pdf"],
+        )
+        assert result == 0
+
+    def test_some_allowlisted_some_not(self) -> None:
+        """Return only the count of tools not in the allowlist"""
+        result: int = get_number_of_required_permissions(
+            [
+                {"tool_name": "read_file", "arguments": {"path": "/tmp/a.txt"}},
+                {"tool_name": "read_file", "arguments": {"path": "/tmp/b.txt"}},
+            ],
+            session_read_allowlist=["/tmp/a.txt"],
+        )
+        assert result == 1
+
+    def test_allowlist_only_affects_read_tools(self) -> None:
+        """Allowlist does not affect destructive tools"""
+        result: int = get_number_of_required_permissions(
+            [
+                {"tool_name": "delete_path", "arguments": {"type": "file", "path": "/tmp/a.txt"}},
+            ],
+            session_read_allowlist=["/tmp/a.txt"],
+        )
+        assert result == 1
+
+
+class TestGetToolReadPath:
+    """Tests for the `get_tool_read_path` dispatching function"""
+
+    def test_read_file_permission_granted(self) -> None:
+        """Return the path for read_file when permission was granted"""
+        result: str | None = get_tool_read_path(
+            {"tool_name": "read_file", "arguments": {"path": "/tmp/test.txt"}},
+            tool_call_permission=True,
+        )
+        assert result == "/tmp/test.txt"
+
+    def test_read_file_permission_denied(self) -> None:
+        """Return None for read_file when permission was denied"""
+        result: str | None = get_tool_read_path(
+            {"tool_name": "read_file", "arguments": {"path": "/tmp/test.txt"}},
+            tool_call_permission=False,
+        )
+        assert result is None
+
+    def test_read_pdf_document_local_permission_granted(self) -> None:
+        """Return the path for a local PDF when permission was granted"""
+        result: str | None = get_tool_read_path(
+            {
+                "tool_name": "read_pdf_document",
+                "arguments": {"location_type": "local", "location": "/tmp/doc.pdf"},
+            },
+            tool_call_permission=True,
+        )
+        assert result == "/tmp/doc.pdf"
+
+    def test_read_pdf_document_web_permission_granted(self) -> None:
+        """Return None for a web PDF even when permission was granted"""
+        result: str | None = get_tool_read_path(
+            {
+                "tool_name": "read_pdf_document",
+                "arguments": {"location_type": "web", "location": "https://example.com/doc.pdf"},
+            },
+            tool_call_permission=True,
+        )
+        assert result is None
+
+    def test_read_pdf_document_permission_denied(self) -> None:
+        """Return None for read_pdf_document when permission was denied"""
+        result: str | None = get_tool_read_path(
+            {
+                "tool_name": "read_pdf_document",
+                "arguments": {"location_type": "local", "location": "/tmp/doc.pdf"},
+            },
+            tool_call_permission=False,
+        )
+        assert result is None
+
+    def test_other_tool_returns_none(self) -> None:
+        """Return None for tools that do not participate in the allowlist"""
+        result: str | None = get_tool_read_path(
+            {"tool_name": "create_directory", "arguments": {"path": "/tmp/test"}},
+            tool_call_permission=True,
+        )
+        assert result is None
+
+    def test_unknown_tool_returns_none(self) -> None:
+        """Return None for unknown tool names"""
+        result: str | None = get_tool_read_path(
+            {"tool_name": "unknown_tool", "arguments": {}},
+            tool_call_permission=True,
+        )
+        assert result is None
 
 
 class TestExecuteToolCall:

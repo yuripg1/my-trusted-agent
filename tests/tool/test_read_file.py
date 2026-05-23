@@ -5,6 +5,7 @@ from tool.read_file import (
     ReadFileArguments,
     get_read_file_message,
     get_read_file_permission,
+    get_read_file_read_path,
     read_file,
 )
 
@@ -37,9 +38,43 @@ class TestGetReadFilePermission:
     """Tests for the `get_read_file_permission` function"""
 
     def test_requires_approval(self) -> None:
-        """Permission should require user approval"""
+        """Permission should require user approval when not in allowlist"""
         arguments: ReadFileArguments = {"path": "/some/file.txt"}
-        assert get_read_file_permission(arguments) is False
+        assert get_read_file_permission(arguments, []) is False
+
+    def test_path_in_allowlist(self) -> None:
+        """Return True when the path is in the session allowlist"""
+        arguments: ReadFileArguments = {"path": "/some/file.txt"}
+        session_read_allowlist: list[str] = ["/some/file.txt"]
+        assert get_read_file_permission(arguments, session_read_allowlist=session_read_allowlist) is True
+
+    def test_path_not_in_allowlist(self) -> None:
+        """Return False when the path is not in the session allowlist"""
+        arguments: ReadFileArguments = {"path": "/some/file.txt"}
+        session_read_allowlist: list[str] = ["/other/file.txt"]
+        assert get_read_file_permission(arguments, session_read_allowlist=session_read_allowlist) is False
+
+    def test_empty_allowlist(self) -> None:
+        """Return False when the session allowlist is empty"""
+        arguments: ReadFileArguments = {"path": "/some/file.txt"}
+        session_read_allowlist: list[str] = []
+        assert get_read_file_permission(arguments, session_read_allowlist=session_read_allowlist) is False
+
+
+class TestGetReadFileReadPath:
+    """Tests for the `get_read_file_read_path` function"""
+
+    def test_permission_granted(self) -> None:
+        """Return the path when permission was granted"""
+        arguments: ReadFileArguments = {"path": "/some/file.txt"}
+        result: str | None = get_read_file_read_path(arguments, tool_call_permission=True)
+        assert result == "/some/file.txt"
+
+    def test_permission_denied(self) -> None:
+        """Return None when permission was denied"""
+        arguments: ReadFileArguments = {"path": "/some/file.txt"}
+        result: str | None = get_read_file_read_path(arguments, tool_call_permission=False)
+        assert result is None
 
 
 class TestReadFile:

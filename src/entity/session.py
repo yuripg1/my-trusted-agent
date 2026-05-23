@@ -1,3 +1,4 @@
+from json import dumps, loads
 from sqlite3 import Connection, Cursor
 from typing import Self
 
@@ -10,6 +11,7 @@ class Session:
     ai_provider: AiProviderType
     agent_name: str
     context_length: int
+    read_allowlist: list[str]
     _tools: AiTools
     _messages: AiMessages
 
@@ -18,12 +20,13 @@ class Session:
         self.ai_provider = ai.provider
         self.agent_name = agent_name
         self.context_length = 0
+        self.read_allowlist = []
         self._tools = ai.create_tools()
         self._messages = ai.create_messages()
 
     def load(self, ai: Ai, id: int, db_connection: Connection) -> Self:
         cursor: Cursor = db_connection.execute(
-            "SELECT agent_name, context_length, tools, messages FROM sessions WHERE id = ? and ai_provider = ?",
+            "SELECT agent_name, context_length, read_allowlist, tools, messages FROM sessions WHERE id = ? and ai_provider = ?",
             (id, str(ai.provider)),
         )
         fetched_data = cursor.fetchone()
@@ -32,6 +35,7 @@ class Session:
             self.ai_provider = ai.provider
             self.agent_name = str(fetched_data["agent_name"])
             self.context_length = int(fetched_data["context_length"])
+            self.read_allowlist = list(loads(str(fetched_data["read_allowlist"])))
             self._tools = ai.decode_tools_json(str(fetched_data["tools"]))
             self._messages = ai.decode_messages_json(str(fetched_data["messages"]))
         return self
@@ -39,18 +43,24 @@ class Session:
     def auto_save(self, ai: Ai, db_connection: Connection) -> None:
         tools: str = ai.encode_tools_json(self._tools)
         messages_json: str = ai.encode_messages_json(self._messages)
+        read_allowlist: str = dumps(self.read_allowlist)
         if self.id is None:
             cursor: Cursor = db_connection.execute(
-                "INSERT INTO sessions (ai_provider, agent_name, context_length, tools, messages) VALUES (?, ?, ?, ?, ?)",
-                (str(self.ai_provider), self.agent_name, self.context_length, tools, messages_json),
+                "INSERT INTO sessions (ai_provider, agent_name, context_length, read_allowlist, tools, messages) VALUES (?, ?, ?, ?, ?, ?)",
+                (str(self.ai_provider), self.agent_name, self.context_length, read_allowlist, tools, messages_json),
             )
             self.id = cursor.lastrowid
         else:
             db_connection.execute(
-                'UPDATE sessions SET context_length = ?, messages = ?, updated_at = datetime("now") WHERE id = ?',
-                (self.context_length, messages_json, self.id),
+                'UPDATE sessions SET context_length = ?, read_allowlist = ?, messages = ?, updated_at = datetime("now") WHERE id = ?',
+                (self.context_length, read_allowlist, messages_json, self.id),
             )
         db_connection.commit()
+
+    def add_to_read_allowlist(self, path: str) -> None:
+        if path not in self.read_allowlist:
+            self.read_allowlist.append(path)
+            self.read_allowlist.sort()
 
     def rewind_message(self, ai: Ai) -> None:
         self.id = None

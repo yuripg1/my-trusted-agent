@@ -15,6 +15,7 @@ def close_db_connection(db_connection: Connection) -> None:
 
 
 def init_db(conn: Connection) -> None:
+    conn.execute("PRAGMA journal_mode = WAL")
     db_version = conn.execute("PRAGMA user_version").fetchone()[0]
     if db_version < 1:
         conn.execute(
@@ -24,6 +25,7 @@ def init_db(conn: Connection) -> None:
                 ai_provider TEXT NOT NULL,
                 agent_name TEXT NOT NULL,
                 context_length INTEGER NOT NULL,
+                read_allowlist TEXT NOT NULL,
                 tools TEXT NOT NULL,
                 messages TEXT NOT NULL,
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),

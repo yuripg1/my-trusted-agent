@@ -23,8 +23,20 @@ _IMPERSONATE_OS: str = "random"
 _REQUEST_TIMEOUT: int = 300
 
 
-def get_read_pdf_document_permission(arguments: ReadPdfDocumentArguments) -> bool:
-    return arguments["location_type"] == "web"
+def get_read_pdf_document_permission(arguments: ReadPdfDocumentArguments, session_read_allowlist: list[str]) -> bool:
+    if arguments["location_type"] == "web":
+        return True
+    elif arguments["location"] in session_read_allowlist:
+        return True
+    else:
+        return False
+
+
+def get_read_pdf_document_read_path(arguments: ReadPdfDocumentArguments, tool_call_permission: bool) -> str | None:
+    if arguments["location_type"] == "local" and tool_call_permission:
+        return arguments["location"]
+    else:
+        return None
 
 
 def get_read_pdf_document_message(arguments: ReadPdfDocumentArguments) -> str:

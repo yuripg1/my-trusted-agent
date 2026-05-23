@@ -27,8 +27,18 @@ def get_read_file_message(arguments: ReadFileArguments) -> str:
         return f"Reading file at **{arguments['path']}**"
 
 
-def get_read_file_permission(arguments: ReadFileArguments) -> bool:
-    return False
+def get_read_file_permission(arguments: ReadFileArguments, session_read_allowlist: list[str]) -> bool:
+    if arguments["path"] in session_read_allowlist:
+        return True
+    else:
+        return False
+
+
+def get_read_file_read_path(arguments: ReadFileArguments, tool_call_permission: bool) -> str | None:
+    if tool_call_permission:
+        return arguments["path"]
+    else:
+        return None
 
 
 def read_file(arguments: ReadFileArguments, tool_call_permission: bool = True) -> str:

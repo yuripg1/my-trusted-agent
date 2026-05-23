@@ -12,6 +12,7 @@ from tool.core import (
     get_individual_tool_call_message,
     get_individual_tool_call_permission,
     get_number_of_required_permissions,
+    get_tool_read_path,
 )
 from ui.core import Ui
 
@@ -103,7 +104,7 @@ def _handle_user_input(
         if len(tool_calls) == 0:
             session.auto_save(ai, db_connection)
             break
-        number_of_required_permissions: int = get_number_of_required_permissions(tool_calls)
+        number_of_required_permissions: int = get_number_of_required_permissions(tool_calls, session.read_allowlist)
         group_tool_call_permission: bool = number_of_required_permissions == 0
         group_tool_call_messages: list[str] = get_group_tool_call_messages(tool_calls)
         group_tool_call_permission = ui.display_group_tool_call_message(
@@ -111,19 +112,20 @@ def _handle_user_input(
         )
         number_of_denied_permissions: int = 0
         for tool_call in tool_calls:
-            tool_call_output: str = ""
-            if group_tool_call_permission:
-                tool_call_output = execute_tool_call(tool_call, group_tool_call_permission)
-            else:
-                individual_tool_call_permission: bool = get_individual_tool_call_permission(tool_call)
+            individual_tool_call_permission: bool = group_tool_call_permission
+            if not individual_tool_call_permission:
+                individual_tool_call_permission = get_individual_tool_call_permission(tool_call, session.read_allowlist)
                 if number_of_required_permissions > 1:
                     individual_tool_call_message: str = get_individual_tool_call_message(tool_call)
                     individual_tool_call_permission = ui.display_individual_tool_call_message(
                         individual_tool_call_message, individual_tool_call_permission
                     )
-                if not individual_tool_call_permission:
-                    number_of_denied_permissions += 1
-                tool_call_output = execute_tool_call(tool_call, individual_tool_call_permission)
+            if not individual_tool_call_permission:
+                number_of_denied_permissions += 1
+            read_path: str | None = get_tool_read_path(tool_call, individual_tool_call_permission)
+            if read_path is not None:
+                session.add_to_read_allowlist(read_path)
+            tool_call_output: str = execute_tool_call(tool_call, individual_tool_call_permission)
             session.add_tool_call(ai, tool_call, tool_call_output)
         if not group_tool_call_permission and number_of_required_permissions == number_of_denied_permissions:
             break
