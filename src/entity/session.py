@@ -120,5 +120,9 @@ class Session:
             message_index += 1
         return "\n".join(lines).strip() + "\n"
 
+    def import_messages(self, ai: Ai, messages_json: str) -> None:
+        self._messages = ai.decode_messages_json(messages_json)
+        self.id = None
+
     def export_to_json(self, ai: Ai) -> str:
         return ai.encode_messages_json(self._messages)

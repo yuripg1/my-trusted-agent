@@ -37,8 +37,7 @@ def _handle_load_command(
     replay: bool = False
     if len(load_input_parts) >= 3:
         replay = load_input_parts[2] == "replay"
-    default_agent_name: str = get_agent_name(environment)
-    session = Session(ai, default_agent_name).load(ai, session_id, db_connection)
+    session = Session(ai, get_agent_name(environment)).load(ai, session_id, db_connection)
     if replay:
         replay_message_index: int = 0
         while True:
@@ -58,6 +57,20 @@ def _handle_system_command(ai: Ai, session: Session, user_input: str) -> None:
     if len(system_input_parts) >= 2:
         system_prompt: str = system_input_parts[1]
         session.add_system_messages(ai, [system_prompt])
+
+
+def _handle_import_command(environment: Environment, ai: Ai, user_input: str) -> Session:
+    import_parts: list[str] = user_input.split(" ", 1)
+    file_path: str = ""
+    if len(import_parts) >= 2:
+        file_path = import_parts[1].strip()
+    if file_path == "":
+        return Session(ai, get_agent_name(environment))
+    with open(file_path, "r") as file:
+        messages_json: str = file.read()
+    session: Session = Session(ai, get_agent_name(environment))
+    session.import_messages(ai, messages_json)
+    return session
 
 
 def _handle_export_command(environment: Environment, ai: Ai, session: Session, user_input: str) -> None:
@@ -159,6 +172,8 @@ def chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui: U
                 _handle_rewind_command(session, ai, ui)
             elif user_input.startswith("/system"):
                 _handle_system_command(ai, session, user_input)
+            elif user_input.startswith("/import"):
+                session = _handle_import_command(environment, ai, user_input)
             elif user_input.startswith("/export"):
                 _handle_export_command(environment, ai, session, user_input)
             elif user_input == "/exit":
