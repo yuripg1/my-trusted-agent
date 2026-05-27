@@ -24,13 +24,13 @@ This project takes a different approach: it deliberately brings you along for th
 
 | Command | Description |
 |---|---|
-| `/new [agent_name]` | Starts a new session; optionally selects an agent |
-| `/load n [replay]` | Loads a previous session with ID `n`; optionally replays the entire conversation |
-| `/system [<message>]` | Adds a system prompt message to the current session |
-| `/read <path_pattern>` | Reads web pages, directories, or files and adds them to the session |
+| <nobr>`/new [agent_name]`</nobr> | Starts a new session; optionally selects an agent |
+| <nobr>`/load <n> [replay]`</nobr> | Loads a previous session with ID `n`; optionally replays the entire conversation |
+| <nobr>`/system [<message>]`</nobr> | Adds a system prompt message to the current session |
+| <nobr>`/read <path_pattern>`</nobr> | Reads web pages, directories, or files and adds them to the session |
 | `/rewind` | Rewinds to right before the latest user message |
-| `/export [<format>]` | Exports the full message history. Format can be `json` (default - can be imported) or `markdown` (human readable) |
-| `/import <file>` | Starts a new session with an imported conversation history |
+| <nobr>`/export [<format>]`</nobr> | Exports the full message history. Format can be `json` (default - can be imported) or `markdown` (human readable) |
+| <nobr>`/import <file>`</nobr> | Starts a new session with an imported conversation history |
 | `/exit` | Closes the application |
 
 ---
