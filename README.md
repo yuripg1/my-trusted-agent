@@ -24,14 +24,14 @@ This project takes a different approach: it deliberately brings you along for th
 
 | Command | Description |
 |---|---|
-| <nobr>`/new [agent_name]`</nobr> | Starts a new session; optionally selects an agent |
-| <nobr>`/load <n> [replay]`</nobr> | Loads a previous session with ID `n`; optionally replays the entire conversation |
-| <nobr>`/system [<message>]`</nobr> | Adds a system prompt message to the current session |
-| <nobr>`/read <path_pattern>`</nobr> | Reads web pages, directories, or files and adds them to the session |
-| `/rewind` | Rewinds to right before the latest user message |
-| <nobr>`/export [<format>]`</nobr> | Exports the full message history. Format can be `json` (default - can be imported) or `markdown` (human readable) |
-| <nobr>`/import <file>`</nobr> | Starts a new session with an imported conversation history |
-| `/exit` | Closes the application |
+| <nobr><code>/new&nbsp;[agent_name]</code></nobr> | Starts a new session; optionally selects an agent |
+| <nobr><code>/load&nbsp;&lt;n&gt;&nbsp;[replay]</code></nobr> | Loads a previous session with ID `n`; optionally replays the entire conversation |
+| <nobr><code>/system&nbsp;[&lt;message&gt;]</code></nobr> | Adds a system prompt message to the current session |
+| <nobr><code>/read&nbsp;&lt;path_pattern&gt;</code></nobr> | Reads web pages, directories, or files and adds them to the session |
+| <nobr><code>/rewind</code></nobr> | Rewinds to right before the latest user message |
+| <nobr><code>/export&nbsp;[&lt;format&gt;]</code></nobr> | Exports the full message history. Format can be `json` (default - can be imported) or `markdown` (human readable) |
+| <nobr><code>/import&nbsp;&lt;file&gt;</code></nobr> | Starts a new session with an imported conversation history |
+| <nobr><code>/exit</code></nobr> | Closes the application |
 
 ---
 
