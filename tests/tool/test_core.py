@@ -605,7 +605,7 @@ class TestExecuteToolCallDispatch:
             {"tool_name": "execute_shell_command", "arguments": {"command": "echo hello"}},
             True,
         )
-        expected: str = "<shell_command_execution>\n<command>\necho hello\n</command>\n<stdout>\nhello\n</stdout>\n<exit_code>0</exit_code>\n</shell_command_execution>"
+        expected: str = "<shell_command_execution>\n<command>\necho hello\n</command>\n<stdout>\nhello\n</stdout>\n<stderr>\n</stderr>\n<exit_code>0</exit_code>\n</shell_command_execution>"
         assert result == expected
 
     def test_list_directory(self) -> None:

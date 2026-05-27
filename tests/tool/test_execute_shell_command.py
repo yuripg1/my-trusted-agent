@@ -36,7 +36,7 @@ class TestExecuteShellCommand:
         exit_code: int = 0
         assert (
             result
-            == f"<shell_command_execution>\n<command>\n{command}\n</command>\n<stdout>\n{stdout_text}\n</stdout>\n<exit_code>{exit_code}</exit_code>\n</shell_command_execution>"
+            == f"<shell_command_execution>\n<command>\n{command}\n</command>\n<stdout>\n{stdout_text}\n</stdout>\n<stderr>\n</stderr>\n<exit_code>{exit_code}</exit_code>\n</shell_command_execution>"
         )
 
     def test_stderr_output(self) -> None:
@@ -47,7 +47,7 @@ class TestExecuteShellCommand:
         exit_code: int = 0
         assert (
             result
-            == f"<shell_command_execution>\n<command>\n{command}\n</command>\n<stderr>\n{stderr_text}\n</stderr>\n<exit_code>{exit_code}</exit_code>\n</shell_command_execution>"
+            == f"<shell_command_execution>\n<command>\n{command}\n</command>\n<stdout>\n</stdout>\n<stderr>\n{stderr_text}\n</stderr>\n<exit_code>{exit_code}</exit_code>\n</shell_command_execution>"
         )
 
     def test_non_zero_exit_code(self) -> None:
@@ -57,7 +57,7 @@ class TestExecuteShellCommand:
         exit_code: int = 1
         assert (
             result
-            == f"<shell_command_execution>\n<command>\n{command}\n</command>\n<exit_code>{exit_code}</exit_code>\n</shell_command_execution>"
+            == f"<shell_command_execution>\n<command>\n{command}\n</command>\n<stdout>\n</stdout>\n<stderr>\n</stderr>\n<exit_code>{exit_code}</exit_code>\n</shell_command_execution>"
         )
 
     def test_command_denied_by_user(self) -> None:
