@@ -72,7 +72,7 @@ def _handle_import_command(environment: Environment, ai: Ai, user_input: str) ->
         file_path = import_parts[1].strip()
     if file_path == "":
         return Session(ai, get_agent_name(environment))
-    with open(file_path, "r") as file:
+    with open(file_path) as file:
         messages_json: str = file.read()
     session: Session = Session(ai, get_agent_name(environment))
     session.import_messages(ai, messages_json)
