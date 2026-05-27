@@ -91,7 +91,7 @@ class Session:
     def get_tool_calls_from_nth_message(self, ai: Ai, message_index: int) -> list[ToolCall]:
         return ai.get_tool_calls_from_nth_message(self._messages, message_index)
 
-    def render_to_markdown(self, ai: Ai) -> str:
+    def export_to_markdown(self, ai: Ai) -> str:
         lines: list[str] = []
         session_id: int = self.id if self.id is not None else 0
         lines.append(f"# Session {session_id}")
@@ -119,3 +119,6 @@ class Session:
                 lines.append("")
             message_index += 1
         return "\n".join(lines).strip() + "\n"
+
+    def export_to_json(self, ai: Ai) -> str:
+        return ai.encode_messages_json(self._messages)

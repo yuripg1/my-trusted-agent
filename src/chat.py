@@ -60,15 +60,27 @@ def _handle_system_command(ai: Ai, session: Session, user_input: str) -> None:
         session.add_system_messages(ai, [system_prompt])
 
 
-def _handle_export_command(environment: Environment, ai: Ai, session: Session) -> None:
+def _handle_export_command(environment: Environment, ai: Ai, session: Session, user_input: str) -> None:
     if session.id is None:
         return
     if session.get_messages_count(ai) == 0:
         return
-    markdown_content: str = session.render_to_markdown(ai)
-    export_file_path: str = f"{environment.export_path}_{session.id}.md"
+    export_parts: list[str] = user_input.split(" ", 1)
+    format_type: str = "json"
+    if len(export_parts) >= 2:
+        format_type = export_parts[1].strip().lower()
+    exported_content: str = ""
+    export_file_path: str = ""
+    if format_type == "markdown":
+        exported_content = session.export_to_markdown(ai)
+        export_file_path = f"{environment.export_path}_{session.id}.md"
+    elif format_type == "json":
+        exported_content = session.export_to_json(ai)
+        export_file_path = f"{environment.export_path}_{session.id}.json"
+    else:
+        return
     with open(export_file_path, "w") as file:
-        file.write(markdown_content)
+        file.write(exported_content)
 
 
 def _handle_rewind_command(session: Session, ai: Ai, ui: Ui) -> None:
@@ -147,8 +159,8 @@ def chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui: U
                 _handle_rewind_command(session, ai, ui)
             elif user_input.startswith("/system"):
                 _handle_system_command(ai, session, user_input)
-            elif user_input == "/export":
-                _handle_export_command(environment, ai, session)
+            elif user_input.startswith("/export"):
+                _handle_export_command(environment, ai, session, user_input)
             elif user_input == "/exit":
                 break
             else:
