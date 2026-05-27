@@ -102,7 +102,7 @@ def _handle_export_command(environment: Environment, ai: Ai, session: Session, u
         file.write(exported_content)
 
 
-def _handle_read_command(environment: Environment, ai: Ai, ui: Ui, session: Session, user_input: str) -> None:
+def _handle_read_command(environment: Environment, ai: Ai, session: Session, user_input: str) -> None:
     read_parts: list[str] = user_input.split(" ", 1)
     path_pattern: str = ""
     if len(read_parts) >= 2:
@@ -206,7 +206,7 @@ def chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui: U
             elif user_input.startswith("/system"):
                 _handle_system_command(ai, session, user_input)
             elif user_input.startswith("/read"):
-                _handle_read_command(environment, ai, ui, session, user_input)
+                _handle_read_command(environment, ai, session, user_input)
             elif user_input.startswith("/import"):
                 session = _handle_import_command(environment, ai, user_input)
             elif user_input.startswith("/export"):
