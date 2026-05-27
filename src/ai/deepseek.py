@@ -217,6 +217,12 @@ class DeepSeekAi:
                     print(dumps(response.json(), indent=2), file=stderr)
             sys_exit(1)
 
+    def has_user_messages(self, messages: list[DeepSeekMessage]) -> bool:
+        for message in messages:
+            if message["role"] == "user":
+                return True
+        return False
+
     def get_messages_count(self, messages: list[DeepSeekMessage]) -> int:
         return len(messages)
 

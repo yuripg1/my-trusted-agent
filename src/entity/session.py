@@ -88,6 +88,9 @@ class Session:
     def get_nth_message(self, ai: Ai, message_index: int) -> AiMessage | None:
         return ai.get_nth_message(self._messages, message_index)
 
+    def has_user_messages(self, ai: Ai) -> bool:
+        return ai.has_user_messages(self._messages)
+
     def get_tool_calls_from_nth_message(self, ai: Ai, message_index: int) -> list[ToolCall]:
         return ai.get_tool_calls_from_nth_message(self._messages, message_index)
 

@@ -139,6 +139,11 @@ class Ai:
         else:
             return AiMessages()
 
+    def has_user_messages(self, messages: AiMessages) -> bool:
+        if self.provider == "deepseek" and self.deepseek_ai is not None and "deepseek_messages" in messages:
+            return self.deepseek_ai.has_user_messages(messages["deepseek_messages"])
+        return False
+
     def encode_messages_json(self, messages: AiMessages) -> str:
         return dumps(messages)
 

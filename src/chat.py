@@ -1,4 +1,6 @@
 from contextlib import suppress
+from glob import glob
+from os.path import isdir
 from sqlite3 import Connection
 
 from agent import get_agent_config, get_agent_name
@@ -14,6 +16,10 @@ from tool.core import (
     get_number_of_required_permissions,
     get_tool_read_path,
 )
+from tool.list_directory import ListDirectoryArguments, list_directory
+from tool.read_file import ReadFileArguments, read_file
+from tool.read_pdf_document import ReadPdfDocumentArguments, read_pdf_document
+from tool.read_web_page import ReadWebPageArguments, read_web_page
 from ui.core import Ui
 
 
@@ -96,6 +102,33 @@ def _handle_export_command(environment: Environment, ai: Ai, session: Session, u
         file.write(exported_content)
 
 
+def _handle_read_command(environment: Environment, ai: Ai, ui: Ui, session: Session, user_input: str) -> None:
+    read_parts: list[str] = user_input.split(" ", 1)
+    path_pattern: str = ""
+    if len(read_parts) >= 2:
+        path_pattern = read_parts[1].strip()
+    if path_pattern == "":
+        return
+    paths: list[str] = sorted(glob(path_pattern, recursive=True))
+    if len(paths) == 0:
+        paths = [path_pattern]
+    for path in paths:
+        path = path.strip()
+        if path == "":
+            continue
+        content: str = ""
+        if path.startswith(("http://", "https://")):
+            content = read_web_page(ReadWebPageArguments(url=path))
+        elif isdir(path):
+            content = list_directory(ListDirectoryArguments(path=path))
+        elif path.lower().endswith(".pdf"):
+            content = read_pdf_document(ReadPdfDocumentArguments(location_type="local", location=path))
+        else:
+            content = read_file(ReadFileArguments(path=path))
+        if len(content.strip()) != 0:
+            session.add_system_messages(ai, [content])
+
+
 def _handle_rewind_command(session: Session, ai: Ai, ui: Ui) -> None:
     session.rewind_message(ai)
     last_message_index: int = session.get_messages_count(ai) - 1
@@ -109,7 +142,7 @@ def _handle_rewind_command(session: Session, ai: Ai, ui: Ui) -> None:
 def _handle_user_input(
     environment: Environment, db_connection: Connection, ai: Ai, ui: Ui, session: Session, user_input: str
 ) -> None:
-    if session.get_messages_count(ai) == 0:
+    if not session.has_user_messages(ai):
         agent_config = get_agent_config(session.agent_name, environment, ui)
         session.add_system_messages(ai, agent_config["system_prompts"])
         session.add_tools(ai, agent_config["tool_names"])
@@ -172,6 +205,8 @@ def chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui: U
                 _handle_rewind_command(session, ai, ui)
             elif user_input.startswith("/system"):
                 _handle_system_command(ai, session, user_input)
+            elif user_input.startswith("/read"):
+                _handle_read_command(environment, ai, ui, session, user_input)
             elif user_input.startswith("/import"):
                 session = _handle_import_command(environment, ai, user_input)
             elif user_input.startswith("/export"):
