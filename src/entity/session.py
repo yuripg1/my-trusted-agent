@@ -40,7 +40,7 @@ class Session:
             self._messages = ai.decode_messages_json(str(fetched_data["messages"]))
         return self
 
-    def auto_save(self, ai: Ai, db_connection: Connection) -> None:
+    def save(self, ai: Ai, db_connection: Connection) -> None:
         tools: str = ai.encode_tools_json(self._tools)
         messages_json: str = ai.encode_messages_json(self._messages)
         read_allowlist: str = dumps(self.read_allowlist)
@@ -82,14 +82,17 @@ class Session:
     def request_assistant_reply(self, ai: Ai) -> None:
         self.context_length = ai.request_assistant_reply(self._messages, self._tools)
 
+    def prune(self, ai: Ai) -> None:
+        ai.prune(self._messages)
+
+    def has_user_messages(self, ai: Ai) -> bool:
+        return ai.has_user_messages(self._messages)
+
     def get_messages_count(self, ai: Ai) -> int:
         return ai.get_messages_count(self._messages)
 
     def get_nth_message(self, ai: Ai, message_index: int) -> AiMessage | None:
         return ai.get_nth_message(self._messages, message_index)
-
-    def has_user_messages(self, ai: Ai) -> bool:
-        return ai.has_user_messages(self._messages)
 
     def get_tool_calls_from_nth_message(self, ai: Ai, message_index: int) -> list[ToolCall]:
         return ai.get_tool_calls_from_nth_message(self._messages, message_index)

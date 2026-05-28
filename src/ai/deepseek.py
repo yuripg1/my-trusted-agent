@@ -66,6 +66,11 @@ class DeepSeekRequest(TypedDict):
     tool_choice: Required[str]
 
 
+class DeepSeekPruneSegment(TypedDict):
+    start: Required[int]
+    end: Required[int]
+
+
 _API_STREAM: bool = False
 _API_TOOL_CHOICE: DeepSeekToolChoiceType = "auto"
 _API_WAIT_AFTER_ERROR: int = 2
@@ -216,6 +221,25 @@ class DeepSeekAi:
                 with suppress(Exception):
                     print(dumps(response.json(), indent=2), file=stderr)
             sys_exit(1)
+
+    def prune(self, messages: list[DeepSeekMessage]) -> None:
+        segments_to_prune: list[DeepSeekPruneSegment] = []
+        segment_start: int | None = None
+        segment_has_tool_calls: bool = False
+        for message_index, message in enumerate(messages):
+            if message["role"] == "user":
+                if segment_start is not None and not segment_has_tool_calls:
+                    segments_to_prune.append(DeepSeekPruneSegment(start=segment_start, end=message_index))
+                segment_start = message_index + 1
+                segment_has_tool_calls = False
+            elif segment_start is not None and message["role"] == "assistant" and "tool_calls" in message:
+                segment_has_tool_calls = True
+        if segment_start is not None and not segment_has_tool_calls:
+            segments_to_prune.append(DeepSeekPruneSegment(start=segment_start, end=len(messages)))
+        for segment in segments_to_prune:
+            for prune_index in range(segment["start"], segment["end"]):
+                if messages[prune_index]["role"] == "assistant" and "reasoning_content" in messages[prune_index]:
+                    del messages[prune_index]["reasoning_content"]
 
     def has_user_messages(self, messages: list[DeepSeekMessage]) -> bool:
         for message in messages:

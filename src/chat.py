@@ -3,7 +3,7 @@ from glob import glob
 from os.path import isdir
 from sqlite3 import Connection
 
-from agent import get_agent_config, get_agent_name
+from agent import AgentConfig, get_agent_config, get_agent_name
 from ai.core import Ai, AiMessage
 from entity.session import Session
 from environment import Environment
@@ -160,7 +160,7 @@ def _handle_user_input(
     environment: Environment, db_connection: Connection, ai: Ai, ui: Ui, session: Session, user_input: str
 ) -> None:
     if not session.has_user_messages(ai):
-        agent_config = get_agent_config(session.agent_name, environment, ui)
+        agent_config: AgentConfig = get_agent_config(session.agent_name, environment, ui)
         session.add_system_messages(ai, agent_config["system_prompts"])
         session.add_tools(ai, agent_config["tool_names"])
     has_added_user_message: bool = session.add_user_message(ai, user_input)
@@ -177,7 +177,8 @@ def _handle_user_input(
         )
         tool_calls: list[ToolCall] = session.get_tool_calls_from_nth_message(ai, assistant_message_index)
         if len(tool_calls) == 0:
-            session.auto_save(ai, db_connection)
+            session.prune(ai)
+            session.save(ai, db_connection)
             break
         number_of_required_permissions: int = get_number_of_required_permissions(tool_calls, session.read_allowlist)
         group_tool_call_permission: bool = number_of_required_permissions == 0
