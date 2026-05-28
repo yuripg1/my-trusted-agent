@@ -47,7 +47,11 @@ class Ui:
             self.terminal_ui.display_assistant_message(session_id, context_length, message, reasoning)
 
     def display_group_tool_call_message(
-        self, session_id: int | None, context_length: int, tool_call_messages: list[str], tool_call_permission: bool
+        self,
+        session_id: int | None,
+        context_length: int,
+        tool_call_messages: list[str],
+        tool_call_permission: bool = True,
     ) -> bool:
         if self.channel == "terminal" and self.terminal_ui is not None:
             return self.terminal_ui.display_group_tool_call_message(
@@ -56,7 +60,7 @@ class Ui:
         else:
             return False
 
-    def display_individual_tool_call_message(self, tool_call_message: str, tool_call_permission: bool) -> bool:
+    def display_individual_tool_call_message(self, tool_call_message: str, tool_call_permission: bool = True) -> bool:
         if self.channel == "terminal" and self.terminal_ui is not None:
             return self.terminal_ui.display_individual_tool_call_message(tool_call_message, tool_call_permission)
         else:

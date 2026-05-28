@@ -16,10 +16,10 @@ from tool.core import (
     get_number_of_required_permissions,
     get_tool_read_path,
 )
-from tool.list_directory import ListDirectoryArguments, list_directory
-from tool.read_file import ReadFileArguments, read_file
-from tool.read_pdf_document import ReadPdfDocumentArguments, read_pdf_document
-from tool.read_web_page import ReadWebPageArguments, read_web_page
+from tool.list_directory import ListDirectoryArguments, get_list_directory_message, list_directory
+from tool.read_file import ReadFileArguments, get_read_file_message, read_file
+from tool.read_pdf_document import ReadPdfDocumentArguments, get_read_pdf_document_message, read_pdf_document
+from tool.read_web_page import ReadWebPageArguments, get_read_web_page_message, read_web_page
 from ui.core import Ui
 
 
@@ -33,7 +33,7 @@ def _handle_new_command(environment: Environment, ai: Ai, user_input: str) -> Se
 
 
 def _handle_load_command(
-    environment: Environment, ai: Ai, db_connection: Connection, user_input: str, ui: Ui
+    environment: Environment, db_connection: Connection, ai: Ai, ui: Ui, user_input: str
 ) -> Session:
     load_input_parts: list[str] = user_input.split(" ", 2)
     session_id: int = 0
@@ -54,6 +54,10 @@ def _handle_load_command(
                 ui.display_user_message(session.id, session.context_length, replay_message["message"])
             elif replay_message["role"] == "assistant":
                 ui.display_assistant_message(session.id, session.context_length, replay_message["message"])
+                tool_calls: list[ToolCall] = session.get_tool_calls_from_nth_message(ai, replay_message_index)
+                if len(tool_calls) != 0:
+                    group_tool_call_messages: list[str] = get_group_tool_call_messages(tool_calls)
+                    ui.display_group_tool_call_message(session.id, session.context_length, group_tool_call_messages)
             replay_message_index += 1
     return session
 
@@ -102,7 +106,7 @@ def _handle_export_command(environment: Environment, ai: Ai, session: Session, u
         file.write(exported_content)
 
 
-def _handle_read_command(environment: Environment, ai: Ai, session: Session, user_input: str) -> None:
+def _handle_read_command(ai: Ai, ui: Ui, session: Session, user_input: str) -> None:
     read_parts: list[str] = user_input.split(" ", 1)
     path_pattern: str = ""
     if len(read_parts) >= 2:
@@ -117,15 +121,28 @@ def _handle_read_command(environment: Environment, ai: Ai, session: Session, use
         if path == "":
             continue
         content: str = ""
+        ui_message: str = ""
         if path.startswith(("http://", "https://")):
+            read_web_page_arguments: ReadWebPageArguments = ReadWebPageArguments(url=path)
+            ui_message = get_read_web_page_message(read_web_page_arguments)
             content = read_web_page(ReadWebPageArguments(url=path))
         elif isdir(path):
+            list_directory_arguments: ListDirectoryArguments = ListDirectoryArguments(path=path)
+            ui_message = get_list_directory_message(list_directory_arguments)
             content = list_directory(ListDirectoryArguments(path=path))
         elif path.lower().endswith(".pdf"):
+            read_pdf_document_arguments: ReadPdfDocumentArguments = ReadPdfDocumentArguments(
+                location_type="local", location=path
+            )
+            ui_message = get_read_pdf_document_message(read_pdf_document_arguments)
             content = read_pdf_document(ReadPdfDocumentArguments(location_type="local", location=path))
         else:
+            read_file_arguments: ReadFileArguments = ReadFileArguments(path=path)
+            ui_message = get_read_file_message(read_file_arguments)
             content = read_file(ReadFileArguments(path=path))
-        if len(content.strip()) != 0:
+        if len(ui_message) != 0:
+            ui.display_individual_tool_call_message(ui_message)
+        if len(content) != 0:
             session.add_system_messages(ai, [content])
 
 
@@ -200,13 +217,13 @@ def chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui: U
             if user_input.startswith("/new"):
                 session = _handle_new_command(environment, ai, user_input)
             elif user_input.startswith("/load"):
-                session = _handle_load_command(environment, ai, db_connection, user_input, ui)
+                session = _handle_load_command(environment, db_connection, ai, ui, user_input)
             elif user_input == "/rewind":
                 _handle_rewind_command(session, ai, ui)
             elif user_input.startswith("/system"):
                 _handle_system_command(ai, session, user_input)
             elif user_input.startswith("/read"):
-                _handle_read_command(environment, ai, session, user_input)
+                _handle_read_command(ai, ui, session, user_input)
             elif user_input.startswith("/import"):
                 session = _handle_import_command(environment, ai, user_input)
             elif user_input.startswith("/export"):
