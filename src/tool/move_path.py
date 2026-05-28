@@ -24,6 +24,13 @@ def get_move_path_permission(arguments: MovePathArguments) -> bool:
     return False
 
 
+def get_move_path_read_path(arguments: MovePathArguments, tool_call_permission: bool) -> str | None:
+    if tool_call_permission:
+        return arguments["destination"]
+    else:
+        return None
+
+
 def move_path(arguments: MovePathArguments, tool_call_permission: bool = True) -> str:
     output_entries: list[str] = []
     if not tool_call_permission:

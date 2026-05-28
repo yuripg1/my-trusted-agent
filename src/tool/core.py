@@ -8,7 +8,13 @@ from tool.create_directory import (
     get_create_directory_permission,
 )
 from tool.delete_path import DeletePathToolCall, delete_path, get_delete_path_message, get_delete_path_permission
-from tool.edit_file import EditFileToolCall, edit_file, get_edit_file_message, get_edit_file_permission
+from tool.edit_file import (
+    EditFileToolCall,
+    edit_file,
+    get_edit_file_message,
+    get_edit_file_permission,
+    get_edit_file_read_path,
+)
 from tool.execute_shell_command import (
     ExecuteShellCommandToolCall,
     execute_shell_command,
@@ -28,7 +34,13 @@ from tool.list_directory import (
     get_list_directory_permission,
     list_directory,
 )
-from tool.move_path import MovePathToolCall, get_move_path_message, get_move_path_permission, move_path
+from tool.move_path import (
+    MovePathToolCall,
+    get_move_path_message,
+    get_move_path_permission,
+    get_move_path_read_path,
+    move_path,
+)
 from tool.read_file import (
     ReadFileToolCall,
     get_read_file_message,
@@ -50,7 +62,13 @@ from tool.read_web_page import (
     read_web_page,
 )
 from tool.search_web import SearchWebToolCall, get_search_web_message, get_search_web_permission, search_web
-from tool.write_file import WriteFileToolCall, get_write_file_message, get_write_file_permission, write_file
+from tool.write_file import (
+    WriteFileToolCall,
+    get_write_file_message,
+    get_write_file_permission,
+    get_write_file_read_path,
+    write_file,
+)
 
 ToolCall: TypeAlias = (
     CreateDirectoryToolCall
@@ -160,10 +178,16 @@ def get_number_of_required_permissions(tool_calls: list[ToolCall], session_read_
 
 
 def get_tool_read_path(tool_call: ToolCall, tool_call_permission: bool) -> str | None:
-    if tool_call["tool_name"] == "read_file":
+    if tool_call["tool_name"] == "edit_file":
+        return get_edit_file_read_path(tool_call["arguments"], tool_call_permission)
+    elif tool_call["tool_name"] == "move_path":
+        return get_move_path_read_path(tool_call["arguments"], tool_call_permission)
+    elif tool_call["tool_name"] == "read_file":
         return get_read_file_read_path(tool_call["arguments"], tool_call_permission)
     elif tool_call["tool_name"] == "read_pdf_document":
         return get_read_pdf_document_read_path(tool_call["arguments"], tool_call_permission)
+    elif tool_call["tool_name"] == "write_file":
+        return get_write_file_read_path(tool_call["arguments"], tool_call_permission)
     else:
         return None
 

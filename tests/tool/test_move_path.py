@@ -5,6 +5,7 @@ from tool.move_path import (
     MovePathArguments,
     get_move_path_message,
     get_move_path_permission,
+    get_move_path_read_path,
     move_path,
 )
 
@@ -25,6 +26,22 @@ class TestGetMovePathPermission:
         """Permission should require user approval"""
         arguments: MovePathArguments = {"type": "file", "source": "/old/path.txt", "destination": "/new/path.txt"}
         assert get_move_path_permission(arguments) is False
+
+
+class TestGetMovePathReadPath:
+    """Tests for the `get_move_path_read_path` function"""
+
+    def test_permission_granted(self) -> None:
+        """Return the destination path when permission was granted"""
+        arguments: MovePathArguments = {"type": "file", "source": "/old/path.txt", "destination": "/new/path.txt"}
+        result: str | None = get_move_path_read_path(arguments, tool_call_permission=True)
+        assert result == "/new/path.txt"
+
+    def test_permission_denied(self) -> None:
+        """Return None when permission was denied"""
+        arguments: MovePathArguments = {"type": "file", "source": "/old/path.txt", "destination": "/new/path.txt"}
+        result: str | None = get_move_path_read_path(arguments, tool_call_permission=False)
+        assert result is None
 
 
 class TestMovePath:

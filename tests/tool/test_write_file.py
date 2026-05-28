@@ -5,6 +5,7 @@ from tool.write_file import (
     WriteFileArguments,
     get_write_file_message,
     get_write_file_permission,
+    get_write_file_read_path,
     write_file,
 )
 
@@ -47,6 +48,22 @@ class TestGetWriteFilePermission:
         """Permission should require user approval"""
         arguments: WriteFileArguments = {"path": "/path/file.txt", "mode": "create_or_overwrite", "content": "content"}
         assert get_write_file_permission(arguments) is False
+
+
+class TestGetWriteFileReadPath:
+    """Tests for the `get_write_file_read_path` function"""
+
+    def test_permission_granted(self) -> None:
+        """Return the path when permission was granted"""
+        arguments: WriteFileArguments = {"path": "/path/file.txt", "mode": "create_or_overwrite", "content": "content"}
+        result: str | None = get_write_file_read_path(arguments, tool_call_permission=True)
+        assert result == "/path/file.txt"
+
+    def test_permission_denied(self) -> None:
+        """Return None when permission was denied"""
+        arguments: WriteFileArguments = {"path": "/path/file.txt", "mode": "create_or_overwrite", "content": "content"}
+        result: str | None = get_write_file_read_path(arguments, tool_call_permission=False)
+        assert result is None
 
 
 class TestWriteFile:

@@ -19,6 +19,13 @@ def get_write_file_permission(arguments: WriteFileArguments) -> bool:
     return False
 
 
+def get_write_file_read_path(arguments: WriteFileArguments, tool_call_permission: bool) -> str | None:
+    if tool_call_permission:
+        return arguments["path"]
+    else:
+        return None
+
+
 def get_write_file_message(arguments: WriteFileArguments) -> str:
     write_path: str = arguments["path"]
     write_mode: str = arguments["mode"]

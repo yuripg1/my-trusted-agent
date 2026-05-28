@@ -20,6 +20,13 @@ def get_edit_file_permission(arguments: EditFileArguments) -> bool:
     return False
 
 
+def get_edit_file_read_path(arguments: EditFileArguments, tool_call_permission: bool) -> str | None:
+    if tool_call_permission:
+        return arguments["path"]
+    else:
+        return None
+
+
 def get_edit_file_message(arguments: EditFileArguments) -> str:
     search_for_text: str = arguments["search_for"]
     replace_with_text: str = arguments["replace_with"]

@@ -7,6 +7,7 @@ from tool.edit_file import (
     edit_file,
     get_edit_file_message,
     get_edit_file_permission,
+    get_edit_file_read_path,
 )
 
 
@@ -38,6 +39,32 @@ class TestGetEditFilePermission:
             "number_of_substitutions": 1,
         }
         assert get_edit_file_permission(arguments) is False
+
+
+class TestGetEditFileReadPath:
+    """Tests for the `get_edit_file_read_path` function"""
+
+    def test_permission_granted(self) -> None:
+        """Return the path when permission was granted"""
+        arguments: EditFileArguments = {
+            "path": "/path/file.txt",
+            "search_for": "hello",
+            "replace_with": "goodbye",
+            "number_of_substitutions": 1,
+        }
+        result: str | None = get_edit_file_read_path(arguments, tool_call_permission=True)
+        assert result == "/path/file.txt"
+
+    def test_permission_denied(self) -> None:
+        """Return None when permission was denied"""
+        arguments: EditFileArguments = {
+            "path": "/path/file.txt",
+            "search_for": "hello",
+            "replace_with": "goodbye",
+            "number_of_substitutions": 1,
+        }
+        result: str | None = get_edit_file_read_path(arguments, tool_call_permission=False)
+        assert result is None
 
 
 class TestEditFile:

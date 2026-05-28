@@ -437,6 +437,60 @@ class TestGetNumberOfRequiredPermissions:
 class TestGetToolReadPath:
     """Tests for the `get_tool_read_path` dispatching function"""
 
+    def test_edit_file_permission_granted(self) -> None:
+        """Return the path for edit_file when permission was granted"""
+        result: str | None = get_tool_read_path(
+            {
+                "tool_name": "edit_file",
+                "arguments": {
+                    "path": "/tmp/test.txt",
+                    "search_for": "old",
+                    "replace_with": "new",
+                    "number_of_substitutions": 1,
+                },
+            },
+            tool_call_permission=True,
+        )
+        assert result == "/tmp/test.txt"
+
+    def test_edit_file_permission_denied(self) -> None:
+        """Return None for edit_file when permission was denied"""
+        result: str | None = get_tool_read_path(
+            {
+                "tool_name": "edit_file",
+                "arguments": {
+                    "path": "/tmp/test.txt",
+                    "search_for": "old",
+                    "replace_with": "new",
+                    "number_of_substitutions": 1,
+                },
+            },
+            tool_call_permission=False,
+        )
+        assert result is None
+
+    def test_move_path_permission_granted(self) -> None:
+        """Return the destination for move_path when permission was granted"""
+        result: str | None = get_tool_read_path(
+            {
+                "tool_name": "move_path",
+                "arguments": {"type": "file", "source": "/tmp/a.txt", "destination": "/tmp/b.txt"},
+            },
+            tool_call_permission=True,
+        )
+        assert result == "/tmp/b.txt"
+
+    def test_move_path_permission_denied(self) -> None:
+        """Return None for move_path when permission was denied"""
+        result: str | None = get_tool_read_path(
+            {
+                "tool_name": "move_path",
+                "arguments": {"type": "file", "source": "/tmp/a.txt", "destination": "/tmp/b.txt"},
+            },
+            tool_call_permission=False,
+        )
+        assert result is None
+
     def test_read_file_permission_granted(self) -> None:
         """Return the path for read_file when permission was granted"""
         result: str | None = get_tool_read_path(
@@ -464,6 +518,17 @@ class TestGetToolReadPath:
         )
         assert result == "/tmp/doc.pdf"
 
+    def test_read_pdf_document_permission_denied(self) -> None:
+        """Return None for read_pdf_document when permission was denied"""
+        result: str | None = get_tool_read_path(
+            {
+                "tool_name": "read_pdf_document",
+                "arguments": {"location_type": "local", "location": "/tmp/doc.pdf"},
+            },
+            tool_call_permission=False,
+        )
+        assert result is None
+
     def test_read_pdf_document_web_permission_granted(self) -> None:
         """Return None for a web PDF even when permission was granted"""
         result: str | None = get_tool_read_path(
@@ -475,12 +540,23 @@ class TestGetToolReadPath:
         )
         assert result is None
 
-    def test_read_pdf_document_permission_denied(self) -> None:
-        """Return None for read_pdf_document when permission was denied"""
+    def test_write_file_permission_granted(self) -> None:
+        """Return the path for write_file when permission was granted"""
         result: str | None = get_tool_read_path(
             {
-                "tool_name": "read_pdf_document",
-                "arguments": {"location_type": "local", "location": "/tmp/doc.pdf"},
+                "tool_name": "write_file",
+                "arguments": {"path": "/tmp/test.txt", "mode": "create_or_overwrite", "content": "hello"},
+            },
+            tool_call_permission=True,
+        )
+        assert result == "/tmp/test.txt"
+
+    def test_write_file_permission_denied(self) -> None:
+        """Return None for write_file when permission was denied"""
+        result: str | None = get_tool_read_path(
+            {
+                "tool_name": "write_file",
+                "arguments": {"path": "/tmp/test.txt", "mode": "create_or_overwrite", "content": "hello"},
             },
             tool_call_permission=False,
         )
