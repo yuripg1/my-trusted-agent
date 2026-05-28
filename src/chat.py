@@ -156,6 +156,12 @@ def _handle_rewind_command(session: Session, ai: Ai, ui: Ui) -> None:
         )
 
 
+def _save_session(ai: Ai, session: Session, db_connection: Connection) -> None:
+    if session.has_user_messages(ai):
+        session.prune(ai)
+        session.save(ai, db_connection)
+
+
 def _handle_user_input(
     environment: Environment, db_connection: Connection, ai: Ai, ui: Ui, session: Session, user_input: str
 ) -> None:
@@ -177,8 +183,7 @@ def _handle_user_input(
         )
         tool_calls: list[ToolCall] = session.get_tool_calls_from_nth_message(ai, assistant_message_index)
         if len(tool_calls) == 0:
-            session.prune(ai)
-            session.save(ai, db_connection)
+            _save_session(ai, session, db_connection)
             break
         number_of_required_permissions: int = get_number_of_required_permissions(tool_calls, session.read_allowlist)
         group_tool_call_permission: bool = number_of_required_permissions == 0
@@ -229,6 +234,8 @@ def chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui: U
                 session = _handle_import_command(environment, ai, user_input)
             elif user_input.startswith("/export"):
                 _handle_export_command(environment, ai, session, user_input)
+            elif user_input == "/save":
+                _save_session(ai, session, db_connection)
             elif user_input == "/exit":
                 break
             else:
