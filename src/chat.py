@@ -23,6 +23,23 @@ from tool.read_web_page import ReadWebPageArguments, get_read_web_page_message, 
 from ui.core import Ui
 
 
+def _replay_session_messages(session: Session, ai: Ai, ui: Ui) -> None:
+    replay_message_index: int = 0
+    while True:
+        replay_message: AiMessage | None = session.get_nth_message(ai, replay_message_index)
+        if replay_message is None:
+            break
+        if replay_message["role"] == "user":
+            ui.display_user_message(session.id, session.context_length, replay_message["message"])
+        elif replay_message["role"] == "assistant":
+            ui.display_assistant_message(session.id, session.context_length, replay_message["message"])
+            tool_calls: list[ToolCall] = session.get_tool_calls_from_nth_message(ai, replay_message_index)
+            if len(tool_calls) != 0:
+                group_tool_call_messages: list[str] = get_group_tool_call_messages(tool_calls)
+                ui.display_group_tool_call_message(session.id, session.context_length, group_tool_call_messages)
+        replay_message_index += 1
+
+
 def _handle_new_command(environment: Environment, ai: Ai, user_input: str) -> Session:
     new_input_parts: list[str] = user_input.split(" ", 1)
     agent_name_input: str = ""
@@ -45,20 +62,7 @@ def _handle_load_command(
         replay = load_input_parts[2] == "replay"
     session = Session(ai, get_agent_name(environment)).load(ai, session_id, db_connection)
     if replay:
-        replay_message_index: int = 0
-        while True:
-            replay_message: AiMessage | None = session.get_nth_message(ai, replay_message_index)
-            if replay_message is None:
-                break
-            if replay_message["role"] == "user":
-                ui.display_user_message(session.id, session.context_length, replay_message["message"])
-            elif replay_message["role"] == "assistant":
-                ui.display_assistant_message(session.id, session.context_length, replay_message["message"])
-                tool_calls: list[ToolCall] = session.get_tool_calls_from_nth_message(ai, replay_message_index)
-                if len(tool_calls) != 0:
-                    group_tool_call_messages: list[str] = get_group_tool_call_messages(tool_calls)
-                    ui.display_group_tool_call_message(session.id, session.context_length, group_tool_call_messages)
-            replay_message_index += 1
+        _replay_session_messages(session, ai, ui)
     return session
 
 
@@ -69,17 +73,22 @@ def _handle_system_command(ai: Ai, session: Session, user_input: str) -> None:
         session.add_system_messages(ai, [system_prompt])
 
 
-def _handle_import_command(environment: Environment, ai: Ai, user_input: str) -> Session:
-    import_parts: list[str] = user_input.split(" ", 1)
+def _handle_import_command(environment: Environment, ai: Ai, ui: Ui, user_input: str) -> Session:
+    import_parts: list[str] = user_input.split(" ", 2)
     file_path: str = ""
     if len(import_parts) >= 2:
         file_path = import_parts[1].strip()
+    replay: bool = False
+    if len(import_parts) >= 3:
+        replay = import_parts[2] == "replay"
     if file_path == "":
         return Session(ai, get_agent_name(environment))
     with open(file_path) as file:
         messages_json: str = file.read()
     session: Session = Session(ai, get_agent_name(environment))
     session.import_messages(ai, messages_json)
+    if replay:
+        _replay_session_messages(session, ai, ui)
     return session
 
 
@@ -231,7 +240,7 @@ def chat_loop(environment: Environment, db_connection: Connection, ai: Ai, ui: U
             elif user_input.startswith("/read"):
                 _handle_read_command(ai, ui, session, user_input)
             elif user_input.startswith("/import"):
-                session = _handle_import_command(environment, ai, user_input)
+                session = _handle_import_command(environment, ai, ui, user_input)
             elif user_input.startswith("/export"):
                 _handle_export_command(environment, ai, session, user_input)
             elif user_input == "/save":

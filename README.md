@@ -25,13 +25,13 @@ This project takes a different approach: it deliberately brings you along for th
 | Command | Description |
 |---|---|
 | <nobr><code>/new&nbsp;[agent_name]</code></nobr> | Starts a new session; optionally selects an agent |
-| <nobr><code>/load&nbsp;&lt;n&gt;&nbsp;[replay]</code></nobr> | Loads a previous session with ID `n`; optionally replays the entire conversation |
+| <nobr><code>/load&nbsp;&lt;session_id&gt;&nbsp;[replay]</code></nobr> | Loads a previous session with ID `session_id`; optionally replays the entire conversation |
 | <nobr><code>/system&nbsp;[&lt;message&gt;]</code></nobr> | Adds a system prompt message to the current session |
 | <nobr><code>/read&nbsp;&lt;path_pattern&gt;</code></nobr> | Reads web pages, directories, or files and adds them to the session |
 | <nobr><code>/rewind</code></nobr> | Rewinds to right before the latest user message |
 | <nobr><code>/save</code></nobr> | Saves the current session to the database |
 | <nobr><code>/export&nbsp;[&lt;format&gt;]</code></nobr> | Exports the full message history. Format can be `json` (default - can be imported) or `markdown` (human readable) |
-| <nobr><code>/import&nbsp;&lt;file&gt;</code></nobr> | Starts a new session with an imported conversation history |
+| <nobr><code>/import&nbsp;&lt;file&gt;&nbsp;[replay]</code></nobr> | Starts a new session with an imported conversation history; optionally replays the entire conversation |
 | <nobr><code>/exit</code></nobr> | Closes the application |
 
 ---
