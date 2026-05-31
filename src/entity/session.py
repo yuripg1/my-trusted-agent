@@ -97,11 +97,12 @@ class Session:
     def get_tool_calls_from_nth_message(self, ai: Ai, message_index: int) -> list[ToolCall]:
         return ai.get_tool_calls_from_nth_message(self._messages, message_index)
 
-    def export_to_markdown(self, ai: Ai) -> str:
+    def export_to_json(self, ai: Ai) -> str:
+        return ai.encode_messages_json(self._messages)
+
+    def export_to_xml(self, ai: Ai) -> str:
         lines: list[str] = []
-        session_id: int = self.id if self.id is not None else 0
-        lines.append(f"# Session {session_id}")
-        lines.append("")
+        lines.append("<session>")
         message_index: int = 0
         while True:
             message: AiMessage | None = self.get_nth_message(ai, message_index)
@@ -111,24 +112,15 @@ class Session:
             if len(message_content) == 0:
                 message_index += 1
                 continue
-            if message["role"] == "user":
-                lines.append("---")
-                lines.append("")
-                lines.append("## User")
-                lines.append("")
+            role: str = message["role"]
+            if role in ["user", "assistant"]:
+                lines.append(f'<message role="{role}">')
                 lines.append(message_content)
-                lines.append("")
-            elif message["role"] == "assistant":
-                lines.append("## Assistant")
-                lines.append("")
-                lines.append(message_content)
-                lines.append("")
+                lines.append("</message>")
             message_index += 1
+        lines.append("</session>")
         return "\n".join(lines).strip() + "\n"
 
     def import_messages(self, ai: Ai, messages_json: str) -> None:
         self._messages = ai.decode_messages_json(messages_json)
         self.id = None
-
-    def export_to_json(self, ai: Ai) -> str:
-        return ai.encode_messages_json(self._messages)

@@ -103,12 +103,12 @@ def _handle_export_command(environment: Environment, ai: Ai, session: Session, u
         format_type = export_parts[1].strip().lower()
     exported_content: str = ""
     export_file_path: str = ""
-    if format_type == "markdown":
-        exported_content = session.export_to_markdown(ai)
-        export_file_path = f"{environment.export_path}_{session.id}.md"
-    elif format_type == "json":
+    if format_type == "json":
         exported_content = session.export_to_json(ai)
         export_file_path = f"{environment.export_path}_{session.id}.json"
+    elif format_type == "xml":
+        exported_content = session.export_to_xml(ai)
+        export_file_path = f"{environment.export_path}_{session.id}.xml"
     else:
         return
     with open(export_file_path, "w") as file:

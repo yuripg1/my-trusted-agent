@@ -30,7 +30,7 @@ This project takes a different approach: it deliberately brings you along for th
 | <nobr><code>/read&nbsp;&lt;path_pattern&gt;</code></nobr> | Reads web pages, directories, or files and adds them to the session |
 | <nobr><code>/rewind</code></nobr> | Rewinds to right before the latest user message |
 | <nobr><code>/save</code></nobr> | Saves the current session to the database |
-| <nobr><code>/export&nbsp;[&lt;format&gt;]</code></nobr> | Exports the full message history. Format can be `json` (default - can be imported) or `markdown` (human readable) |
+| <nobr><code>/export&nbsp;[&lt;format&gt;]</code></nobr> | Exports the full message history. Format can be `json` (full history - default) or `xml` (conversation only) |
 | <nobr><code>/import&nbsp;&lt;file&gt;&nbsp;[replay]</code></nobr> | Starts a new session with an imported conversation history; optionally replays the entire conversation |
 | <nobr><code>/exit</code></nobr> | Closes the application |
 
